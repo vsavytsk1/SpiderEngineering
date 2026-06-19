@@ -1,0 +1,9 @@
+ref,part,qty,notes
+PCB1,aracnium-mainboard,1,"hardware/pcb — MCU + motor drivers + IMU"
+MCU1,microcontroller,1,"pick your brain: ESP32 / RP2040 / STM32"
+SRV,micro-servo,24,"= n_legs(8) x joints_per_leg(3); keep in sync with spec [actuation]"
+IMU1,6-axis-imu,1,"body orientation for the gait controller"
+BAT1,lipo-pack,1,"lives in the opisthosoma (rear disc)"
+LEG,leg-segment-set,8,"one 7-segment leg set per leg (CAD: hardware/cad)"
+FOOT,setae-foot-pad,8,"optional van-der-Waals grip; spec [grip].setae_adhesion"
+FAST,m2-hardware-kit,1,"screws/standoffs — one kit per unit"

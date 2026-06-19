@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>THE WALL v1.0 — one number decides if the infinities lose or win</title>
+<!--
+  THE WALL v1.0  — Claude's entry. Sim wars.
+  =========================================================================
+  A renormalization sandbox. You drag ONE thing: the mass dimension [g] of
+  a theory's coupling. Everything else is COMPUTED from the standard
+  power-counting rule, not asserted:
+
+      per-loop growth of the superficial divergence  ω(L) = ω0 + L·(−[g])
+
+    [g] = 0   -> ω flat   -> finitely many counterterms -> RENORMALIZABLE (QED)
+    [g] > 0   -> ω falls  -> SUPER-renormalizable
+    [g] < 0   -> ω grows  -> infinite counterterm tower -> NON-RENORMALIZABLE (gravity, [G]=−2)
+
+  Engine verified before build (python, 4D): reproduces QED [e]=0 renorm,
+  gravity [G]=−2 & Fermi [G_F]=−2 non-renorm, gravity's first irreducible
+  divergence at 2 loops (consistent with Goroff–Sagnotti R³).
+
+  HONESTY CAVEATS (read these — they are the point of the whole conversation):
+   K1  ω(L) here is the SCHEMATIC dimensional power-count, not a full graph-by-
+       graph BPHZ analysis. It gets the renorm/non-renorm verdict and the
+       qualitative tower right; it is NOT a substitute for real loop integrals.
+   K2  "counterterms needed" = number of independent divergent operator
+       structures up to loop L. The growth law is real; the exact integer at
+       each L is model-dependent (I show the schematic count).
+   K3  The g−2 "12 digits" and the 10^120 cosmological-constant numbers are
+       real measured/known facts, shown as fixed labels, NOT computed here.
+   K4  No actual field theory is being integrated. This is a power-counting
+       VISUALIZER. The looney is the cartoon; the rule underneath is honest.
+       (Same split as ARACNIUM: cartoon premise, real engine.)
+  =========================================================================
+-->
+<style>
+  :root{
+    --void:#0a0a12; --ink:#e9e6df; --dim:#6b6f7e; --faint:#373b49;
+    --tame:#3dd6a0;      /* QED green: infinities tamed */
+    --war:#ff5d5d;       /* gravity red: infinities win  */
+    --super:#54b8ff;     /* super-renormalizable blue */
+    --gold:#f4c049;      /* the one number you control */
+    --wire:#1c2030;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--void);color:var(--ink);font-family:var(--mono);overflow:hidden}
+  #stage{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;height:100%}
+
+  /* masthead */
+  header{padding:18px 22px 10px;border-bottom:1px solid var(--wire)}
+  .kick{font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(22px,4.4vw,38px);line-height:1.02;
+     letter-spacing:-.01em;margin-top:5px}
+  h1 .em{font-style:italic}
+  .sub{margin-top:7px;font-size:12px;color:var(--dim);max-width:64ch;line-height:1.55}
+  .sub b{color:var(--ink);font-weight:600}
+
+  /* main canvas area */
+  #main{position:relative;overflow:hidden}
+  canvas{display:block;width:100%;height:100%}
+  #verdict{position:absolute;left:22px;top:18px;z-index:6;pointer-events:none;max-width:300px}
+  #vbadge{display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+     font-weight:700;padding:3px 10px;border-radius:4px;border:1px solid currentColor}
+  #vline{font-family:var(--serif);font-style:italic;font-size:20px;margin-top:12px;line-height:1.25}
+  #vwhy{font-size:11px;color:var(--dim);margin-top:9px;line-height:1.55}
+  #vwhy code{color:var(--gold)}
+  #realworld{position:absolute;right:22px;top:18px;z-index:6;text-align:right;
+     font-size:10.5px;color:var(--dim);line-height:1.9;pointer-events:none}
+  #realworld .tag{color:var(--faint);letter-spacing:.16em;text-transform:uppercase;font-size:9px}
+  #realworld b{font-weight:600}
+
+  /* control deck */
+  footer{padding:14px 22px 18px;border-top:1px solid var(--wire);background:rgba(10,10,18,.6)}
+  .dialwrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .dialmeta{min-width:210px}
+  .dialmeta .lab{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+  .dialmeta .big{font-family:var(--serif);font-size:30px;color:var(--gold);line-height:1;margin-top:3px}
+  .dialmeta .big small{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:0}
+  .track{flex:1;min-width:240px}
+  input[type=range]{appearance:none;width:100%;height:6px;border-radius:4px;outline:none;cursor:pointer;
+     background:linear-gradient(90deg,var(--war) 0%,var(--war) 33%,var(--tame) 50%,var(--super) 66%,var(--super) 100%)}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;
+     background:var(--gold);border:3px solid var(--void);box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(244,192,73,.6);cursor:grab}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--gold);
+     border:3px solid var(--void);box-shadow:0 0 0 1px var(--gold);cursor:grab}
+  .ticks{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-top:6px;
+     letter-spacing:.04em}
+  .ticks span{position:relative}
+  .ticks .hot{color:var(--war)} .ticks .ok{color:var(--tame)} .ticks .cool{color:var(--super)}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .pchip{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--dim);
+     background:transparent;border:1px solid var(--wire);border-radius:999px;padding:4px 12px;cursor:pointer;
+     transition:all .14s}
+  .pchip:hover{border-color:var(--gold);color:var(--ink)}
+  .pchip b{color:var(--ink);font-weight:600}
+  .foothint{font-size:10px;color:var(--faint);margin-top:11px;line-height:1.5}
+  .foothint code{color:var(--dim)}
+  @media (max-width:680px){
+    #realworld{display:none} #verdict{position:static;margin:14px 0 0 22px}
+    #main{min-height:240px}
+  }
+  @media (prefers-reduced-motion:reduce){ canvas{opacity:.96} }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <header>
+    <div class="kick">The Wall · a renormalization sandbox</div>
+    <h1>One number decides whether the infinities <span class="em">lose</span> — or <span class="em">win</span>.</h1>
+    <div class="sub">Every quantum field theory is full of infinities. Drag the <b>mass dimension of the coupling</b> and watch the same subtraction machine that makes QED the most precise theory in physics <b>fail</b> for gravity. Nothing here is asserted: the tower of counterterms is counted from the power-counting rule <code style="color:var(--gold)">ω(L)=ω₀ − L·[g]</code>.</div>
+  </header>
+
+  <div id="main">
+    <canvas id="cv"></canvas>
+    <div id="verdict">
+      <span id="vbadge">—</span>
+      <div id="vline">—</div>
+      <div id="vwhy">—</div>
+    </div>
+    <div id="realworld">
+      <div class="tag">where the dial lands in reality</div>
+      <div id="rw"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="dialwrap">
+      <div class="dialmeta">
+        <div class="lab">coupling mass dimension</div>
+        <div class="big" id="gval">[g] = 0<small> &nbsp;dimensionless</small></div>
+      </div>
+      <div class="track">
+        <input id="dial" type="range" min="-30" max="20" step="1" value="0">
+        <div class="ticks">
+          <span class="hot">[g]=−3 · gravity·² wall</span>
+          <span class="ok">[g]=0 · QED</span>
+          <span class="cool">[g]=+2 · super</span>
+        </div>
+      </div>
+    </div>
+    <div class="presets" id="presets"></div>
+    <div class="foothint">
+      The looney is the cartoon. The engine is honest — and labelled. <code>K1</code> ω(L) is the schematic dimensional power-count, not a graph-by-graph BPHZ proof: it nails the verdict and the qualitative tower, not the exact integer at each loop. <code>K3</code> the g−2 and 10¹²⁰ figures are real known facts shown as labels, not computed here. Referee accordingly.
+    </div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   THE WALL — power-counting engine (verified before build)
+   ω(L) = ω0 − L·[g]   (4D, schematic superficial degree of divergence)
+   [g]=0 flat -> renormalizable ; [g]<0 grows -> infinite tower
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function size(){ DPR=Math.min(devicePixelRatio||1,2); const r=cv.getBoundingClientRect();
+  W=cv.width=Math.max(1,r.width*DPR); H=cv.height=Math.max(1,r.height*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener('resize',()=>{size();}); 
+
+const dial=document.getElementById('dial');
+const OMEGA0=2;                      // baseline UV degree of a 2-point function (schematic)
+const MAXLOOP=8;                     // we visualize up to 8 loops
+let g=0;                             // current coupling mass dim (dial/ -... we map below)
+
+// dial is -30..20 in tenths -> [g] in -3.0 .. +2.0
+function dialToG(v){ return v/10; }
+function omega(L,gg){ return OMEGA0 - L*gg; }        // the whole physics, one line
+// counterterms needed up to loop L = number of loops whose worst graph still diverges (ω>=0),
+// i.e. how many independent divergent structures the tower has demanded so far.
+function counterterms(gg){
+  if(gg>0){ // super-renormalizable: divergences die out after finitely many loops
+    let last=0; for(let L=1;L<=200;L++){ if(omega(L,gg)>=0) last=L; else break; } return last; // finite
+  }
+  if(gg===0) return 1;                 // renormalizable: one stable set of structures (schematically "finite")
+  return Infinity;                     // non-renormalizable: every loop demands a new one, forever
+}
+
+const verdictBadge=document.getElementById('vbadge');
+const verdictLine =document.getElementById('vline');
+const verdictWhy  =document.getElementById('vwhy');
+const gvalEl=document.getElementById('gval');
+const rwEl=document.getElementById('rw');
+
+function classify(gg){
+  if(gg===0) return {
+    key:'tame', col:getCSS('--tame'),
+    badge:'Infinities tamed', label:'Renormalizable.',
+    line:'The wall holds. Finitely many counterterms, then exact answers forever.',
+    why:'<code>[g]=0</code> → ω(L) is flat in loop order. The divergences never outgrow the finite set of parameters (mass, charge, field). Subtract once, predict to all orders.'
+  };
+  if(gg>0) return {
+    key:'super', col:getCSS('--super'),
+    badge:'Super-renormalizable', label:'Divergences fade.',
+    line:'Easy mode. The infinities shrink with every loop and stop on their own.',
+    why:'<code>[g]&gt;0</code> → ω(L)=ω₀−L·[g] falls. After a few loops nothing diverges at all. Rare in 4D; e.g. a super-renormalizable scalar.'
+  };
+  return {
+    key:'war', col:getCSS('--war'),
+    badge:'Infinities win', label:'Non-renormalizable.',
+    line:'The wall breaks. Every loop demands a brand-new parameter — forever.',
+    why:'<code>[g]&lt;0</code> → ω(L) grows without bound. The counterterm tower is infinite, so predictivity dies. This is gravity (<code>[G]=−2</code>): first irreducible divergence at two loops (Goroff–Sagnotti R³).'
+  };
+}
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+// real-world anchor for the current [g]
+function realWorld(gg){
+  if(gg===0) return '<span class="tag">QED · the Standard Model</span><br>coupling: charge e (dimensionless)<br>electron g−2 verified to <b>~10⁻¹²</b><br>the most precise prediction in physics';
+  if(Math.abs(gg+2)<1e-9) return '<span class="tag">gravity · Fermi β-decay</span><br>coupling: G (mass dim <b>−2</b>)<br>2-loop R³ divergence — <b>proven</b><br>points to new physics at the Planck scale';
+  if(gg<0) return '<span class="tag">non-renormalizable EFT</span><br>negative-dimension coupling<br>fine as a low-energy effective theory<br>breaks when E → its cutoff scale';
+  return '<span class="tag">super-renormalizable</span><br>positive-dimension coupling<br>UV-finite after finite order<br>(toy / low-dimensional theories)';
+}
+
+/* ---- the visual: a beam of "loop corrections" hitting a wall.
+        green = absorbed (tamed); red = the wall cracks and the tower
+        of counterterms erupts upward to infinity. ---- */
+let particles=[];                    // loop-correction sparks
+let towerBars=[];                    // the counterterm tower (right side)
+let tNow=0, reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function rebuildTower(gg){
+  towerBars=[];
+  const ct=counterterms(gg);
+  if(ct===Infinity){
+    for(let L=1;L<=MAXLOOP;L++) towerBars.push({L, h:omega(L,gg), inf:true});
+  } else if(gg>0){
+    let L=1; while(omega(L,gg)>=0 && L<=MAXLOOP){ towerBars.push({L,h:omega(L,gg),inf:false}); L++; }
+  } else {
+    towerBars.push({L:1,h:OMEGA0,inf:false}); // renormalizable: one stable block
+  }
+}
+
+function spark(){
+  // emit from left, fly toward the wall at center
+  particles.push({ x:-10, y:H/DPR*(0.30+Math.random()*0.40), v:1.6+Math.random()*1.4, life:1, hit:false });
+}
+
+function draw(){
+  const w=W/DPR, h=H/DPR;
+  ctx.clearRect(0,0,w,h);
+  const wallX=w*0.46;
+  const cls=classify(g);
+
+  // ground line
+  ctx.strokeStyle=getCSS('--wire'); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,h-26); ctx.lineTo(w,h-26); ctx.stroke();
+
+  // THE WALL
+  const cracked = (g<0);
+  ctx.save();
+  ctx.strokeStyle = cls.col; ctx.globalAlpha = cracked? .5 : .9;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  if(!cracked){
+    ctx.moveTo(wallX, 24); ctx.lineTo(wallX, h-26);
+  } else {
+    // jagged cracked wall
+    let y=24; const seg=(h-50)/10; let x=wallX;
+    ctx.moveTo(x,y);
+    for(let i=0;i<10;i++){ y+=seg; x = wallX + (Math.sin(i*1.7+tNow*2)* (6+(-g)*3)); ctx.lineTo(x,y); }
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // incoming loop-correction sparks
+  for(const p of particles){
+    if(!p.hit){ p.x += p.v* (reduceMotion?0.6:1); if(p.x>=wallX){ p.hit=true; p.life=1; } }
+    else { p.life -= 0.02; }
+    const alpha = p.hit? Math.max(0,p.life) : .85;
+    ctx.beginPath();
+    ctx.arc(Math.min(p.x,wallX), p.y, p.hit? (cracked?1.5:2.4):2, 0, 7);
+    ctx.fillStyle = cls.col; ctx.globalAlpha=alpha; ctx.fill(); ctx.globalAlpha=1;
+    // tamed: little absorbed flash; war: spray upward (escaping, becoming a new counterterm)
+    if(p.hit && cracked && p.life>0.6){
+      ctx.beginPath(); ctx.moveTo(wallX,p.y);
+      ctx.lineTo(wallX+18+Math.random()*40, p.y-30-Math.random()*40);
+      ctx.strokeStyle=cls.col; ctx.globalAlpha=p.life*.5; ctx.lineWidth=1; ctx.stroke(); ctx.globalAlpha=1;
+    }
+  }
+  particles = particles.filter(p=> !(p.hit && p.life<=0)).slice(-160);
+
+  // THE COUNTERTERM TOWER (right of wall) — bars rising; if infinite, fade to top arrow
+  const baseX = wallX+34, slot=Math.min(34,(w-baseX-30)/MAXLOOP);
+  const maxH = h-70;
+  let towerInf=false;
+  towerBars.forEach((b,i)=>{
+    const bx=baseX+i*slot;
+    const norm = Math.max(0.12, Math.min(1, b.h/ (OMEGA0 + MAXLOOP*Math.max(0.0001,-g)) ));
+    const bh = b.inf? maxH*Math.min(1,(b.h)/(OMEGA0+ (-g)*MAXLOOP))*1.0 : maxH*0.18;
+    const yTop = (h-26) - Math.max(8,bh);
+    ctx.fillStyle=cls.col; ctx.globalAlpha = b.inf? 0.30+0.5*(i/MAXLOOP) : 0.8;
+    ctx.fillRect(bx, yTop, Math.max(6,slot-6), (h-26)-yTop);
+    ctx.globalAlpha=1;
+    // loop label
+    ctx.fillStyle=getCSS('--dim'); ctx.font='9px '+getCSS('--mono'); ctx.textAlign='center';
+    ctx.fillText(b.L+'L', bx+(slot-6)/2, h-13);
+    if(b.inf) towerInf=true;
+  });
+  // infinite arrow
+  if(towerInf){
+    const ax=baseX+MAXLOOP*slot+6;
+    ctx.fillStyle=cls.col; ctx.globalAlpha=.85; ctx.font='600 13px '+getCSS('--mono'); ctx.textAlign='left';
+    ctx.fillText('→ ∞', ax, 40);
+    ctx.font='9px '+getCSS('--mono'); ctx.fillStyle=getCSS('--dim');
+    ctx.fillText('new parameter', ax, 56);
+    ctx.fillText('every loop', ax, 67);
+    ctx.globalAlpha=1;
+  } else {
+    const ax=baseX+towerBars.length*slot+10;
+    ctx.fillStyle=getCSS('--dim'); ctx.font='9px '+getCSS('--mono'); ctx.textAlign='left';
+    ctx.fillText(g>0?'stops on':'finite', ax, 40);
+    ctx.fillText(g>0?'its own':'set', ax, 52);
+  }
+
+  // emit sparks at a steady rate
+  if(!reduceMotion){ if(Math.random()<0.5) spark(); }
+  else if(particles.length<8 && Math.random()<0.2) spark();
+}
+
+let raf;
+function loop(t){ tNow=t/1000; draw(); raf=requestAnimationFrame(loop); }
+
+function refresh(){
+  g = dialToG(+dial.value);
+  const cls=classify(g);
+  // label
+  let unit = g===0?' dimensionless' : (g>0?' positive (UV-soft)':' negative (UV-hard)');
+  gvalEl.innerHTML = `[g] = ${g>0?'+':''}${g}<small> &nbsp;${unit}</small>`;
+  verdictBadge.textContent=cls.badge; verdictBadge.style.color=cls.col;
+  verdictLine.textContent=cls.line; verdictLine.style.color=cls.col;
+  verdictWhy.innerHTML=cls.why;
+  rwEl.innerHTML=realWorld(g);
+  rebuildTower(g);
+}
+
+// presets — the real theories
+const PRE=[
+  {t:'QED  <b>[g]=0</b>', v:0},
+  {t:'gravity / Fermi  <b>[g]=−2</b>', v:-20},
+  {t:'super-renorm  <b>[g]=+1</b>', v:10},
+  {t:'mild non-renorm  <b>[g]=−1</b>', v:-10},
+];
+const pc=document.getElementById('presets');
+PRE.forEach(p=>{ const b=document.createElement('button'); b.className='pchip'; b.innerHTML=p.t;
+  b.onclick=()=>{ dial.value=p.v; refresh(); }; pc.appendChild(b); });
+
+dial.addEventListener('input', refresh);
+size(); refresh(); loop(0);
+</script>
+</body></html>

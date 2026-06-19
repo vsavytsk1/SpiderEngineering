@@ -1,0 +1,86 @@
+## =====================================================================
+##  ARACNIUM — CANONICAL SPEC  (the single source of truth)
+## =====================================================================
+##  This file IS the spider. One design, here, in one place.
+##  Firmware, CAD, the BOM, and the sim all READ from this — none of them
+##  redefine geometry on their own. Change a number here and the whole
+##  project moves with it.
+##
+##  Values seeded from sim/aracnium_v1_4_heave.html  (const P, SEG, GAITS).
+##  Units are millimetres unless a field says otherwise.
+##  See docs/aracneBioMechanics.md for the biology each choice maps to.
+## =====================================================================
+
+[build]
+name     = "aracnium"
+codename = "mk1"          # bump on a real design change; git tag is the true version (PX4 convention)
+revision = "v1.4-heave"   # the sim milestone this spec was lifted from
+
+# --- BODY ------------------------------------------------------------
+[body]
+prosoma_dia    = 70.0     # P.proDia  — front body disc (brain + sensors live here)
+opisthosoma_dia = 85.0    # P.opiDia  — rear body disc (battery / payload)
+tube_dia       = 10.0     # P.tubeDia — structural tube / limb stock diameter
+ride_height    = 62.0     # P.ride    — nominal body height off the ground
+
+# --- LEG SEGMENTS (proximal -> distal, the 7 named segments) ---------
+# Matches the spider's real anatomy: coxa, trochanter, femur, patella,
+# tibia, metatarsus, tarsus  (docs/aracneBioMechanics.md §2).
+[leg.segments]
+coxa      = 18.0
+trochanter = 8.0
+femur     = 45.0
+patella   = 14.0
+tibia     = 40.0
+metatarsus = 30.0
+tarsus    = 16.0
+
+# --- IK REDUCTION ----------------------------------------------------
+# The 7-segment leg collapses to a 2-link bow for control (your K1).
+# link1 (proximal) = coxa+trochanter+femur+patella
+# link2 (distal)   = tibia+metatarsus+tarsus
+# These are DERIVED from segments above — listed here only as a contract
+# the tools verify, never as a second place to edit.
+[leg.ik]
+model            = "2link"     # one bend at the "knee"
+link1_segments   = ["coxa", "trochanter", "femur", "patella"]
+link2_segments   = ["tibia", "metatarsus", "tarsus"]
+
+# --- ACTUATION (what a real unit must physically drive) --------------
+# A real leg needs hip-pan + hip-lift + knee = 3 driven joints.
+# (Maps to the hip complex's 2 DOF + the hydraulic knee, doc §2.)
+# Total servos in the BOM is computed as n_legs * joints_per_leg —
+# so changing n_legs below re-sizes the whole bill automatically.
+[actuation]
+n_legs          = 8           # P.nLegs
+joints_per_leg  = 3
+servo_model     = "generic-micro-servo"   # swap for your real part #
+
+# --- LOCOMOTION / GAIT GRAPH (the CPG) -------------------------------
+# Movement is a graph of leg phase-relationships. Each gait is a
+# different coupling pattern over the same 8 oscillator nodes.
+[gait]
+graphs          = ["TRIPOD", "WAVE", "TETRAPOD"]
+default         = "TRIPOD"
+stride_mm       = 62.0        # P.stride
+step_freq_hz    = 1.5         # P.freq
+substeps        = 1           # P.sub
+
+# --- ENVIRONMENT / PHYSICS LIMITS (honest model from the sim) --------
+[physics]
+friction_mu     = 0.7         # P.mu      — Coulomb friction at the foot
+density_proxy   = 80.0        # P.density — mass model proxy
+launch_v0       = 0.95        # P.v0      — pounce initial velocity factor
+muzzle          = 3.0         # P.muzzle  — siege/bolas muzzle factor
+terrain_amp     = 1.0         # P.terrAmp — test-terrain roughness
+
+# --- GRIP MODE -------------------------------------------------------
+# Fractal-hair (setae) van-der-Waals adhesion — contact-splitting,
+# the √n scaling from doc §"Adhesion". Off by default; the climb limit
+# is honest without it.
+[grip]
+setae_adhesion  = false
+
+# --- THE MISSION (keep it fun, keep it specified) --------------------
+[mission]
+purpose = "pass the butter — and other small helpful fetch-and-carry tasks, with rigor"

@@ -1,0 +1,635 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>LENS v0.6 ARACNIUM -- graph-math exoskeleton (Goldberg carapace)</title>
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --purple:#cc44ff; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;touch-action:none}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.80);border:1px solid #20202e;
+    border-radius:8px;padding:9px 12px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.06em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:560px;line-height:1.45}
+  #sub b{color:var(--cyan)}
+  #note{color:var(--espresso);font-size:10px;margin-top:6px;max-width:560px;line-height:1.45}
+  #note b{color:var(--gold)}
+
+  /* the heart: live invariant ledger */
+  #inv{margin-left:auto;min-width:230px}
+  #inv h{display:block;color:var(--gold);font-size:11px;letter-spacing:0.08em;margin-bottom:6px}
+  #inv table{border-collapse:collapse;width:100%}
+  #inv td{padding:2px 0;font-size:11px}
+  #inv td.k{color:var(--dim)}
+  #inv td.v{color:var(--green);text-align:right;font-weight:bold}
+  #inv td.v.lock{color:var(--gold)}
+  #inv td.v.pk{color:var(--pink)}
+  #inv .foot{color:#444;font-size:9px;margin-top:6px;line-height:1.4}
+
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:9px;
+    align-items:center;justify-content:center;background:rgba(8,8,16,0.90);border:1px solid #20202e;
+    border-radius:10px;padding:8px 13px;z-index:10;max-width:96vw}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{background:#1d2233;border-color:var(--cyan);color:var(--cyan)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  button.esp{color:var(--espresso)} button.esp:hover{border-color:var(--espresso)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:10px}
+  .ctl .val{color:var(--gold);font-size:11px;min-width:30px;text-align:right}
+  input[type=range]{appearance:none;width:84px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:var(--gold);cursor:pointer}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 2px}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.05em}
+
+  #side{position:fixed;right:14px;top:148px;max-width:228px;background:rgba(8,8,16,0.74);
+    border:1px solid #20202e;border-radius:8px;padding:9px 11px;font-size:10px;color:var(--dim);
+    line-height:1.55;z-index:9;pointer-events:none}
+  #side .l{color:var(--gold)}
+  #side .row{display:flex;align-items:center;gap:6px;margin:1px 0}
+  #side .sw{width:14px;height:8px;border-radius:2px;display:inline-block}
+  #side hr{border:0;border-top:1px solid #1a1a26;margin:7px 0}
+  #side em{color:var(--espresso);font-style:normal}
+
+  .wip{position:fixed;left:14px;bottom:64px;background:rgba(8,8,16,0.85);border:1px solid #c7894a;
+    border-radius:8px;padding:6px 10px;font-size:10px;color:var(--espresso);z-index:9;max-width:340px;line-height:1.45}
+  .wip b{color:var(--gold)}
+  @media (max-width:760px){ #side{display:none} #inv{margin-left:0} .wip{display:none} }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">LENS v0.6 ARACNIUM &mdash; graph-math exoskeleton</div>
+    <div id="sub">carapace = <b>Goldberg polyhedron</b> GP(m,0), built by icosahedron subdivision + dual.
+      pure point-and-line graph, rendered in software 3D (no WebGL). drag to orbit.</div>
+    <div id="note">claim under test: <b>the exoskeleton is just graph math.</b> the &ldquo;carbon&rarr;silica transformer&rdquo;
+      is the <b>subdivision push</b> &mdash; watch the ledger: <b>&chi;=2</b>, <b>P=12</b>, <b>E/V=1.5</b> never break, no matter how hard you push.</div>
+  </div>
+
+  <div id="inv">
+    <h>EULER LEDGER &mdash; live, computed not hardcoded</h>
+    <table>
+      <tr><td class="k">lens</td><td class="v" id="iLens">GOLDBERG (dual)</td></tr>
+      <tr><td class="k">subdivision &nu; (freq)</td><td class="v" id="iFreq">2</td></tr>
+      <tr><td class="k">V &nbsp;vertices</td><td class="v" id="iV">&mdash;</td></tr>
+      <tr><td class="k">E &nbsp;edges</td><td class="v" id="iE">&mdash;</td></tr>
+      <tr><td class="k">F &nbsp;faces</td><td class="v" id="iF">&mdash;</td></tr>
+      <tr><td class="k">&chi; = V&minus;E+F</td><td class="v lock" id="iChi">&mdash;</td></tr>
+      <tr><td class="k" id="iPlbl">pentagons</td><td class="v pk" id="iP">&mdash;</td></tr>
+      <tr><td class="k">E/V ratio</td><td class="v" id="iEV">&mdash;</td></tr>
+      <tr><td class="k">max vertex degree</td><td class="v" id="iDeg">&mdash;</td></tr>
+    </table>
+    <div class="foot" id="iProxy">material proxy &Sigma;|edge| &mdash;</div>
+  </div>
+</div>
+
+<div id="side">
+  <div class="row"><span class="sw" style="background:#ff69b4"></span><span class="l">pentagon node</span> (deg-5, the 12)</div>
+  <div class="row"><span class="sw" style="background:#00d4ff"></span>hexagon node (deg-6)</div>
+  <div class="row"><span class="sw" style="background:#c7894a"></span>leg chain (coxa&rarr;femur&rarr;tibia)</div>
+  <div class="row"><span class="sw" style="background:#ffd700"></span>rotor (n-blade, spins math-honest)</div>
+  <div class="row"><span class="sw" style="background:#00ffd5"></span>tool arm + chisel node</div>
+  <hr>
+  <em>passive-dynamics nod:</em> the leg swing is a pendulum arc &mdash; the design walks by
+  <span class="l">falling correctly</span>, controller only tops up friction loss.
+  <span style="color:#3a3a4a">(McGeer 1990; Pfeifer&ndash;Iida 2005 &mdash; real refs)</span>
+  <hr>
+  <em>why Goldberg?</em> it&rsquo;s the only trivalent sphere graph forced to carry
+  <span class="l">exactly 12 pentagons</span> &mdash; Euler proves it. that&rsquo;s structure you can&rsquo;t cheat.
+</div>
+
+<div class="wip">
+  <b>K1</b> no rigid-body physics (pure kinematics + graph) &middot;
+  <b>K2</b> hierarchy named as <b>levels</b>, not &ldquo;fractal-brand&rdquo; &middot;
+  <b>K3</b> single HTML, software 3D, no GPU/WebGL
+</div>
+
+<div id="bar">
+  <span class="klbl">push &nu;</span>
+  <input id="cFreq" type="range" min="0" max="4" step="1" value="1">
+  <span class="val" id="cFreqv">2</span>
+  <span class="sep"></span>
+  <button id="cLens" class="cyan">lens: GOLDBERG</button>
+  <span class="sep"></span>
+  <span class="klbl">legs</span>
+  <input id="cLegs" type="range" min="4" max="8" step="2" value="6">
+  <span class="val" id="cLegsv">6</span>
+  <span class="sep"></span>
+  <span class="klbl">gait</span>
+  <input id="cGait" type="range" min="0" max="100" step="1" value="42">
+  <span class="val" id="cGaitv">0.42</span>
+  <span class="sep"></span>
+  <span class="klbl">rotor</span>
+  <input id="cRpm" type="range" min="0" max="100" step="1" value="60">
+  <span class="val" id="cRpmv">60</span>
+  <span class="sep"></span>
+  <button id="bLegs" class="on esp">legs</button>
+  <button id="bRot" class="on">rotors</button>
+  <button id="bTool" class="on pink">tool</button>
+  <span class="sep"></span>
+  <button id="bPlay" class="cyan">pause</button>
+  <button id="bReset" class="pink">reset</button>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   GENESIS KERNEL (software 3D) -- Canvas 2D only.
+   No WebGL, no three.js, no framework. We roll the rotation
+   and perspective ourselves so K3 holds.
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W=0, H=0, DPR=1;
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = innerWidth;
+  H = innerHeight;
+  cv.style.width  = W + 'px';   // CSS size (read/write)
+  cv.style.height = H + 'px';
+  cv.width  = Math.floor(W*DPR); // drawing-buffer size (read/write)
+  cv.height = Math.floor(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize(); addEventListener('resize', resize);
+
+const C = {
+  bg:'#050508', gold:'#ffd700', cyan:'#00d4ff', pink:'#ff69b4',
+  green:'#00ffd5', espresso:'#c7894a', purple:'#cc44ff', dim:'#6a6a82'
+};
+
+/* ---------- vec3 helpers ---------- */
+const v_add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const v_sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const v_scale=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const v_len=(a)=>Math.hypot(a[0],a[1],a[2]);
+const v_norm=(a)=>{const l=v_len(a)||1;return [a[0]/l,a[1]/l,a[2]/l];};
+
+/* ============================================================
+   ICOSAHEDRON -> SUBDIVIDE -> (optional) DUAL = GOLDBERG
+   This is the navierCrunch object. Counts obey:
+     F = 20*nu^2 , E = 30*nu^2 , V = 10*nu^2 + 2
+     chi = V - E + F = 2   (always)
+     deg-5 vertices = 12   (always)  -> 12 pentagons in the dual
+   nu = 2^depth via recursive midpoint subdivision.
+   ============================================================ */
+function icosahedron(){
+  const t=(1+Math.sqrt(5))/2;
+  let verts=[
+    [-1, t, 0],[ 1, t, 0],[-1,-t, 0],[ 1,-t, 0],
+    [ 0,-1, t],[ 0, 1, t],[ 0,-1,-t],[ 0, 1,-t],
+    [ t, 0,-1],[ t, 0, 1],[-t, 0,-1],[-t, 0, 1]
+  ].map(v_norm);
+  const faces=[
+    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+    [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+  ];
+  return {verts, faces};
+}
+
+function subdivide(mesh, depth){
+  let {verts, faces} = mesh;
+  verts = verts.map(v=>v.slice());
+  for(let d=0; d<depth; d++){
+    const mid = new Map();
+    const nf=[];
+    const getMid=(i,j)=>{
+      const key = i<j ? i+'_'+j : j+'_'+i;
+      let m = mid.get(key);
+      if(m!==undefined) return m;
+      const a=verts[i], b=verts[j];
+      const p = v_norm([(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2]);
+      m = verts.length; verts.push(p); mid.set(key,m);
+      return m;
+    };
+    for(const f of faces){
+      const [a,b,c]=f;
+      const ab=getMid(a,b), bc=getMid(b,c), ca=getMid(c,a);
+      nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
+    }
+    faces = nf;
+  }
+  return {verts, faces};
+}
+
+function edgeList(faces){
+  const set=new Map();
+  const push=(i,j)=>{ const k=i<j?i+'_'+j:j+'_'+i; if(!set.has(k)) set.set(k,[i,j]); };
+  for(const f of faces){ push(f[0],f[1]); push(f[1],f[2]); push(f[2],f[0]); }
+  return [...set.values()];
+}
+
+function vertexDegrees(nV, edges){
+  const deg=new Array(nV).fill(0);
+  for(const [i,j] of edges){ deg[i]++; deg[j]++; }
+  return deg;
+}
+
+/* dual: each triangular face -> a vertex (centroid on sphere);
+   two faces sharing an original edge -> a dual edge.
+   result is trivalent (deg 3) with 12 pentagons. */
+function dual(mesh){
+  const {verts, faces}=mesh;
+  const dverts = faces.map(f=>{
+    const a=verts[f[0]],b=verts[f[1]],c=verts[f[2]];
+    return v_norm([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3]);
+  });
+  const edgeFaces=new Map();
+  const reg=(i,j,fi)=>{ const k=i<j?i+'_'+j:j+'_'+i;
+    if(!edgeFaces.has(k)) edgeFaces.set(k,[]); edgeFaces.get(k).push(fi); };
+  faces.forEach((f,fi)=>{ reg(f[0],f[1],fi); reg(f[1],f[2],fi); reg(f[2],f[0],fi); });
+  const dedges=[];
+  for(const arr of edgeFaces.values()){ if(arr.length===2) dedges.push([arr[0],arr[1]]); }
+  return {verts:dverts, edges:dedges};
+}
+
+/* build everything for a given depth, cache both lenses */
+const meshCache={};
+function buildAll(depth){
+  if(meshCache[depth]) return meshCache[depth];
+  const tri = subdivide(icosahedron(), depth);
+  const triEdges = edgeList(tri.faces);
+  const triDeg = vertexDegrees(tri.verts.length, triEdges);
+  const pentTri = triDeg.filter(d=>d===5).length;      // == 12
+  const maxDegTri = Math.max(...triDeg);
+
+  const du = dual(tri);
+  const duDeg = vertexDegrees(du.verts.length, du.edges);
+  const maxDegDual = Math.max(...duDeg);
+
+  const sumLen = (verts, edges)=>{
+    let s=0; for(const [i,j] of edges) s+=v_len(v_sub(verts[i],verts[j])); return s;
+  };
+
+  const out = {
+    nu: Math.pow(2,depth),
+    // GEODESIC (triangulated) stats + geometry
+    geo:{
+      verts:tri.verts, edges:triEdges, faces:tri.faces,
+      V:tri.verts.length, E:triEdges.length, F:tri.faces.length,
+      pent:pentTri, maxDeg:maxDegTri, deg:triDeg,
+      sumLen: sumLen(tri.verts, triEdges)
+    },
+    // GOLDBERG (dual) stats + geometry
+    gold:{
+      verts:du.verts, edges:du.edges,
+      V:du.verts.length, E:du.edges.length, F:tri.verts.length, // dual faces = orig verts
+      pent:pentTri, maxDeg:maxDegDual, deg:duDeg,
+      sumLen: sumLen(du.verts, du.edges)
+    }
+  };
+  meshCache[depth]=out;
+  return out;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let depth = 1;          // nu = 2
+let lensGold = true;    // true=Goldberg dual, false=geodesic triangulation
+let nLegs = 6;
+let gaitSpeed = 0.42;
+let rotorRpm = 60;
+let showLegs=true, showRot=true, showTool=true;
+let playing=true;
+let t=0;
+
+let yaw=0.6, pitch=-0.42;
+let dragging=false, lastX=0, lastY=0, autoSpin=true;
+
+const BODY_R = 1.0;     // carapace radius in world units
+const CAM = 4.6;        // camera distance
+function FOC(){ return Math.min(W,H)*0.62; }
+
+/* ---------- 3D rotate + perspective project ---------- */
+function rot(p){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw);
+  let x1 = p[0]*cy + p[2]*sy;
+  let z1 = -p[0]*sy + p[2]*cy;
+  let y1 = p[1];
+  const cx=Math.cos(pitch), sx=Math.sin(pitch);
+  let y2 = y1*cx - z1*sx;
+  let z2 = y1*sx + z1*cx;
+  return [x1,y2,z2];
+}
+function project(p){
+  const r = rot(p);
+  const zc = r[2] + CAM;
+  if(zc < 0.08) return null;
+  const s = FOC()/zc;
+  return { x: W/2 + r[0]*s, y: H/2 - r[1]*s, z:r[2], s };
+}
+
+/* ============================================================
+   DRAW: carapace graph
+   ============================================================ */
+function drawCarapace(g, isGold){
+  const verts = g.verts, edges = g.edges, deg = g.deg;
+  // project all verts once
+  const P=new Array(verts.length);
+  for(let i=0;i<verts.length;i++) P[i]=project(v_scale(verts[i],BODY_R));
+
+  // edges: sort far->near by avg projected z for honest depth layering
+  const order = edges.map((e,idx)=>{
+    const a=P[e[0]], b=P[e[1]];
+    const z = (a&&b)? (a.z+b.z)/2 : -99;
+    return [z, idx];
+  }).sort((u,v)=>u[0]-v[0]);
+
+  for(const [z,idx] of order){
+    const [i,j]=edges[idx];
+    const a=P[i], b=P[j];
+    if(!a||!b) continue;
+    const depthA = (z+1.4)/2.8;            // 0..1 front-ness
+    const alpha = 0.10 + 0.42*Math.max(0,Math.min(1,depthA));
+    ctx.strokeStyle = (isGold? 'rgba(0,212,255,' : 'rgba(199,137,74,') + alpha.toFixed(3)+')';
+    ctx.lineWidth = 0.5 + 0.9*depthA;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+
+  // nodes: pentagons (deg-5 here in goldberg; in geodesic the 12 special verts)
+  for(let i=0;i<verts.length;i++){
+    const p=P[i]; if(!p) continue;
+    const depthA=(p.z+1.4)/2.8;
+    const isPent = isGold ? (deg[i]===3 && false) : false; // see below
+    // For GOLDBERG: every node is deg-3; the *pentagon faces* are the 12 around
+    //   original deg-5 verts. We mark pentagon NODES differently only in geodesic.
+    let col, rad;
+    if(!isGold){
+      // geodesic: highlight the 12 degree-5 vertices (the pentagon seeds)
+      if(deg[i]===5){ col=C.pink; rad=3.4; }
+      else { col=C.cyan; rad=1.5; }
+    } else {
+      col=C.cyan; rad=1.6;
+    }
+    ctx.globalAlpha = 0.35 + 0.6*Math.max(0,Math.min(1,depthA));
+    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.arc(p.x,p.y, rad*(0.7+0.6*depthA), 0, 7); ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  // In goldberg mode, paint the 12 pentagon centers (original deg-5 verts of the
+  // triangulation = face-centroid... ) -> simplest honest marker: draw the 12
+  // pentagon nodes by projecting the original icosphere deg-5 verts.
+  if(isGold){
+    const base = buildAll(depth).geo;
+    for(let i=0;i<base.verts.length;i++){
+      if(base.deg[i]!==5) continue;
+      const p=project(v_scale(base.verts[i],BODY_R*1.001));
+      if(!p) continue;
+      const depthA=(p.z+1.4)/2.8;
+      ctx.globalAlpha=0.4+0.6*depthA;
+      ctx.fillStyle=C.pink;
+      ctx.beginPath(); ctx.arc(p.x,p.y,3.3*(0.7+0.6*depthA),0,7); ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+}
+
+/* ============================================================
+   DRAW: legs (forward kinematics, tripod gait)
+   leg chain = attach -> knee(coxa/femur) -> foot(tibia)
+   "walks by falling correctly": swing foot follows a pendulum sine arc.
+   ============================================================ */
+function legChain(i, n, phase){
+  const theta = (i/n)*Math.PI*2 + 0.3;
+  // tripod: alternate legs are in opposite phase
+  const tri = (i%2===0) ? 0 : Math.PI;
+  const ph = phase*Math.PI*2 + tri;
+  const lift = Math.max(0, Math.sin(ph));        // 0..1 swing lift (pendulum-ish)
+  const reach = Math.cos(ph)*0.18;               // fore/aft sweep
+
+  const outDir = [Math.cos(theta), 0, Math.sin(theta)];
+  const attach = v_scale(outDir, BODY_R*0.92).map((x,k)=> x + (k===1? -0.12:0));
+
+  // coxa/femur to knee: out and slightly up
+  const kneeUp = 0.30;
+  const knee = v_add(attach, [
+    outDir[0]*0.70, kneeUp, outDir[2]*0.70
+  ]);
+  // tibia to foot: down and out, modulated by gait
+  const footDrop = -0.95 + lift*0.55;            // lift raises the foot during swing
+  const foot = v_add(knee, [
+    outDir[0]*(0.62+reach), footDrop, outDir[2]*(0.62+reach)
+  ]);
+  return {attach, knee, foot, lift};
+}
+
+function drawLegs(){
+  for(let i=0;i<nLegs;i++){
+    const L=legChain(i,nLegs, (t*gaitSpeed*0.02));
+    const a=project(L.attach), k=project(L.knee), f=project(L.foot);
+    if(!a||!k||!f) continue;
+    const fade = (k.z+1.4)/2.8;
+    // coxa/femur
+    ctx.strokeStyle='rgba(199,137,74,'+(0.45+0.4*fade).toFixed(3)+')';
+    ctx.lineWidth=2.0+1.4*fade;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(k.x,k.y); ctx.stroke();
+    // tibia (lighter)
+    ctx.strokeStyle='rgba(231,224,208,'+(0.30+0.35*fade).toFixed(3)+')';
+    ctx.lineWidth=1.4+1.0*fade;
+    ctx.beginPath(); ctx.moveTo(k.x,k.y); ctx.lineTo(f.x,f.y); ctx.stroke();
+    // joint + foot nodes
+    ctx.fillStyle=C.espresso;
+    ctx.beginPath(); ctx.arc(k.x,k.y,2.2+1*fade,0,7); ctx.fill();
+    ctx.fillStyle = L.lift>0.05 ? C.gold : C.green;   // gold foot = in swing
+    ctx.beginPath(); ctx.arc(f.x,f.y,2.6+1*fade,0,7); ctx.fill();
+  }
+}
+
+/* ============================================================
+   DRAW: rotors (n-blade discs, spin = rpm). math-honest line blades.
+   ============================================================ */
+const N_BLADE=2;
+function drawRotors(){
+  const hubs=[
+    [ 0.75, 0.55, 0.75],[ -0.75, 0.55, 0.75],
+    [ 0.75, 0.55,-0.75],[ -0.75, 0.55,-0.75]
+  ];
+  const spin = t*rotorRpm*0.012;
+  for(const hub of hubs){
+    const ph=project(hub); if(!ph) continue;
+    const fade=(ph.z+1.4)/2.8;
+    // arm from body to hub
+    const root=project(v_scale(v_norm(hub),0.5));
+    if(root){
+      ctx.strokeStyle='rgba(106,106,130,'+(0.3+0.3*fade).toFixed(3)+')';
+      ctx.lineWidth=1.6+1*fade;
+      ctx.beginPath(); ctx.moveTo(root.x,root.y); ctx.lineTo(ph.x,ph.y); ctx.stroke();
+    }
+    // hub ring
+    ctx.strokeStyle=C.gold; ctx.globalAlpha=0.4+0.4*fade;
+    ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(ph.x,ph.y, (10+6*fade), 0, 7); ctx.stroke();
+    ctx.globalAlpha=1;
+    // blades (rotate in the rotor's local horizontal plane -> world X/Z around hub)
+    for(let bI=0;bI<N_BLADE;bI++){
+      const ang = spin + bI*Math.PI*2/N_BLADE;
+      const tip = v_add(hub, [Math.cos(ang)*0.42, 0, Math.sin(ang)*0.42]);
+      const tail= v_add(hub, [-Math.cos(ang)*0.42,0,-Math.sin(ang)*0.42]);
+      const pt=project(tip), pl=project(tail);
+      if(pt&&pl){
+        ctx.strokeStyle='rgba(255,215,0,'+(0.35+0.45*fade).toFixed(3)+')';
+        ctx.lineWidth=1.6+1.2*fade;
+        ctx.beginPath(); ctx.moveTo(pt.x,pt.y); ctx.lineTo(pl.x,pl.y); ctx.stroke();
+      }
+    }
+  }
+}
+
+/* ============================================================
+   DRAW: tool arm (3-seg chain reaching to oscillating target)
+   ============================================================ */
+function drawTool(){
+  const swing = Math.sin(t*0.02)*0.5;
+  const base=[0, -0.55, 0.55];
+  const j1 = v_add(base, [0.25, -0.35, 0.30+swing*0.2]);
+  const j2 = v_add(j1,   [0.30, -0.30, 0.35+swing*0.25]);
+  const tip= v_add(j2,   [0.20, -0.25+swing*0.15, 0.28]);
+  const pts=[base,j1,j2,tip].map(project);
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i], b=pts[i+1]; if(!a||!b) continue;
+    const fade=(b.z+1.4)/2.8;
+    ctx.strokeStyle = i<2 ? 'rgba(0,255,213,'+(0.45+0.35*fade).toFixed(3)+')'
+                          : 'rgba(255,105,180,'+(0.5+0.35*fade).toFixed(3)+')';
+    ctx.lineWidth = 2.4 - i*0.4 + fade;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  const tp=pts[3];
+  if(tp){
+    ctx.fillStyle=C.pink;
+    ctx.beginPath(); ctx.arc(tp.x,tp.y, 3.4, 0, 7); ctx.fill();
+    // little chisel spark
+    const sp = 2 + 1.6*Math.abs(Math.sin(t*0.2));
+    ctx.strokeStyle='rgba(255,105,180,0.5)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(tp.x,tp.y, 5+sp, 0, 7); ctx.stroke();
+  }
+}
+
+/* ============================================================
+   HUD ledger update
+   ============================================================ */
+function fmt(n){ return n.toLocaleString(); }
+function updateLedger(g, isGold){
+  document.getElementById('iLens').textContent = isGold? 'GOLDBERG (dual)' : 'GEODESIC (tri)';
+  document.getElementById('iFreq').textContent = buildAll(depth).nu;
+  document.getElementById('iV').textContent = fmt(g.V);
+  document.getElementById('iE').textContent = fmt(g.E);
+  document.getElementById('iF').textContent = fmt(g.F);
+  const chi = g.V - g.E + g.F;
+  const chiEl=document.getElementById('iChi');
+  chiEl.textContent = chi;
+  chiEl.className = 'v lock';
+  document.getElementById('iPlbl').textContent = isGold? 'pentagons (forced)' : 'deg-5 vertices';
+  document.getElementById('iP').textContent = g.pent;
+  const ev=(g.E/g.V);
+  document.getElementById('iEV').textContent = ev.toFixed(3) + (isGold? '  (locked)':'');
+  document.getElementById('iDeg').textContent = g.maxDeg + (isGold? '  (trivalent)':'');
+  document.getElementById('iProxy').textContent =
+    'material proxy  \u03A3|edge| = ' + g.sumLen.toFixed(1) +
+    '   \u00B7   struts = ' + fmt(g.E) + '   \u00B7   nodes = ' + fmt(g.V) +
+    '   [illustrative, not a verified physics result]';
+}
+
+/* ============================================================
+   FRAME
+   ============================================================ */
+function frame(){
+  ctx.fillStyle=C.bg; ctx.fillRect(0,0,W,H);
+
+  // faint horizon grid for depth feel
+  ctx.strokeStyle='#0c0c16'; ctx.lineWidth=1;
+  for(let gx=-3; gx<=3; gx++){
+    const a=project([gx*0.8,-1.7,-2.4]), b=project([gx*0.8,-1.7,2.4]);
+    if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  }
+
+  const all = buildAll(depth);
+  const g = lensGold ? all.gold : all.geo;
+
+  // render order: rotors behind+front handled by their own depth; draw carapace,
+  // then legs/tool/rotors layered. (good-enough painter ordering for readability)
+  if(showRot) drawRotors();
+  drawCarapace(g, lensGold);
+  if(showLegs) drawLegs();
+  if(showTool) drawTool();
+
+  updateLedger(g, lensGold);
+
+  if(playing){
+    t++;
+    if(autoSpin && !dragging) yaw += 0.0035;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+const $=id=>document.getElementById(id);
+$('cFreq').addEventListener('input',e=>{
+  depth=+e.target.value; $('cFreqv').textContent=Math.pow(2,depth);
+});
+$('cLens').addEventListener('click',e=>{
+  lensGold=!lensGold;
+  e.target.textContent='lens: '+(lensGold?'GOLDBERG':'GEODESIC');
+  e.target.className = lensGold? 'cyan':'esp';
+});
+$('cLegs').addEventListener('input',e=>{ nLegs=+e.target.value; $('cLegsv').textContent=nLegs; });
+$('cGait').addEventListener('input',e=>{ gaitSpeed=+e.target.value/100; $('cGaitv').textContent=gaitSpeed.toFixed(2); });
+$('cRpm').addEventListener('input',e=>{ rotorRpm=+e.target.value; $('cRpmv').textContent=rotorRpm; });
+
+function toggle(btn, get, set){
+  $(btn).addEventListener('click',e=>{ set(!get()); e.target.classList.toggle('on', get()); });
+}
+toggle('bLegs', ()=>showLegs, v=>showLegs=v);
+toggle('bRot',  ()=>showRot,  v=>showRot=v);
+toggle('bTool', ()=>showTool, v=>showTool=v);
+
+$('bPlay').addEventListener('click',e=>{ playing=!playing; e.target.textContent=playing?'pause':'play'; });
+$('bReset').addEventListener('click',()=>{
+  depth=1; lensGold=true; nLegs=6; gaitSpeed=0.42; rotorRpm=60;
+  showLegs=showRot=showTool=true; playing=true; autoSpin=true;
+  yaw=0.6; pitch=-0.42; t=0;
+  $('cFreq').value=1; $('cFreqv').textContent=2;
+  $('cLens').textContent='lens: GOLDBERG'; $('cLens').className='cyan';
+  $('cLegs').value=6; $('cLegsv').textContent=6;
+  $('cGait').value=42; $('cGaitv').textContent='0.42';
+  $('cRpm').value=60; $('cRpmv').textContent=60;
+  ['bLegs','bRot','bTool'].forEach(b=>$(b).classList.add('on'));
+  $('bPlay').textContent='pause';
+});
+
+/* drag to orbit */
+function down(x,y){ dragging=true; autoSpin=false; lastX=x; lastY=y; }
+function move(x,y){
+  if(!dragging) return;
+  yaw   += (x-lastX)*0.006;
+  pitch += (y-lastY)*0.006;
+  pitch = Math.max(-1.3, Math.min(1.3, pitch));
+  lastX=x; lastY=y;
+}
+function up(){ dragging=false; }
+cv.addEventListener('mousedown',e=>down(e.clientX,e.clientY));
+addEventListener('mousemove',e=>move(e.clientX,e.clientY));
+addEventListener('mouseup',up);
+cv.addEventListener('touchstart',e=>{const t0=e.touches[0];down(t0.clientX,t0.clientY);},{passive:true});
+cv.addEventListener('touchmove',e=>{const t0=e.touches[0];move(t0.clientX,t0.clientY);e.preventDefault();},{passive:false});
+cv.addEventListener('touchend',up);
+
+frame();
+</script>
+</body></html>

@@ -1,0 +1,31 @@
+## =====================================================================
+##  ARACNIUM — FLEET MANIFEST
+## =====================================================================
+##  This is the ONLY place quantity lives.
+##
+##      Build 1 spider:   count = 1
+##      Build 10 spiders: count = 10
+##
+##  Every unit is the SAME design (spec/aracnium.toml). A fleet is just
+##  that one design, instantiated N times. Nothing about the spider is
+##  re-described here — only how many, and any tiny per-unit facts
+##  (a serial, a radio channel) that MUST differ between physical units.
+##
+##  Run:  python tools/build_fleet.py
+##  to expand this into per-unit build cards + a scaled bill of materials.
+## =====================================================================
+
+[fleet]
+build  = "mk1"     # which design to stamp out (matches spec.build.codename)
+count  = 1         # <<< THE KNOB. change this one number.
+prefix = "ARC"     # serials become ARC-001, ARC-002, ...
+
+# --- PER-UNIT OVERRIDES (optional) -----------------------------------
+# 99% of units need nothing here — that's the point. Only list a unit
+# if one physical thing must differ (e.g. a hand-tuned servo, a radio
+# channel). Anything not overridden inherits the spec exactly.
+#
+# [[unit]]
+# serial  = "ARC-003"
+# note    = "patella servo swapped to high-torque variant"
+# channel = 14

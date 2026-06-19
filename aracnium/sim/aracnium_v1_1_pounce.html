@@ -1,0 +1,802 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>ARACNIUM v1.1 THE POUNCE -- ballistic leap + the scaling-law ceiling</title>
+<!--
+  ARACNIUM v0.8 LOCOMOTION -- step 4 of N
+  ======================================
+  Movement defined as a GRAPH of leg phase-relationships (CPG / gait
+  graph): each leg is an oscillator node, the coupling pattern is the
+  edge set -> tripod / wave / tetrapod are different graphs.
+
+  Feet are PLANTED during stance (no sliding); body slides over them;
+  legs solved by 2-link IK to world foot targets. Honest speed model:
+  v = stride_length x step_frequency, read out in mm/s, m/s, BL/s with
+  real-spider reference. Click the ground to set point B; it walks there.
+
+  Verified before build: IK foot-hit 0mm, ground-click round-trip 0mm.
+
+  K1 reduced 2-link IK (bend at "knee"), no full dynamics
+  K2 leg rendered as 7 named segments = HIERARCHY
+  K3 single HTML, software 3D, no GPU/WebGL
+-->
+<style>
+  :root{
+    --bg:#06070b; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --steel:#7fa8c0; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
+  #hud{position:fixed;top:0;left:0;right:0;padding:9px 92px 9px 13px;display:flex;gap:12px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,9,15,0.82);border:1px solid #1d2230;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.05em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:430px;line-height:1.45}
+  #sub b{color:var(--cyan)}
+  #read{margin-left:auto;min-width:250px}
+  #read h{display:block;color:var(--gold);font-size:11px;letter-spacing:0.07em;margin-bottom:6px}
+  #read table{border-collapse:collapse;width:100%}
+  #read td{padding:2px 0;font-size:11px}
+  #read td.k{color:var(--dim)} #read td.v{text-align:right;font-weight:bold;color:var(--green)}
+  #read td.v.gold{color:var(--gold)} #read td.v.pk{color:var(--pink)} #read td.v.cy{color:var(--cyan)}
+  #read .hr{height:1px;background:#1a1f2c;margin:5px 0}
+  #read .ref{color:#566; font-size:9px; margin-top:5px; line-height:1.4}
+  #read .ref b{color:var(--steel)}
+
+  #dims{position:fixed;left:13px;top:120px;width:222px;background:rgba(8,9,15,0.86);
+    border:1px solid #1d2230;border-radius:9px;padding:9px 11px;z-index:10;font-size:10px}
+  #dims h{display:block;color:var(--cyan);font-size:11px;letter-spacing:0.06em;margin-bottom:7px}
+  #dims .r{display:grid;grid-template-columns:60px 1fr 38px;align-items:center;gap:7px;margin:3px 0}
+  #dims .r label{color:var(--dim)} #dims .r .vv{color:var(--gold);text-align:right}
+  #dims .seg label{color:var(--steel)}
+  #dims .sub{color:#4a4a5a;font-size:9px;margin:6px 0 2px}
+  input[type=range]{appearance:none;width:100%;height:4px;background:#262b3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--gold);cursor:pointer}
+
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:9px;
+    align-items:center;justify-content:center;background:rgba(8,9,15,0.92);border:1px solid #1d2230;
+    border-radius:10px;padding:8px 13px;z-index:10;max-width:96vw}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 10px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{background:#1d2233;border-color:var(--cyan);color:var(--cyan)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:10px}
+  .ctl .val{color:var(--gold);font-size:11px;min-width:30px;text-align:right}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 2px}
+  .klbl{color:var(--dim);font-size:10px}
+  .wip{position:fixed;right:13px;bottom:64px;background:rgba(8,9,15,0.85);border:1px solid #c7894a;
+    border-radius:8px;padding:6px 10px;font-size:10px;color:var(--espresso);z-index:9;max-width:280px;line-height:1.45}
+  .wip b{color:var(--gold)}
+  @media (max-width:900px){ #dims{display:none} .wip{display:none} #read{margin-left:0} }
+
+  /* ---- panel hide/show ---- */
+  #hdr,#read{position:relative}                 /* #dims is already position:fixed (own containing block) */
+  #hdr{padding-right:26px}
+  .fold{position:absolute;top:6px;right:7px;width:18px;height:18px;padding:0;
+    font:13px/1 var(--mono);border-radius:5px;background:#14141f;border:1px solid #2a2a3a;
+    color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4}
+  .fold:hover{border-color:var(--cyan);color:var(--cyan)}
+  #hdr.folded #sub{display:none}
+  #dims.folded .r,#dims.folded .sub{display:none} #dims.folded{padding-bottom:9px}
+  #read.folded table,#read.folded .ref{display:none}
+  #uiToggle{position:fixed;top:11px;right:13px;z-index:40;font:11px var(--mono);padding:6px 10px;
+    background:rgba(8,9,15,0.92);border:1px solid #2a2a3a;color:var(--steel);border-radius:7px;
+    cursor:pointer;backdrop-filter:blur(3px)}
+  #uiToggle:hover{border-color:var(--cyan);color:var(--cyan)}
+  body.clean #hud,body.clean #dims,body.clean #bar,body.clean .wip{display:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<button id="uiToggle" title="hide all panels (press H)">hide UI</button>
+
+<div id="hud">
+  <div id="hdr">
+    <button class="fold" id="foldHdr" title="collapse">&#8722;</button>
+    <div id="ttl">ARACNIUM v1.1 THE POUNCE &mdash; ballistic leap + the scaling-law ceiling</div>
+    <div id="sub">Robertino climbs a <b>mountain</b>. Footholds via a <b>Shazam spatial-hash index</b> of walkable terrain points; the steepest climb breaks at a real friction / reach limit &mdash; until the <b>fractal-hair (setae)</b> toggle.
+      <b>click the ground</b> to set point B &middot; drag to orbit &middot; <b>POUNCE</b> (or Space) leaps to B &middot; <b>H</b> hides panels.</div>
+  </div>
+  <div id="read">
+    <button class="fold" id="foldRead" title="collapse">&#8722;</button>
+    <h>SPEED &middot; SCALAR</h>
+    <table>
+      <tr><td class="k">body speed</td><td class="v cy" id="rMS">&mdash;</td></tr>
+      <tr><td class="k">&nbsp;&nbsp;in body-lengths/sec</td><td class="v cy" id="rBL">&mdash;</td></tr>
+      <tr><td class="k">stride &times; frequency</td><td class="v" id="rSF">&mdash;</td></tr>
+      <tr><td class="k">gait graph</td><td class="v gold" id="rGait">&mdash;</td></tr>
+      <div class="hr"></div>
+      <tr><td class="k">leg span / height</td><td class="v" id="rGeom">&mdash;</td></tr>
+      <tr><td class="k">housing volume</td><td class="v" id="rVol">&mdash;</td></tr>
+      <tr><td class="k">carapace &chi; / P</td><td class="v pk" id="rChiP">&mdash;</td></tr>
+      <div class="hr"></div>
+      <tr><td class="k">slope under body</td><td class="v" id="rSlope">&mdash;</td></tr>
+      <tr><td class="k">climb limit &theta;<sub>crit</sub></td><td class="v gold" id="rCrit">&mdash;</td></tr>
+      <tr><td class="k">grip model</td><td class="v" id="rGrip">&mdash;</td></tr>
+      <tr><td class="k">walkable landmarks</td><td class="v cy" id="rLand">&mdash;</td></tr>
+      <tr><td class="k">status</td><td class="v" id="rStatus">&mdash;</td></tr>
+      <div class="hr"></div>
+      <tr><td class="k">takeoff v&#8320;</td><td class="v cy" id="rV0">&mdash;</td></tr>
+      <tr><td class="k">max jump range</td><td class="v gold" id="rRange">&mdash;</td></tr>
+      <tr><td class="k">max jump height</td><td class="v" id="rJH">&mdash;</td></tr>
+      <tr><td class="k">leap to B</td><td class="v" id="rReach">&mdash;</td></tr>
+    </table>
+    <div class="ref">real reference: house spider sprint <b>&asymp;0.5 m/s</b>;
+      fast spiders <b>~20&ndash;50 BL/s</b> via very high stride frequency (hydraulic legs).</div>
+  </div>
+</div>
+
+<div id="dims">
+  <button class="fold" id="foldDims" title="collapse">&#8722;</button>
+  <h>DIMENSIONS (mm)</h>
+  <div class="r"><label>prosoma &Oslash;</label><input id="d_pro" type="range" min="30" max="140" step="1" value="70"><span class="vv" id="v_pro">70</span></div>
+  <div class="r"><label>opistho &Oslash;</label><input id="d_opi" type="range" min="30" max="160" step="1" value="85"><span class="vv" id="v_opi">85</span></div>
+  <div class="r"><label>tube &Oslash;</label><input id="d_tube" type="range" min="3" max="22" step="1" value="10"><span class="vv" id="v_tube">10</span></div>
+  <div class="r"><label>ride height</label><input id="d_ride" type="range" min="20" max="120" step="1" value="62"><span class="vv" id="v_ride">62</span></div>
+  <div class="sub">LEG SEGMENTS (7-segment hierarchy)</div>
+  <div class="r seg"><label>coxa</label><input id="s_coxa" type="range" min="4" max="60" step="1" value="18"><span class="vv" id="v_coxa">18</span></div>
+  <div class="r seg"><label>trochanter</label><input id="s_troch" type="range" min="2" max="40" step="1" value="8"><span class="vv" id="v_troch">8</span></div>
+  <div class="r seg"><label>femur</label><input id="s_femur" type="range" min="8" max="110" step="1" value="45"><span class="vv" id="v_femur">45</span></div>
+  <div class="r seg"><label>patella</label><input id="s_pat" type="range" min="4" max="50" step="1" value="14"><span class="vv" id="v_pat">14</span></div>
+  <div class="r seg"><label>tibia</label><input id="s_tib" type="range" min="8" max="100" step="1" value="40"><span class="vv" id="v_tib">40</span></div>
+  <div class="r seg"><label>metatarsus</label><input id="s_meta" type="range" min="6" max="80" step="1" value="30"><span class="vv" id="v_meta">30</span></div>
+  <div class="r seg"><label>tarsus</label><input id="s_tar" type="range" min="4" max="50" step="1" value="16"><span class="vv" id="v_tar">16</span></div>
+</div>
+
+<div class="wip">
+  <b>K1</b> 2-link IK, no dynamics &middot; <b>K2</b> 7 named segments &middot; <b>K3</b> software 3D, no GPU
+</div>
+
+<div id="bar">
+  <button id="bGaitType" class="on">gait: TRIPOD</button>
+  <span class="sep"></span>
+  <span class="klbl">legs</span>
+  <input id="cLegs" type="range" min="4" max="8" step="2" value="8" style="width:60px">
+  <span class="val" id="cLegsv">8</span>
+  <span class="sep"></span>
+  <span class="klbl">stride</span>
+  <input id="cStride" type="range" min="20" max="130" step="1" value="62" style="width:74px">
+  <span class="val" id="cStridev">62</span>
+  <span class="sep"></span>
+  <span class="klbl">freq Hz</span>
+  <input id="cFreq" type="range" min="20" max="900" step="5" value="150" style="width:84px">
+  <span class="val" id="cFreqv">1.5</span>
+  <span class="sep"></span>
+  <button id="bSpinL" title="pivot left">&#8634;</button>
+  <button id="bSpinR" title="pivot right">&#8635;</button>
+  <button id="bFront" class="on">front: TOOL</button>
+  <span class="sep"></span>
+  <span class="klbl">steepness</span>
+  <input id="cAmp" type="range" min="40" max="320" step="5" value="100" style="width:74px">
+  <span class="val" id="cAmpv">1.0&times;</span>
+  <span class="klbl">&mu;</span>
+  <input id="cMu" type="range" min="20" max="120" step="2" value="70" style="width:60px">
+  <span class="val" id="cMuv">0.70</span>
+  <button id="bAdh" title="fractal-hair van der Waals adhesion">hairs: OFF</button>
+  <span class="klbl">density</span>
+  <input id="cDen" type="range" min="40" max="160" step="5" value="80" style="width:60px">
+  <span class="val" id="cDenv">80</span>
+  <span class="sep"></span>
+  <button id="bPounce" class="on" title="ballistic leap to B (Space)">POUNCE</button>
+  <span class="klbl">v&#8320; m/s</span>
+  <input id="cV0" type="range" min="40" max="500" step="5" value="95" style="width:78px">
+  <span class="val" id="cV0v">0.95</span>
+  <span class="sep"></span>
+  <button id="bDemo" class="pink">walk demo</button>
+  <button id="bReset" class="pink">reset</button>
+</div>
+
+<script>
+"use strict";
+/* ===== GENESIS KERNEL (volumetric software 3D, camera follows body) ===== */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){ DPR=Math.min(2,window.devicePixelRatio||1);
+  W=innerWidth;H=innerHeight; cv.style.width=W+'px';cv.style.height=H+'px';
+  cv.width=Math.floor(W*DPR);cv.height=Math.floor(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); }
+resize(); addEventListener('resize',resize);
+
+/* vec3 */
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const scl=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]);
+const norm=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l,a[2]/l];};
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+/* icosphere (verified) */
+function icosahedron(){const t=(1+Math.sqrt(5))/2;
+  const verts=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+    [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]].map(norm);
+  const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],
+    [10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  return{verts,faces};}
+function subdivide(m,depth){let{verts,faces}=m;verts=verts.map(v=>v.slice());
+  for(let d=0;d<depth;d++){const mid=new Map(),nf=[];
+    const gm=(i,j)=>{const k=i<j?i+'_'+j:j+'_'+i;let x=mid.get(k);if(x!==undefined)return x;
+      const a=verts[i],b=verts[j];const p=norm([(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2]);
+      x=verts.length;verts.push(p);mid.set(k,x);return x;};
+    for(const f of faces){const[a,b,c]=f;const ab=gm(a,b),bc=gm(b,c),ca=gm(c,a);
+      nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);}faces=nf;}
+  return{verts,faces};}
+const sc={}; const sphereMesh=d=>(sc[d]||(sc[d]=subdivide(icosahedron(),d)));
+
+/* ===== PARAMS (mm) ===== */
+const P={ proDia:70,opiDia:85,tubeDia:10,ride:62,
+  seg:{coxa:18,troch:8,femur:45,patella:14,tibia:40,meta:30,tarsus:16},
+  nLegs:8, stride:62, freq:1.5, sub:1,
+  terrAmp:1.0, mu:0.7, density:80, v0:0.95 };
+let adhesion=false;        // fractal-hair (setae) van-der-Waals grip toggle
+const SEG=['coxa','troch','femur','patella','tibia','meta','tarsus'];
+const L1=()=>P.seg.coxa+P.seg.troch+P.seg.femur+P.seg.patella;  // proximal IK link
+const L2=()=>P.seg.tibia+P.seg.meta+P.seg.tarsus;               // distal IK link
+const reach=()=>L1()+L2();
+
+/* ===== LOCOMOTION STATE ===== */
+const GAITS=['TRIPOD','WAVE','TETRAPOD'];
+let gaitIdx=0;
+let bodyPos=[0,0], heading=0, target=null, moving=false;
+let gaitClock=0;
+let toolFront=true;       // front pair acts as Salticid manipulator/feeler limbs
+let spinDir=0;            // -1 / 0 / +1  pure pirouette
+let vNow=0, omegaNow=0;   // live body twist for HUD
+const legs=[];            // {pair,side,dir,offset,foot,liftFrom,wasSwing,tool,phase}
+function buildLegs(){
+  legs.length=0;
+  const n=P.nLegs, pairs=n/2;
+  for(let p=0;p<pairs;p++){
+    const lean=(pairs===1)?0:(0.7-1.4*p/(pairs-1));   // +front .. -back
+    for(const side of [1,-1]){
+      const dir=norm([side*Math.cos(lean),0,Math.sin(lean)]);
+      legs.push({pair:p,side,dir,offset:0,foot:null,liftFrom:null,wasSwing:false,tool:false,phase:Math.random()*6.28});
+    }
+  }
+  setLegRoles();
+}
+function setLegRoles(){
+  // front pair becomes tool limbs only when enough walking legs remain (pairs>=3)
+  const pairs=P.nLegs/2;
+  legs.forEach(lg=>{ lg.tool = toolFront && lg.pair===0 && pairs>=3; });
+  assignGaitOffsets();
+}
+function assignGaitOffsets(){
+  const g=GAITS[gaitIdx];
+  const walk=legs.filter(l=>!l.tool); const k=walk.length;   // gait graph over WALKING legs only
+  walk.forEach((lg,i)=>{
+    if(g==='TRIPOD' && k===6){ lg.offset=((lg.pair+(lg.side>0?0:1))%2)*0.5; }
+    else if(g==='TETRAPOD'){ lg.offset=(i%3)/3; }
+    else { lg.offset=i/k; }                                  // WAVE / fallback ripple
+  });
+}
+function dutyFactor(){ const g=GAITS[gaitIdx]; const k=legs.filter(l=>!l.tool).length||1;
+  if(g==='TRIPOD'&&k===6)return 0.5; if(g==='TETRAPOD')return 0.66; return Math.max(0.5,1-1/k); }
+
+/* body frame -> world (heading yaw + translate; body rides terrain via bodyYNow) */
+function toWorld(L){ const ch=Math.cos(heading),sh=Math.sin(heading); const by=(bodyYNow==null?P.ride:bodyYNow);
+  return [ bodyPos[0]+L[0]*ch+L[2]*sh, by+L[1], bodyPos[1]-L[0]*sh+L[2]*ch ]; }
+function headingDir(){ return [Math.sin(heading),0,Math.cos(heading)]; }
+
+function rideClamped(){ return Math.min(P.ride, 0.80*reach()); }
+function neutralRadius(){ const h=rideClamped();
+  return Math.sqrt(Math.max(60*60,(0.82*reach())**2 - h*h)); }
+function neutralLocal(lg){ const rN=neutralRadius(); const h=rideClamped();
+  return [lg.dir[0]*rN, -h, lg.dir[2]*rN]; }   // local y so world y ~ 0
+// raised manipulator target for a front "tool" leg (jumping-spider feeler/grab), with a searching wave
+function toolLocal(lg,t){ const rN=neutralRadius();
+  const sweep=Math.sin(t*1.6+lg.phase)*rN*0.18;
+  const upW  =0.40*reach() + Math.sin(t*1.2+lg.phase)*rN*0.12;   // world height of the tip
+  return [ lg.dir[0]*(rN*0.55) + sweep*lg.side, upW - P.ride, P.proDia*0.5 + rN*0.6 ];
+}
+
+/* ===== TERRAIN (deterministic mountain) + SLOPE BRAKE + SHAZAM FOOTHOLD INDEX ===== */
+const P2=a=>a*a;
+function terrainH(x,z){ const A=P.terrAmp, r=Math.hypot(x,z);
+  let h=520*Math.exp(-P2(r/2600));                     // broad gentle dome
+  h+=300*Math.exp(-(P2(x-1500)+P2(z+1100))/P2(1100));  // hill shoulder
+  h+=90*Math.sin(x/1000)*Math.cos(z/950);              // soft undulation
+  h+=260/(1+Math.exp(-(x-1100)/300));                  // gentle escarpment in +x
+  return h*A;
+}
+function terrainNormal(x,z){ const e=10;
+  const gx=(terrainH(x+e,z)-terrainH(x-e,z))/(2*e);
+  const gz=(terrainH(x,z+e)-terrainH(x,z-e))/(2*e);
+  return {n:norm([-gx,1,-gz]), slope:Math.atan(Math.hypot(gx,gz))}; }
+function slopeAt(x,z){ return terrainNormal(x,z).slope; }
+// two honest climb limits:
+function thFriction(){ return adhesion ? 80*Math.PI/180 : Math.atan(P.mu); }  // setae beat friction
+function thReach(){ const rN=neutralRadius(), hz=Math.max(1,rN-proR()*0.75);
+  return Math.atan(Math.sqrt(Math.max(0,P2(reach())-P2(hz)))/rN); }            // kinematic reach
+function thCrit(){ return Math.min(thFriction(), thReach()); }                 // binding limit
+
+// SHAZAM INVERTED INDEX: keep only WALKABLE terrain points (slope<=thCrit), hash by cell.
+// Rebuilt over a window around the spider when it moves enough, or when grip/terrain changes.
+const CELL=90; const footIndex=new Map(); let idxCenter=[1e9,1e9], idxCount=0, idxDirty=true;
+const ckey=(x,z)=>Math.floor(x/CELL)+'_'+Math.floor(z/CELL);
+function rebuildIndex(){
+  footIndex.clear(); idxCount=0;
+  const cx=bodyPos[0], cz=bodyPos[1], win=reach()*2.4+400, step=Math.max(28,P.density);
+  const crit=thCrit();
+  for(let x=cx-win;x<=cx+win;x+=step) for(let z=cz-win;z<=cz+win;z+=step){
+    if(slopeAt(x,z)<=crit){                              // throw away the too-steep 99%, keep robust landmarks
+      const k=ckey(x,z); let a=footIndex.get(k); if(!a){a=[];footIndex.set(k,a);}
+      a.push([x,z,terrainH(x,z)]); idxCount++;
+    }
+  }
+  idxCenter=[cx,cz]; idxDirty=false;
+}
+// O(1)-ish query: nearest walkable landmark to (tx,tz) within leg reach of hip
+function queryFoothold(tx,tz,hip){
+  const cx=Math.floor(tx/CELL),cz=Math.floor(tz/CELL); let best=null,bd=1e9;
+  for(let i=-1;i<=1;i++) for(let j=-1;j<=1;j++){
+    const a=footIndex.get((cx+i)+'_'+(cz+j)); if(!a) continue;
+    for(const p of a){
+      const dHip=Math.hypot(p[0]-hip[0],p[1]-hip[2],p[2]-hip[1]);
+      if(dHip>reach()*0.99) continue;                    // must be kinematically reachable
+      const d=Math.hypot(p[0]-tx,p[1]-tz); if(d<bd){bd=d;best=p;}
+    }
+  }
+  return best;   // [x,z,y] or null  (null => no grip here => SLIP, the brake)
+}
+
+const proR=()=>P.proDia/2;
+function hipLocal(lg){ return [lg.dir[0]*proR()*0.75, proR()*0.10, proR()*0.45 + lg.dir[2]*proR()*0.75]; }
+let bodyYNow=null, supportFrac=1, slopeUnderBody=0;
+
+/* ===== THE POUNCE — pure ballistic scalar math (the engineering limit lives here) ===== */
+const G=9810;                                  // gravity, mm/s^2
+let jump=null;                                  // active flight state
+const v0mm=()=>P.v0*1000;                        // takeoff speed in mm/s
+const jumpRange =()=> v0mm()*v0mm()/G;           // max horizontal range (flat, 45deg): R = v0^2/g
+const jumpHeight=()=> v0mm()*v0mm()/(2*G);       // max height (straight up):           H = v0^2/2g
+// plan a leap at (tx,tz): solve launch angle to hit the target, predict where it actually lands on the terrain
+function planPounce(tx,tz){
+  const x0=bodyPos[0], z0=bodyPos[1], y0=(bodyYNow==null?P.ride:bodyYNow);
+  let dx=tx-x0, dz=tz-z0, d=Math.hypot(dx,dz);
+  if(d<1){ d=1; dx=Math.sin(heading); dz=Math.cos(heading); }
+  const dirx=dx/d, dirz=dz/d;
+  const dh=(terrainH(tx,tz)+P.ride)-y0;          // target standing height relative to launch
+  const v=v0mm(), disc=Math.pow(v,4)-G*(G*d*d+2*dh*v*v);   // <0  => OUT OF RANGE (no angle reaches it)
+  let th, reach;
+  if(disc>=0){ reach=true;  th=Math.atan((v*v-Math.sqrt(disc))/(G*d)); }  // low/flat solution = accurate
+  else       { reach=false; th=Math.PI/4; }                                // best-effort 45deg, will fall short
+  const vh=v*Math.cos(th), vv=v*Math.sin(th);
+  // integrate the parabola until it meets the ground (handles up/down-slope landings)
+  let t=0,px=x0,py=y0,pz=z0; const arc=[[x0,y0,z0]]; const dt=0.012;
+  for(let i=0;i<700;i++){ t+=dt; px=x0+dirx*vh*t; pz=z0+dirz*vh*t; py=y0+vv*t-0.5*G*t*t; arc.push([px,py,pz]);
+    if((vv-G*t)<0 && py<=terrainH(px,pz)+P.ride) break; }
+  return {dirx,dirz,vh,vv,reach,th,arc,land:[px,py,pz],dist:d};
+}
+function startPounce(){
+  if(jump) return;
+  const tgt = target ? [target[0],target[1]]
+                     : [bodyPos[0]+Math.sin(heading)*jumpRange(), bodyPos[1]+Math.cos(heading)*jumpRange()];
+  const p=planPounce(tgt[0],tgt[1]); if(p.dist<25) return;     // too close to bother
+  jump={ t:0, x0:bodyPos[0], y0:(bodyYNow==null?P.ride:bodyYNow), z0:bodyPos[1],
+         dirx:p.dirx, dirz:p.dirz, vh:p.vh, vv:p.vv, reach:p.reach };
+  spinDir=0;
+}
+function tuckFoot(lg){ const rN=neutralRadius();          // legs tuck toward the body in flight
+  return toWorld([lg.dir[0]*rN*0.5, -P.ride*0.25, lg.dir[2]*rN*0.5]); }
+
+
+function update(dt){
+  // ---- BALLISTIC FLIGHT: body follows the parabola, legs tuck, until it lands ----
+  if(jump){
+    jump.t+=dt; const t=jump.t;
+    bodyPos[0]=jump.x0+jump.dirx*jump.vh*t;
+    bodyPos[1]=jump.z0+jump.dirz*jump.vh*t;
+    bodyYNow =jump.y0+jump.vv*t-0.5*G*t*t;
+    for(const lg of legs){ const tk=tuckFoot(lg); lg.foot=lg.foot?lerp(lg.foot,tk,Math.min(1,dt*9)):tk; lg.slip=false; lg.wasSwing=false; }
+    const ground=terrainH(bodyPos[0],bodyPos[1])+P.ride;
+    vNow=jump.vh/1000; omegaNow=0; supportFrac=0; slopeUnderBody=slopeAt(bodyPos[0],bodyPos[1]);
+    if((jump.vv-G*t)<0 && bodyYNow<=ground){ bodyYNow=ground; jump=null; }   // touchdown
+    moving=true; return;
+  }
+  // keep the Shazam inverted index fresh as the spider explores the mountain
+  if(idxDirty || Math.hypot(bodyPos[0]-idxCenter[0],bodyPos[1]-idxCenter[1])>CELL*0.5) rebuildIndex();
+
+  // ---- desired body twist: v (mm/s forward) + omega (rad/s yaw) ----
+  let v=0, omega=0;
+  const vMax=P.stride*P.freq, omegaMax=(25*Math.PI/180)*P.freq;
+  if(target){
+    const dx=target[0]-bodyPos[0], dz=target[1]-bodyPos[1], dist=Math.hypot(dx,dz);
+    if(dist<38){ target=null; }
+    else{
+      const bearing=Math.atan2(dx,dz);
+      const err=((bearing-heading+Math.PI*3)%(Math.PI*2))-Math.PI;
+      omega=clamp(err*3.0,-omegaMax,omegaMax);
+      const align=Math.cos(err); const gate=align>0.7?(align-0.7)/0.3:0;
+      v=Math.min(vMax*gate, dist*4);
+    }
+  } else if(spinDir!==0){ omega=spinDir*omegaMax; }
+
+  const beta=dutyFactor(), arcH=0.16*reach();
+  const dThetaH=clamp((omega/Math.max(1e-4,P.freq))/2,-0.4,0.4);
+  const fwdHalf=v/(2*Math.max(1e-4,P.freq));
+  const active = v>1 || Math.abs(omega)>0.01;
+
+  // tool (front) legs hover + wave
+  const tnow=performance.now()*0.001;
+  for(const lg of legs){ if(lg.tool){ lg.foot=toWorld(toolLocal(lg,tnow)); lg.slip=false; lg.wasSwing=false; } }
+  if(active) gaitClock=(gaitClock+P.freq*dt)%1;
+
+  // ---- place footholds on terrain via the index query ----
+  let support=0, walk=0; const stanceY=[], clampUp=[];
+  for(const lg of legs){ if(lg.tool) continue; walk++;
+    const phi=(gaitClock+lg.offset)%1;
+    const nL=neutralLocal(lg), c=Math.cos(dThetaH), s=Math.sin(dThetaH);
+    const la=[ nL[0]*c+nL[2]*s, nL[1], -nL[0]*s+nL[2]*c+fwdHalf ];
+    const idW=toWorld(la), idX=idW[0], idZ=idW[2];
+    const hipW=toWorld(hipLocal(lg));
+    const hit=queryFoothold(idX,idZ,hipW);                  // <-- SHAZAM INDEX QUERY (nearest walkable landmark in reach)
+    const tgt = hit ? [hit[0],hit[2],hit[1]] : [idX, terrainH(idX,idZ), idZ];
+    const slip=!hit;
+
+    if(!active){
+      lg.foot = lg.foot ? lerp(lg.foot, tgt, Math.min(1,dt*6)) : tgt.slice();
+      lg.foot[1]=terrainH(lg.foot[0],lg.foot[2]); lg.slip=slip; lg.wasSwing=false;
+    } else if(phi<beta){                                    // STANCE
+      if(lg.wasSwing || !lg.foot){ lg.foot=tgt.slice(); lg.wasSwing=false; }
+      lg.slip=slip;
+      if(slip){                                            // no grip -> slide downhill, give no support
+        const nrm=terrainNormal(lg.foot[0],lg.foot[2]).n;
+        lg.foot[0]+=nrm[0]*70*dt; lg.foot[2]+=nrm[2]*70*dt;
+        lg.foot[1]=terrainH(lg.foot[0],lg.foot[2]);
+      }
+    } else {                                               // SWING
+      const sp=(phi-beta)/(1-beta);
+      if(!lg.wasSwing){ lg.liftFrom=(lg.foot||tgt).slice(); lg.wasSwing=true; }
+      const fx=lg.liftFrom[0]+(tgt[0]-lg.liftFrom[0])*sp, fz=lg.liftFrom[2]+(tgt[2]-lg.liftFrom[2])*sp;
+      lg.foot=[fx, terrainH(fx,fz)+arcH*Math.sin(Math.PI*sp), fz]; lg.slip=slip;
+    }
+    // count support + gather body-height constraints from planted, gripping feet
+    if(!lg.slip && (!active || phi<beta)){ support++;
+      const hz=Math.hypot(hipW[0]-lg.foot[0],hipW[2]-lg.foot[2]);
+      stanceY.push(lg.foot[1]); clampUp.push(lg.foot[1]+Math.sqrt(Math.max(0,P2(reach())-P2(hz)))*0.95);
+    }
+  }
+  supportFrac = walk? support/walk : 1;
+
+  // advance, scaled by available support -> stalls when the slope steals the footholds
+  const moveScale=supportFrac, turnScale=Math.max(0.3,supportFrac);
+  heading+=omega*turnScale*dt;
+  const hd=headingDir();
+  bodyPos[0]+=hd[0]*v*moveScale*dt; bodyPos[1]+=hd[2]*v*moveScale*dt;
+  vNow=v*moveScale; omegaNow=omega*turnScale;
+
+  // body rides the terrain: avg gripping-foot height + ride, clamped so legs stay in reach
+  let byTarget;
+  if(stanceY.length){ const avg=stanceY.reduce((a,b)=>a+b,0)/stanceY.length;
+    byTarget=Math.min(avg+P.ride, Math.min.apply(null,clampUp)); }
+  else byTarget=terrainH(bodyPos[0],bodyPos[1])+P.ride;
+  bodyYNow=(bodyYNow==null)?byTarget:bodyYNow+(byTarget-bodyYNow)*Math.min(1,dt*6);
+
+  slopeUnderBody=slopeAt(bodyPos[0],bodyPos[1]);
+  moving=active;
+}
+
+/* ===== CAMERA (follows body) ===== */
+let yaw=0.7,pitch=-0.42,zoom=1.0,bound=260;
+function computeBound(){ bound=Math.max(reach()*1.7, P.opiDia*2, 220); }
+function CAM(){ return bound*2.6/zoom; }
+function FOC(){ return Math.min(W,H)*0.82; }
+function viewCenter(){ return [bodyPos[0], (bodyYNow==null?0:bodyYNow)*0.62, bodyPos[1]]; }
+function rel(p){ const v=viewCenter(); return [p[0]-v[0],p[1]-v[1],p[2]-v[2]]; }
+function rot(p){ const cy=Math.cos(yaw),sy=Math.sin(yaw);
+  let x1=p[0]*cy+p[2]*sy,z1=-p[0]*sy+p[2]*cy,y1=p[1];
+  const cx=Math.cos(pitch),sx=Math.sin(pitch);
+  return [x1,y1*cx-z1*sx,y1*sx+z1*cx]; }
+function invRot(c){ const cy=Math.cos(yaw),sy=Math.sin(yaw),cx=Math.cos(pitch),sx=Math.sin(pitch);
+  const x1=c[0],y1=c[1]*cx+c[2]*sx,z1=-c[1]*sx+c[2]*cx;
+  return [x1*cy-z1*sy,y1,x1*sy+z1*cy]; }
+function project(c){ const zc=c[2]+CAM(); if(zc<1)return null; const s=FOC()/zc;
+  return {x:W/2+c[0]*s,y:H/2-c[1]*s,z:c[2]}; }
+function projW(p){ return project(rot(rel(p))); }     // world -> screen
+function unprojGround(sx,sy){                          // screen -> world ground (y=0)
+  const f=FOC(),cam=CAM();
+  const Pz=zc=>[ (sx-W/2)/f*zc, -(sy-H/2)/f*zc, zc-cam ];
+  const W0=invRot(Pz(cam)), W1=invRot(Pz(cam+100));
+  if(Math.abs(W1[1]-W0[1])<1e-6) return null;
+  const lam=-W0[1]/(W1[1]-W0[1]);
+  const v=viewCenter();
+  return [ W0[0]+lam*(W1[0]-W0[0])+v[0], 0, W0[2]+lam*(W1[2]-W0[2])+v[2] ];
+}
+
+/* ===== GEOMETRY EMIT ===== */
+let TRI=[]; const LIGHT=norm([-0.45,0.82,0.55]);
+function pushTri(a,b,c,col){ TRI.push({p:[a,b,c],col}); }
+function emitSphereW(cW,r,col,depth){ const m=sphereMesh(depth);
+  const tv=m.verts.map(v=>[cW[0]+v[0]*r,cW[1]+v[1]*r,cW[2]+v[2]*r]);
+  for(const f of m.faces) pushTri(tv[f[0]],tv[f[1]],tv[f[2]],col); }
+function emitEllipL(cL,r,col,depth,sx,sy,sz){ const m=sphereMesh(depth);
+  const tv=m.verts.map(v=>toWorld([cL[0]+v[0]*r*sx,cL[1]+v[1]*r*sy,cL[2]+v[2]*r*sz]));
+  for(const f of m.faces) pushTri(tv[f[0]],tv[f[1]],tv[f[2]],col); }
+function emitTubeW(A,B,r,col,sides){ const ax=sub(B,A),Ln=len(ax); if(Ln<1e-4)return;
+  const d=scl(ax,1/Ln); const up=Math.abs(d[1])>0.9?[1,0,0]:[0,1,0];
+  const u=norm(cross(d,up)),v=cross(d,u); const N=sides||6,rA=[],rB=[];
+  for(let k=0;k<N;k++){const a=k/N*6.2832; const off=add(scl(u,Math.cos(a)*r),scl(v,Math.sin(a)*r));
+    rA.push(add(A,off));rB.push(add(B,off));}
+  for(let k=0;k<N;k++){const j=(k+1)%N; pushTri(rA[k],rA[j],rB[j],col); pushTri(rA[k],rB[j],rB[k],col);} }
+function emitTubeL(AL,BL,r,col,sides){ emitTubeW(toWorld(AL),toWorld(BL),r,col,sides); }
+
+/* 2-link IK (verified): returns knee + reachable foot, knee-up */
+function legIK(Hh,F,l1,l2){
+  const horiz=[F[0]-Hh[0],0,F[2]-Hh[2]]; const dh=len(horiz);
+  const hatH=dh<1e-6?[1,0,0]:scl(horiz,1/dh); const dv=F[1]-Hh[1];
+  let d=Math.hypot(dh,dv); d=clamp(d,Math.abs(l1-l2)+0.001,l1+l2-0.001);
+  const a1=Math.atan2(dv,dh);
+  const cosA=clamp((d*d+l1*l1-l2*l2)/(2*l1*d),-1,1); const A=Math.acos(cosA);
+  const th1=a1+A;
+  const knee=add(Hh,[hatH[0]*Math.cos(th1)*l1, Math.sin(th1)*l1, hatH[2]*Math.cos(th1)*l1]);
+  const foot=add(Hh,[hatH[0]*d*Math.cos(a1), d*Math.sin(a1), hatH[2]*d*Math.cos(a1)]);
+  return {knee,foot};
+}
+
+/* ===== BUILD CHASSIS ===== */
+// terrain window around the spider, slope-coloured (green walkable -> amber -> red too-steep)
+function emitTerrain(){
+  const cx=bodyPos[0], cz=bodyPos[1];
+  const win=reach()*2.3+500, step=Math.max(70, win/16);   // bounded grid (~32x32)
+  const crit=thCrit(), L=norm([-0.45,0.82,0.55]);
+  for(let x=cx-win; x<cx+win; x+=step){
+    for(let z=cz-win; z<cz+win; z+=step){
+      const p00=[x,terrainH(x,z),z], p10=[x+step,terrainH(x+step,z),z];
+      const p01=[x,terrainH(x,z+step),z+step], p11=[x+step,terrainH(x+step,z+step),z+step];
+      const slp=slopeAt(x+step/2,z+step/2);
+      // colour by how the slope compares to the climb limit
+      let col;
+      const ratio=slp/crit;
+      if(ratio<=0.78)      col=[44+slp*40, 96+slp*10, 70];      // walkable green-steel
+      else if(ratio<=1.0)  col=[150,120,40];                    // amber: near the limit
+      else                 col=[150,46,40];                     // red: too steep, no grip
+      pushTri(p00,p10,p11,col); pushTri(p00,p11,p01,col);
+    }
+  }
+}
+let metrics={span:0,height:0,vol:0,bodyLen:0};
+function buildChassis(t){
+  TRI=[]; computeBound();
+  emitTerrain();                                         // mountain first (depth-sorts with the spider)
+  const proR=P.proDia/2,opiR=P.opiDia/2,tubeR=P.tubeDia/2;
+  const proCL=[0,proR*0.10,proR*0.45];
+  const opiCL=[0,(opiR-proR)*0.25+proR*0.10,-(proR*0.45+opiR*0.9)];
+
+  emitEllipL(proCL,proR,[42,110,143],P.sub,1.05,0.78,1.12);       // carapace shell
+  emitEllipL(opiCL,opiR,[104,70,52],Math.min(P.sub,2),1.0,0.85,1.25); // abdomen
+  emitTubeL(add(proCL,[0,-proR*0.05,-proR*0.7]),add(opiCL,[0,0,opiR*0.7]),proR*0.18,[90,70,55],8); // waist
+
+  // 12 pentagon-seed nodes on the shell
+  {const m=sphereMesh(P.sub);
+   for(let i=0;i<12;i++){const v=m.verts[i];
+     emitSphereW(toWorld([proCL[0]+v[0]*proR*1.05,proCL[1]+v[1]*proR*0.78,proCL[2]+v[2]*proR*1.12]),tubeR*0.55,[255,105,180],0);}}
+
+  // eyes (anatomical nod): 2 big AME + 6 smaller
+  emitSphereW(toWorld(add(proCL,[ proR*0.18,proR*0.18,proR*1.0])),proR*0.16,[10,12,20],1);
+  emitSphereW(toWorld(add(proCL,[-proR*0.18,proR*0.18,proR*1.0])),proR*0.16,[10,12,20],1);
+  for(const ex of [0.40,-0.40]){
+    emitSphereW(toWorld(add(proCL,[proR*ex,proR*0.40,proR*0.78])),proR*0.07,[12,16,26],0);
+    emitSphereW(toWorld(add(proCL,[proR*ex*0.55,proR*0.52,proR*0.55])),proR*0.06,[12,16,26],0);}
+
+  // pedipalps
+  for(const side of [1,-1]){
+    const b=add(proCL,[side*proR*0.30,0,proR*0.95]); const tip=add(b,[side*proR*0.12,-proR*0.35,proR*0.45]);
+    emitTubeL(b,tip,tubeR*0.7,[150,120,90],6); emitSphereW(toWorld(tip),tubeR*0.9,[150,120,90],0);}
+
+  // ===== LEGS (IK to planted world feet) =====
+  let legVol=0;
+  for(const lg of legs){
+    if(!lg.foot) lg.foot=toWorld(neutralLocal(lg));
+    const hipW=toWorld(hipLocal(lg));
+    const ik=legIK(hipW,lg.foot,L1(),L2());
+    // proximal link split into coxa/troch/femur/patella
+    const limbCol = lg.tool ? [0,200,170] : (lg.slip ? [150,60,60] : [120,150,170]);
+    const prox=[P.seg.coxa,P.seg.troch,P.seg.femur,P.seg.patella]; const sP=L1();
+    let cum=0, prev=hipW;
+    for(let i=0;i<prox.length;i++){ cum+=prox[i]; const pt=lerp(hipW,ik.knee,cum/sP);
+      const r=tubeR*(1-i*0.04); emitTubeW(prev,pt,r,limbCol,6);
+      legVol+=Math.PI*r*r*len(sub(pt,prev)); prev=pt; }
+    emitSphereW(ik.knee,tubeR*1.15, lg.tool?[0,220,180]:[200,210,225],0);   // knee
+    // distal link split into tibia/meta/tarsus
+    const dist=[P.seg.tibia,P.seg.meta,P.seg.tarsus]; const sD=L2();
+    cum=0; prev=ik.knee;
+    for(let i=0;i<dist.length;i++){ cum+=dist[i]; const pt=lerp(ik.knee,ik.foot,cum/sD);
+      const r=tubeR*(0.85-i*0.07); emitTubeW(prev,pt,r,limbCol,6);
+      legVol+=Math.PI*r*r*len(sub(pt,prev)); prev=pt; }
+    emitSphereW(hipW,tubeR*1.15,[255,215,0],0);                 // hip
+    emitSphereW(ik.foot, tubeR*(lg.tool?1.0:0.8), lg.tool?[255,105,180]:(lg.slip?[255,70,70]:[0,255,213]),0); // foot / tool tip / slipping
+  }
+
+  // metrics
+  const ellip=(rx,ry,rz)=>4/3*Math.PI*rx*ry*rz;
+  metrics.vol=ellip(proR*1.05,proR*0.78,proR*1.12)+ellip(opiR,opiR*0.85,opiR*1.25)+legVol;
+  metrics.bodyLen=(proR*0.45+proR*1.12)+(proR*0.45+opiR*0.9+opiR*1.25);
+  metrics.span=2*neutralRadius()+P.stride;
+  metrics.height=P.ride+proR*0.78;
+}
+
+/* ===== RENDER overlays ===== */
+function targetMarker(){
+  if(!target)return; const ty=terrainH(target[0],target[1]);
+  ctx.strokeStyle=css('--cyan');ctx.lineWidth=2;ctx.beginPath();let first=true;
+  for(let k=0;k<=24;k++){const a=k/24*6.2832;const wx=target[0]+Math.cos(a)*30,wz=target[1]+Math.sin(a)*30;
+    const p=projW([wx,terrainH(wx,wz)+2,wz]); if(!p){first=true;continue;} if(first){ctx.moveTo(p.x,p.y);first=false;}else ctx.lineTo(p.x,p.y);}
+  ctx.stroke(); const cp=projW([target[0],ty+2,target[1]]);
+  if(cp){ctx.fillStyle=css('--cyan');ctx.font='10px ui-monospace,Consolas,monospace';ctx.textAlign='center';ctx.fillText('B',cp.x,cp.y-6);}
+}
+function footprints(){ // gripping feet = cyan dots, slipping feet = red
+  for(const lg of legs){ if(!lg.foot||lg.tool)continue;
+    const onGround=Math.abs(lg.foot[1]-terrainH(lg.foot[0],lg.foot[2]))<3;
+    if(!onGround && !lg.slip) continue;
+    const p=projW([lg.foot[0],lg.foot[1]+1,lg.foot[2]]); if(!p)continue;
+    ctx.fillStyle=lg.slip?'rgba(255,70,70,0.65)':'rgba(0,255,213,0.30)';
+    ctx.beginPath();ctx.arc(p.x,p.y,lg.slip?4:3,0,6.2832);ctx.fill(); }
+}
+function scaleBar(){ // 100mm reference laid on the terrain beside the body
+  const bx=bodyPos[0]-neutralRadius()-60, bz=bodyPos[1];
+  const p0=projW([bx,terrainH(bx,bz)+2,bz]), p1=projW([bx+100,terrainH(bx+100,bz)+2,bz]);
+  if(p0&&p1){ctx.strokeStyle=css('--gold');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();
+    ctx.fillStyle=css('--gold');ctx.font='10px ui-monospace,Consolas,monospace';ctx.textAlign='left';ctx.fillText('100 mm',p0.x,p0.y-5);}
+}
+function pounceArc(){ // dotted parabola preview toward B: green if reachable, amber if it falls short
+  if(jump || !target) return;
+  const p=planPounce(target[0],target[1]); if(p.dist<25) return;
+  ctx.setLineDash([5,5]); ctx.lineWidth=2;
+  ctx.strokeStyle=p.reach?'rgba(0,255,213,0.85)':'rgba(255,170,40,0.9)';
+  ctx.beginPath(); let first=true;
+  for(const q of p.arc){ const s=projW(q); if(!s){first=true;continue;} if(first){ctx.moveTo(s.x,s.y);first=false;}else ctx.lineTo(s.x,s.y);}
+  ctx.stroke(); ctx.setLineDash([]);
+  const L=projW([p.land[0],terrainH(p.land[0],p.land[2])+2,p.land[2]]);
+  if(L){ ctx.strokeStyle=p.reach?css('--green'):'rgba(255,170,40,1)'; ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(L.x,L.y,7,0,6.2832);ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle;ctx.font='10px ui-monospace,Consolas,monospace';ctx.textAlign='center';
+    ctx.fillText(p.reach?'land':'falls short',L.x,L.y-11); }
+}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  update(dt);
+  ctx.fillStyle=css('--bg'); ctx.fillRect(0,0,W,H);
+  buildChassis(now*0.001);
+
+  const draw=[]; const bgc=[6,7,11];
+  for(const tri of TRI){ const[a,b,c]=tri.p;
+    const nrm=norm(cross(sub(b,a),sub(c,a)));
+    const br=0.30+0.62*Math.abs(dot(nrm,LIGHT));
+    const ca=rot(rel(a)),cb=rot(rel(b)),cc=rot(rel(c));
+    const z=(ca[2]+cb[2]+cc[2])/3;
+    const pa=project(ca),pb=project(cb),pc=project(cc); if(!pa||!pb||!pc)continue;
+    const fog=clamp((z+bound)/(bound*3),0,0.5);
+    draw.push({z,pa,pb,pc,col:tri.col,br,fog});
+  }
+  draw.sort((u,v)=>v.z-u.z);
+  for(const d of draw){
+    let r=d.col[0]*d.br,g=d.col[1]*d.br,bl=d.col[2]*d.br;
+    r+=(bgc[0]-r)*d.fog;g+=(bgc[1]-g)*d.fog;bl+=(bgc[2]-bl)*d.fog;
+    ctx.fillStyle='rgb('+(r|0)+','+(g|0)+','+(bl|0)+')';
+    ctx.beginPath();ctx.moveTo(d.pa.x,d.pa.y);ctx.lineTo(d.pb.x,d.pb.y);ctx.lineTo(d.pc.x,d.pc.y);ctx.closePath();ctx.fill();
+  }
+  footprints(); targetMarker(); scaleBar(); pounceArc();   // overlays on top of the filled scene
+  updateHUD();
+  requestAnimationFrame(frame);
+}
+
+/* ===== HUD ===== */
+function updateHUD(){
+  $('rMS').textContent=(vNow/1000).toFixed(3)+' m/s';
+  $('rBL').textContent=(vNow/Math.max(1,metrics.bodyLen)).toFixed(2)+' BL/s';
+  $('rSF').textContent=P.stride+' mm \u00D7 '+P.freq.toFixed(1)+' Hz  \u00B7  turn '+(omegaNow*57.3).toFixed(0)+'\u00B0/s';
+  const walk=legs.filter(l=>!l.tool).length;
+  $('rGait').textContent=GAITS[gaitIdx]+'  ('+walk+' walk'+(toolFront&&walk!==legs.length?' + 2 tool':'')+')';
+  $('rGeom').textContent=Math.round(metrics.span)+' / '+Math.round(metrics.height)+' mm';
+  $('rVol').textContent=(metrics.vol/1000).toFixed(1)+' cm\u00B3';
+  const nu=Math.pow(2,P.sub),V=10*nu*nu+2,E=30*nu*nu,F=20*nu*nu;
+  $('rChiP').textContent='\u03C7='+(V-E+F)+'  P=12';
+  // --- terrain / grip ---
+  const slpD=slopeUnderBody*57.2958, critD=thCrit()*57.2958;
+  const limit = thFriction()<=thReach() ? 'friction' : 'reach';
+  $('rSlope').textContent=slpD.toFixed(0)+'\u00B0';
+  $('rCrit').textContent=critD.toFixed(0)+'\u00B0  ('+limit+'-limited)';
+  $('rGrip').textContent=adhesion?'setae ON (van der Waals)':'\u03BC = '+P.mu.toFixed(2);
+  $('rLand').textContent=idxCount.toLocaleString()+' walkable';
+  let st,cl; if(supportFrac>0.85){st='CLIMBING';cl='var(--green)';}
+  else if(supportFrac>0.35){st='STRAINING';cl='var(--gold)';}
+  else {st='BLOCKED \u2014 slope too steep';cl='var(--pink)';}
+  const se=$('rStatus'); se.textContent=st+' ('+Math.round(supportFrac*100)+'% feet gripping)'; se.style.color=cl;
+  // --- the pounce (ballistic ceiling) ---
+  const blen=Math.max(1,metrics.bodyLen);
+  $('rV0').textContent=P.v0.toFixed(2)+' m/s  ('+(P.v0*1000/blen).toFixed(1)+' BL/s)';
+  $('rRange').textContent=jumpRange().toFixed(0)+' mm  ('+(jumpRange()/blen).toFixed(2)+' BL)';
+  $('rJH').textContent=jumpHeight().toFixed(0)+' mm';
+  const rr=$('rReach');
+  if(target){ const p=planPounce(target[0],target[1]);
+    rr.textContent=p.dist.toFixed(0)+' mm \u2014 '+(p.reach?'REACHABLE':'OUT OF RANGE');
+    rr.style.color=p.reach?'var(--green)':'var(--gold)';
+  } else { rr.textContent='set B, then POUNCE'; rr.style.color=''; }
+}
+
+/* ===== CONTROLS ===== */
+const $=id=>document.getElementById(id);
+
+/* panel hide/show */
+function foldPanel(id,btn){ const p=$(id); const f=p.classList.toggle('folded');
+  btn.textContent=f?'+':'\u2212'; btn.title=f?'expand':'collapse'; }
+$('foldHdr').addEventListener('click',e=>foldPanel('hdr',e.currentTarget));
+$('foldRead').addEventListener('click',e=>foldPanel('read',e.currentTarget));
+$('foldDims').addEventListener('click',e=>foldPanel('dims',e.currentTarget));
+function setClean(on){ document.body.classList.toggle('clean',on);
+  $('uiToggle').textContent=on?'show UI':'hide UI'; }
+$('uiToggle').addEventListener('click',()=>setClean(!document.body.classList.contains('clean')));
+addEventListener('keydown',e=>{ if((e.key==='h'||e.key==='H') && e.target.tagName!=='INPUT'){
+  setClean(!document.body.classList.contains('clean')); } });
+function bindDim(sl,lb,key,sub){ $(sl).addEventListener('input',e=>{const x=+e.target.value;$(lb).textContent=x;
+  if(sub)P.seg[key]=x;else P[key]=x;}); }
+bindDim('d_pro','v_pro','proDia',0);bindDim('d_opi','v_opi','opiDia',0);
+bindDim('d_tube','v_tube','tubeDia',0);bindDim('d_ride','v_ride','ride',0);
+bindDim('s_coxa','v_coxa','coxa',1);bindDim('s_troch','v_troch','troch',1);bindDim('s_femur','v_femur','femur',1);
+bindDim('s_pat','v_pat','patella',1);bindDim('s_tib','v_tib','tibia',1);bindDim('s_meta','v_meta','meta',1);bindDim('s_tar','v_tar','tarsus',1);
+
+$('bGaitType').addEventListener('click',e=>{ gaitIdx=(gaitIdx+1)%GAITS.length; assignGaitOffsets();
+  e.target.textContent='gait: '+GAITS[gaitIdx]; });
+$('cLegs').addEventListener('input',e=>{ P.nLegs=+e.target.value; $('cLegsv').textContent=P.nLegs; buildLegs(); });
+$('cStride').addEventListener('input',e=>{ P.stride=+e.target.value; $('cStridev').textContent=P.stride; });
+$('cFreq').addEventListener('input',e=>{ P.freq=(+e.target.value)/100; $('cFreqv').textContent=P.freq.toFixed(1); });
+$('bDemo').addEventListener('click',()=>{ spinDir=0; markSpin(); const a=Math.random()*6.2832,r=bound*2.2+200;
+  target=[bodyPos[0]+Math.cos(a)*r, bodyPos[1]+Math.sin(a)*r]; });
+$('bSpinL').addEventListener('click',()=>{ target=null; spinDir=(spinDir===1?0:1); markSpin(); });
+$('bSpinR').addEventListener('click',()=>{ target=null; spinDir=(spinDir===-1?0:-1); markSpin(); });
+function markSpin(){ $('bSpinL').classList.toggle('on',spinDir===1); $('bSpinR').classList.toggle('on',spinDir===-1); }
+$('bFront').addEventListener('click',e=>{ toolFront=!toolFront;
+  e.target.textContent='front: '+(toolFront?'TOOL':'WALK'); e.target.classList.toggle('on',toolFront); setLegRoles(); });
+$('cAmp').addEventListener('input',e=>{ P.terrAmp=(+e.target.value)/100; $('cAmpv').textContent=P.terrAmp.toFixed(2)+'\u00D7'; idxDirty=true; });
+$('cMu').addEventListener('input',e=>{ P.mu=(+e.target.value)/100; $('cMuv').textContent=P.mu.toFixed(2); idxDirty=true; });
+$('bAdh').addEventListener('click',e=>{ adhesion=!adhesion;
+  e.target.textContent='hairs: '+(adhesion?'ON':'OFF'); e.target.classList.toggle('on',adhesion); idxDirty=true; });
+$('cDen').addEventListener('input',e=>{ P.density=+e.target.value; $('cDenv').textContent=P.density; idxDirty=true; });
+$('bPounce').addEventListener('click',()=>startPounce());
+$('cV0').addEventListener('input',e=>{ P.v0=(+e.target.value)/100; $('cV0v').textContent=P.v0.toFixed(2); });
+addEventListener('keydown',e=>{ if(e.code==='Space' && e.target.tagName!=='INPUT'){ e.preventDefault(); startPounce(); } });
+$('bReset').addEventListener('click',()=>{
+  Object.assign(P,{proDia:70,opiDia:85,tubeDia:10,ride:62,nLegs:8,stride:62,freq:1.5,sub:1,terrAmp:1.0,mu:0.7,density:80,v0:0.95});
+  P.seg={coxa:18,troch:8,femur:45,patella:14,tibia:40,meta:30,tarsus:16};
+  gaitIdx=0; bodyPos=[0,0]; heading=0; target=null; moving=false; yaw=0.7;pitch=-0.42;zoom=1.0;
+  toolFront=true; spinDir=0; adhesion=false; bodyYNow=null; idxDirty=true;
+  const s=(id,val)=>{const el=$(id);if(el)el.value=val;};
+  s('d_pro',70);s('d_opi',85);s('d_tube',10);s('d_ride',62);
+  s('s_coxa',18);s('s_troch',8);s('s_femur',45);s('s_pat',14);s('s_tib',40);s('s_meta',30);s('s_tar',16);
+  s('cLegs',8);s('cStride',62);s('cFreq',150); s('cAmp',100);s('cMu',70);s('cDen',80);s('cV0',95);
+  ['v_pro:70','v_opi:85','v_tube:10','v_ride:62','v_coxa:18','v_troch:8','v_femur:45','v_pat:14','v_tib:40','v_meta:30','v_tar:16','cLegsv:8','cStridev:62','cFreqv:1.5','cAmpv:1.00\u00D7','cMuv:0.70','cDenv:80','cV0v:0.95']
+    .forEach(p=>{const i=p.lastIndexOf(':');const a=p.slice(0,i),b=p.slice(i+1);$(a).textContent=b;});
+  $('bGaitType').textContent='gait: TRIPOD';
+  $('bFront').textContent='front: TOOL'; $('bFront').classList.add('on');
+  $('bAdh').textContent='hairs: OFF'; $('bAdh').classList.remove('on');
+  buildLegs(); markSpin();
+});
+
+/* orbit drag vs click-to-target */
+let down=false,moved=false,sx0=0,sy0=0,lx=0,ly=0;
+function onDown(x,y){down=true;moved=false;sx0=lx=x;sy0=ly=y;}
+function onMove(x,y){ if(!down)return; if(Math.hypot(x-sx0,y-sy0)>6)moved=true;
+  yaw+=(x-lx)*0.006; pitch=clamp(pitch+(y-ly)*0.006,-1.45,1.45); lx=x;ly=y; }
+function onUp(x,y){ if(down&&!moved){ const g=unprojGround(x,y); if(g){ target=[g[0],g[2]]; spinDir=0; markSpin(); } } down=false; }
+cv.addEventListener('mousedown',e=>onDown(e.clientX,e.clientY));
+addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+addEventListener('mouseup',e=>onUp(e.clientX,e.clientY));
+cv.addEventListener('wheel',e=>{zoom=clamp(zoom*(e.deltaY<0?1.08:0.926),0.3,4);e.preventDefault();},{passive:false});
+cv.addEventListener('touchstart',e=>{const a=e.touches[0];onDown(a.clientX,a.clientY);},{passive:true});
+cv.addEventListener('touchmove',e=>{const a=e.touches[0];onMove(a.clientX,a.clientY);e.preventDefault();},{passive:false});
+cv.addEventListener('touchend',e=>{const a=e.changedTouches[0];onUp(a.clientX,a.clientY);});
+
+buildLegs();
+requestAnimationFrame(frame);
+</script>
+</body></html>

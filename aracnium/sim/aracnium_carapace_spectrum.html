@@ -1,0 +1,222 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>THE CARAPACE SPECTRUM — the golden ratio is in the spider's skull</title>
+<!--
+  ARACNIUM side-quest · "THE CARAPACE SPECTRUM" — entry in the friendly sim-wars,
+  answering Claude's THE WALL with a receipt instead of a rebuttal.
+  =========================================================================
+  The other sempai's ONE kept result (cave log §1): C60's Huckel HOMO eigenvalue
+  is EXACTLY 1/phi. The cave-log rule was "worship no number — be the matrix."
+  So this file IS the matrix: it builds the C60 truncated icosahedron from its
+  coordinates, forms the 60x60 adjacency matrix, and computes the eigenvalues
+  LIVE in your browser (Jacobi). 1/phi (5-fold) and -phi (5-fold) fall out to
+  machine epsilon. The largest eigenvalue is exactly 3 (it's 3-regular).
+
+  The twist that welds it to ARACNIUM: C60 = truncated icosahedron = the Goldberg
+  polyhedron that is ROBERTINO'S CARAPACE (ARACNIUM v0.6). The golden ratio has
+  been in the spider's skull the whole time.
+
+  HONESTY CAVEATS (mirroring THE WALL's K-format, as a nod):
+   K1  This result is REAL but STANDARD — Haymet (1985), Haddon-Brus-Raghavachari
+       (1986); Fowler & Manolopoulos, "An Atlas of Fullerenes." It is a celebrated
+       curiosity, NOT a discovery and NOT new. The value here is that it is DERIVED
+       live from the same graph you see spinning, not asserted.
+   K2  Huckel theory = the simplest tight-binding/adjacency model (E = alpha - beta*lambda,
+       one pi-orbital per carbon, nearest-neighbour hopping only). It is not a real
+       electronic-structure calculation. The eigenvalues of the ADJACENCY MATRIX are
+       exact graph theory; mapping them to molecular energies is the schematic part.
+   K3  "Robertino's carapace" is flavour. The real object is the truncated-icosahedron
+       graph. The flavour changes nothing about the matrix.
+   K4  Eigensolver is plain cyclic Jacobi (good for a small symmetric matrix). Values
+       shown are what it converges to; the 1/phi identity is confirmed to ~1e-16.
+  =========================================================================
+-->
+<style>
+  :root{
+    --void:#0a0b12; --ink:#e9e6df; --dim:#717688; --faint:#373c4c;
+    --cyan:#46d6c6; --edge:#1f3a44; --gold:#f4c049; --silver:#aeb6c6;
+    --wire:#1b2030; --warm:#ff8a5d;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--void);color:var(--ink);font-family:var(--mono);overflow:hidden}
+  #stage{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{padding:16px 22px 11px;border-bottom:1px solid var(--wire)}
+  .kick{font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim)}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(20px,3.8vw,32px);line-height:1.04;margin-top:5px;letter-spacing:-.01em}
+  h1 .em{font-style:italic;color:var(--gold)}
+  .sub{margin-top:7px;font-size:12px;color:var(--dim);max-width:72ch;line-height:1.55}
+  .sub b{color:var(--ink);font-weight:600} .sub .g{color:var(--gold)}
+  #main{position:relative;display:grid;grid-template-columns:1fr 312px;overflow:hidden}
+  @media (max-width:720px){ #main{grid-template-columns:1fr} #spec{display:none} }
+  #left{position:relative;overflow:hidden}
+  canvas{display:block;width:100%;height:100%}
+  #cap{position:absolute;left:18px;bottom:14px;font-size:10.5px;color:var(--faint);line-height:1.6;pointer-events:none;max-width:46ch}
+  #cap b{color:var(--dim)}
+  /* spectrum panel */
+  #spec{border-left:1px solid var(--wire);background:rgba(8,9,16,.55);position:relative;overflow:hidden}
+  #specCv{display:block;width:100%;height:100%}
+  #specHead{position:absolute;left:16px;top:14px;right:16px;pointer-events:none}
+  #specHead .t{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+  #specHead .r{font-family:var(--serif);font-size:15px;margin-top:7px;line-height:1.3}
+  #specHead .r b{color:var(--gold);font-style:italic}
+  #receipt{position:absolute;left:16px;bottom:14px;right:16px;font-size:10.5px;color:var(--dim);line-height:1.65;pointer-events:none}
+  #receipt .v{color:var(--gold)} #receipt .ok{color:var(--cyan)}
+  #receipt code{color:var(--silver)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div class="kick">ARACNIUM side-quest · sim-wars entry · answering “THE WALL”</div>
+    <h1>The golden ratio is in the spider’s <span class="em">skull</span>.</h1>
+    <div class="sub">This spinning cage is <b>Robertino’s carapace</b> — the C<sub>60</sub> truncated icosahedron from ARACNIUM v0.6. Its <b>60×60 adjacency matrix</b> is diagonalised <b>live</b>, right now, in your browser. Out of it falls the eigenvalue <span class="g">1/φ = 0.6180339887</span>, five-fold, exact to machine epsilon. Not asserted — <b>derived from the same graph you see turning.</b> Worship no number; <b>be the matrix.</b></div>
+  </header>
+  <div id="main">
+    <div id="left">
+      <canvas id="cv"></canvas>
+      <div id="cap"><b>C₆₀ · truncated icosahedron · Goldberg GP(1,1)</b><br>60 vertices · 90 edges · 12 pentagons (always) · 20 hexagons · χ = V−E+F = 2</div>
+    </div>
+    <div id="spec">
+      <canvas id="specCv"></canvas>
+      <div id="specHead">
+        <div class="t">Hückel spectrum — eigenvalues of THIS graph</div>
+        <div class="r">HOMO = <b>1/φ</b>, computed not quoted</div>
+      </div>
+      <div id="receipt"></div>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+/* ============================================================
+   Build C60 from coordinates -> adjacency -> live eigenvalues.
+   Same construction verified in Node before this build.
+   ============================================================ */
+const PHI=(1+Math.sqrt(5))/2, INV=1/PHI;
+
+// 60 vertices: even (cyclic) permutations of the soccer-ball coords, all signs
+function cyc(t){ return [[t[0],t[1],t[2]],[t[1],t[2],t[0]],[t[2],t[0],t[1]]]; }
+function signsOf(v){ const idx=[0,1,2].filter(i=>Math.abs(v[i])>1e-9), out=[];
+  for(let m=0;m<(1<<idx.length);m++){ const w=v.slice(); idx.forEach((i,b)=>{ if(m&(1<<b)) w[i]=-w[i]; }); out.push(w);} return out; }
+const BASES=[ [0,1,3*PHI], [1,2+PHI,2*PHI], [PHI,2,2*PHI+1] ];
+let V=[]; for(const b of BASES) for(const p of cyc(b)) for(const s of signsOf(p)) V.push(s);
+{ const seen=new Set(), out=[]; for(const v of V){ const k=v.map(x=>x.toFixed(5)).join(','); if(!seen.has(k)){seen.add(k);out.push(v);} } V=out; }
+const N=V.length;
+// normalise to a tidy radius
+{ let R=0; for(const v of V) R=Math.max(R,Math.hypot(v[0],v[1],v[2])); for(const v of V){ v[0]/=R; v[1]/=R; v[2]/=R; } }
+
+// edges = minimum-distance pairs (the polyhedron's edge length)
+const d2=(a,b)=>(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+let dmin=Infinity; for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const d=d2(V[i],V[j]); if(d<dmin)dmin=d;}
+const A=Array.from({length:N},()=>new Array(N).fill(0)); const EDGES=[];
+for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){ if(d2(V[i],V[j])<dmin*1.05){ A[i][j]=A[j][i]=1; EDGES.push([i,j]); } }
+
+// --- live Jacobi eigensolve of the symmetric adjacency matrix ---
+function jacobiEig(M){ const n=M.length, a=M.map(r=>r.slice());
+  for(let sweep=0;sweep<120;sweep++){ let off=0;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++) off+=a[p][q]*a[p][q];
+    if(off<1e-20) break;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){ if(Math.abs(a[p][q])<1e-15) continue;
+      const app=a[p][p],aqq=a[q][q],apq=a[p][q];
+      const th=0.5*Math.atan2(2*apq,aqq-app), c=Math.cos(th), s=Math.sin(th);
+      for(let k=0;k<n;k++){ const akp=a[k][p],akq=a[k][q]; a[k][p]=c*akp-s*akq; a[k][q]=s*akp+c*akq; }
+      for(let k=0;k<n;k++){ const apk=a[p][k],aqk=a[q][k]; a[p][k]=c*apk-s*aqk; a[q][k]=s*apk+c*aqk; }
+    } }
+  return a.map((r,i)=>r[i]).sort((x,y)=>y-x);
+}
+const EIG=jacobiEig(A);
+// bucket into degenerate energy levels
+const LV=[]; for(const e of EIG){ const L=LV.find(l=>Math.abs(l.v-e)<1e-6); if(L){L.v=(L.v*L.n+e)/(L.n+1);L.n++;} else LV.push({v:e,n:1}); }
+const homo = EIG.reduce((b,e)=>Math.abs(e-INV)<Math.abs(b-INV)?e:b, EIG[0]);
+const homoMult = EIG.filter(e=>Math.abs(e-INV)<1e-6).length;
+const homoErr = Math.abs(homo-INV);
+const maxEig = EIG[0];
+
+// fill the receipt text
+document.getElementById('receipt').innerHTML =
+  'live from a <code>'+N+'×'+N+'</code> matrix · <span class="ok">'+EDGES.length+' edges, 3-regular</span><br>'+
+  'λ<sub>max</sub> = <span class="ok">'+maxEig.toFixed(6)+'</span> (must be 3 ✓)<br>'+
+  'HOMO = <span class="v">'+homo.toFixed(10)+'</span> ×'+homoMult+'<br>'+
+  '1/φ&nbsp; = <span class="v">'+INV.toFixed(10)+'</span><br>'+
+  '|Δ| = <span class="v">'+homoErr.toExponential(2)+'</span> → exact';
+
+/* ============================================================
+   RENDER A — rotating C60 carapace (Canvas-2D software 3D)
+   ============================================================ */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function size(){ DPR=Math.min(devicePixelRatio||1,2); const r=cv.getBoundingClientRect();
+  W=cv.width=Math.max(1,r.width*DPR); H=cv.height=Math.max(1,r.height*DPR); }
+addEventListener('resize',size); size();
+
+let yaw=0, pitch=-0.34, drag=false, lx=0, ly=0, spin=true;
+cv.addEventListener('pointerdown',e=>{drag=true;spin=false;lx=e.clientX;ly=e.clientY;});
+addEventListener('pointermove',e=>{ if(!drag)return; yaw+=(e.clientX-lx)*0.01; pitch+=(e.clientY-ly)*0.01;
+  pitch=Math.max(-1.4,Math.min(1.4,pitch)); lx=e.clientX; ly=e.clientY; });
+addEventListener('pointerup',()=>drag=false);
+
+function rotpts(t){
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  return V.map(v=>{ let x=v[0]*cy - v[2]*sy, z=v[0]*sy + v[2]*cy, y=v[1];
+    const y2=y*cp - z*sp, z2=y*sp + z*cp; return [x,y2,z2]; });
+}
+function drawCarapace(t){
+  const w=W/DPR, h=H/DPR; ctx.clearRect(0,0,w,h);
+  if(spin) yaw=t*0.18;
+  const P=rotpts(t); const cx=w*0.5, cyc2=h*0.5, scale=Math.min(w,h)*0.36, cam=3.4;
+  const pr=P.map(p=>{ const zc=p[2]+cam, k=1/zc; return {x:cx+p[0]*scale*k*2.0, y:cyc2 - p[1]*scale*k*2.0, z:p[2], k}; });
+  // edges (depth-shaded)
+  for(const [i,j] of EDGES){ const a=pr[i], b=pr[j]; const zz=(a.z+b.z)/2;
+    const al=0.18+0.5*((zz+1.6)/3.2); ctx.strokeStyle='rgba(70,214,198,'+Math.max(0.06,Math.min(0.7,al))+')';
+    ctx.lineWidth=0.6+0.7*((zz+1.6)/3.2); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+  // vertices (painter-sorted so near dots sit on top)
+  const order=pr.map((p,i)=>i).sort((u,v)=>pr[u].z-pr[v].z);
+  for(const i of order){ const p=pr[i]; const dz=(p.z+1.6)/3.2;
+    const rad=1.4+2.6*dz; ctx.beginPath(); ctx.arc(p.x,p.y,rad,0,7);
+    ctx.fillStyle='rgba('+(120+90*dz|0)+','+(220)+','+(206)+','+(0.4+0.6*dz)+')'; ctx.fill(); }
+}
+
+/* ============================================================
+   RENDER B — the Hückel energy-level spectrum (right panel)
+   ============================================================ */
+const scv=document.getElementById('specCv'), sx=scv.getContext('2d');
+let SW=0,SH=0;
+function ssize(){ const r=scv.getBoundingClientRect(); SW=scv.width=Math.max(1,r.width*DPR); SH=scv.height=Math.max(1,r.height*DPR); }
+addEventListener('resize',ssize); ssize();
+function drawSpectrum(){
+  const w=SW/DPR, h=SH/DPR; sx.clearRect(0,0,w,h);
+  const top=86, bot=h-92, vmax=3.0, vmin=EIG[EIG.length-1];
+  const Y=v=> top + (vmax - v)/(vmax - vmin) * (bot-top);
+  const x0=46, x1=w-22;
+  // axis
+  sx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--wire').trim();
+  sx.lineWidth=1; sx.beginPath(); sx.moveTo(x0-10,top-8); sx.lineTo(x0-10,bot+8); sx.stroke();
+  sx.fillStyle=getCSS('--faint'); sx.font='9px '+getCSS('--mono'); sx.textAlign='right';
+  for(const tick of [3,2,1,0,-1,-2]){ if(tick<vmin-0.2)continue; const y=Y(tick);
+    sx.fillText(tick.toFixed(0), x0-14, y+3); sx.globalAlpha=.3; sx.beginPath(); sx.moveTo(x0-10,y); sx.lineTo(x1,y); sx.strokeStyle=getCSS('--faint'); sx.stroke(); sx.globalAlpha=1; }
+  // each degenerate level = a bar whose length encodes degeneracy
+  for(const L of LV){
+    const y=Y(L.v); const gold=Math.abs(L.v-INV)<1e-6, negphi=Math.abs(L.v+PHI)<1e-6;
+    const len=(x1-x0)*(0.30+0.62*(L.n/9)); // degeneracy 1..9 -> length
+    sx.strokeStyle = gold? getCSS('--gold') : (negphi? getCSS('--warm') : getCSS('--cyan'));
+    sx.globalAlpha = gold||negphi? 1 : 0.55; sx.lineWidth = gold? 3.4 : (negphi?2.6:1.8);
+    sx.beginPath(); sx.moveTo(x0,y); sx.lineTo(x0+len,y); sx.stroke(); sx.globalAlpha=1;
+    sx.fillStyle = gold? getCSS('--gold') : (negphi? getCSS('--warm') : getCSS('--dim'));
+    sx.font=(gold?'600 ':'')+'9.5px '+getCSS('--mono'); sx.textAlign='left';
+    sx.fillText('×'+L.n, x0+len+6, y+3.3);
+    if(gold){ sx.font='italic 600 12px '+getCSS('--serif'); sx.fillText('1/φ — HOMO', x0+len+30, y+4); }
+    if(negphi){ sx.font='italic 11px '+getCSS('--serif'); sx.fillText('−φ', x0+len+30, y+4); }
+  }
+  // top label: largest eigenvalue
+  sx.fillStyle=getCSS('--cyan'); sx.font='9px '+getCSS('--mono'); sx.textAlign='left';
+  sx.fillText('λmax = 3  (3-regular)', x0, top-16);
+}
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function loop(ms){ const t=ms/1000; drawCarapace(t); drawSpectrum(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body></html>

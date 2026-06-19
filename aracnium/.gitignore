@@ -1,0 +1,17 @@
+# generated fleet artifacts — reproducible from spec + fleet.toml, so not committed
+fleet/generated/*
+!fleet/generated/.gitkeep
+
+# build / editor / OS noise
+build/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+
+# CAD / EDA backups
+*.kicad_*-bak
+*.bak
+*.lock
+fp-info-cache

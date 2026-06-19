@@ -1,0 +1,542 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>ARACNIUM v0.7 VOLUMETRIC -- mm-scalar spider chassis</title>
+<!--
+  ARACNIUM v0.7 VOLUMETRIC -- step 3 of N
+  ======================================
+  From point-and-line (v0.6) to FULL VOLUMETRIC software 3D.
+  Every dimension is a real scalar in millimetres. The exoskeleton
+  is treated as an electronics housing: internal volume is read out
+  live in mm^3 / cm^3 / AA-cell equivalents.
+
+  Carapace (prosoma) = geodesic Goldberg shell: chi=2, P=12 locked.
+  Legs = 7 anatomical segments (HIERARCHY, not "fractal") as tubes.
+  All geometry generated from pure math; no imported meshes.
+
+  Genesis kernel discipline: Canvas 2D only, software rotation +
+  perspective + painter's depth sort + two-sided diffuse light.
+  K1 no rigid-body physics (prescribed posture, no IK/walk solve)
+  K2 leg = 7 named segments = HIERARCHY
+  K3 single HTML, no GPU/WebGL
+-->
+<style>
+  :root{
+    --bg:#06070b; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --steel:#7fa8c0; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;touch-action:none}
+
+  #hud{position:fixed;top:0;left:0;right:0;padding:9px 13px;display:flex;gap:12px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,9,15,0.82);border:1px solid #1d2230;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.05em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:480px;line-height:1.45}
+  #sub b{color:var(--cyan)}
+
+  #read{margin-left:auto;min-width:248px}
+  #read h{display:block;color:var(--gold);font-size:11px;letter-spacing:0.07em;margin-bottom:6px}
+  #read table{border-collapse:collapse;width:100%}
+  #read td{padding:2px 0;font-size:11px}
+  #read td.k{color:var(--dim)} #read td.v{text-align:right;font-weight:bold;color:var(--green)}
+  #read td.v.gold{color:var(--gold)} #read td.v.pk{color:var(--pink)} #read td.v.cy{color:var(--cyan)}
+  #read .hr{height:1px;background:#1a1f2c;margin:5px 0}
+  #read .foot{color:#4a4a5a;font-size:9px;margin-top:5px;line-height:1.4}
+
+  /* DIMENSIONS panel (mm) */
+  #dims{position:fixed;left:13px;top:128px;width:226px;background:rgba(8,9,15,0.86);
+    border:1px solid #1d2230;border-radius:9px;padding:9px 11px;z-index:10;font-size:10px}
+  #dims h{display:block;color:var(--cyan);font-size:11px;letter-spacing:0.06em;margin-bottom:7px}
+  #dims .r{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:7px;margin:3px 0}
+  #dims .r label{color:var(--dim)}
+  #dims .r .vv{color:var(--gold);text-align:right}
+  #dims .seg label{color:var(--steel)}
+  #dims .sub{color:#4a4a5a;font-size:9px;margin:6px 0 2px}
+  input[type=range]{appearance:none;width:100%;height:4px;background:#262b3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--gold);cursor:pointer}
+
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:9px;
+    align-items:center;justify-content:center;background:rgba(8,9,15,0.92);border:1px solid #1d2230;
+    border-radius:10px;padding:8px 13px;z-index:10;max-width:96vw}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 10px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{background:#1d2233;border-color:var(--cyan);color:var(--cyan)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:10px}
+  .ctl .val{color:var(--gold);font-size:11px;min-width:26px;text-align:right}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 2px}
+  .klbl{color:var(--dim);font-size:10px}
+
+  .wip{position:fixed;right:13px;bottom:64px;background:rgba(8,9,15,0.85);border:1px solid #c7894a;
+    border-radius:8px;padding:6px 10px;font-size:10px;color:var(--espresso);z-index:9;max-width:300px;line-height:1.45}
+  .wip b{color:var(--gold)}
+  @media (max-width:880px){ #dims{display:none} .wip{display:none} #read{margin-left:0} }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">ARACNIUM v0.7 &mdash; volumetric mm-scalar chassis</div>
+    <div id="sub">full software-3D solid. carapace = <b>Goldberg shell</b> (&chi;=2, P=12).
+      every dimension a real <b>millimetre</b>. drag to orbit &middot; wheel to zoom.</div>
+  </div>
+  <div id="read">
+    <h>SCALAR READOUT</h>
+    <table>
+      <tr><td class="k">overall leg span</td><td class="v gold" id="rSpan">&mdash;</td></tr>
+      <tr><td class="k">standing height</td><td class="v gold" id="rHt">&mdash;</td></tr>
+      <tr><td class="k">body length (proso+opistho)</td><td class="v" id="rLen">&mdash;</td></tr>
+      <tr><td class="k">single leg length</td><td class="v" id="rLeg">&mdash;</td></tr>
+      <div class="hr"></div>
+      <tr><td class="k">internal housing volume</td><td class="v cy" id="rVol">&mdash;</td></tr>
+      <tr><td class="k">&nbsp;&nbsp;&asymp; AA-cell equivalents</td><td class="v cy" id="rAA">&mdash;</td></tr>
+      <div class="hr"></div>
+      <tr><td class="k">carapace &chi; = V&minus;E+F</td><td class="v gold" id="rChi">&mdash;</td></tr>
+      <tr><td class="k">carapace pentagons</td><td class="v pk" id="rP">&mdash;</td></tr>
+      <tr><td class="k">carapace V / E / F</td><td class="v" id="rVEF">&mdash;</td></tr>
+    </table>
+    <div class="foot" id="rNote">volumes are exact geometry of the rendered solids.</div>
+  </div>
+</div>
+
+<div id="dims">
+  <h>DIMENSIONS (mm)</h>
+  <div class="r"><label>prosoma &Oslash;</label><input id="d_pro" type="range" min="30" max="140" step="1" value="70"><span class="vv" id="v_pro">70</span></div>
+  <div class="r"><label>opistho &Oslash;</label><input id="d_opi" type="range" min="30" max="160" step="1" value="85"><span class="vv" id="v_opi">85</span></div>
+  <div class="r"><label>tube &Oslash;</label><input id="d_tube" type="range" min="3" max="22" step="1" value="10"><span class="vv" id="v_tube">10</span></div>
+  <div class="sub">LEG SEGMENTS (the 7-segment hierarchy)</div>
+  <div class="r seg"><label>coxa</label><input id="s_coxa" type="range" min="4" max="60" step="1" value="18"><span class="vv" id="v_coxa">18</span></div>
+  <div class="r seg"><label>trochanter</label><input id="s_troch" type="range" min="2" max="40" step="1" value="8"><span class="vv" id="v_troch">8</span></div>
+  <div class="r seg"><label>femur</label><input id="s_femur" type="range" min="8" max="110" step="1" value="45"><span class="vv" id="v_femur">45</span></div>
+  <div class="r seg"><label>patella</label><input id="s_pat" type="range" min="4" max="50" step="1" value="14"><span class="vv" id="v_pat">14</span></div>
+  <div class="r seg"><label>tibia</label><input id="s_tib" type="range" min="8" max="100" step="1" value="40"><span class="vv" id="v_tib">40</span></div>
+  <div class="r seg"><label>metatarsus</label><input id="s_meta" type="range" min="6" max="80" step="1" value="30"><span class="vv" id="v_meta">30</span></div>
+  <div class="r seg"><label>tarsus</label><input id="s_tar" type="range" min="4" max="50" step="1" value="16"><span class="vv" id="v_tar">16</span></div>
+</div>
+
+<div class="wip">
+  <b>K1</b> prescribed posture (no IK/walk solve) &middot;
+  <b>K2</b> leg = 7 named segments = hierarchy &middot;
+  <b>K3</b> single HTML, software 3D, no GPU
+</div>
+
+<div id="bar">
+  <span class="klbl">legs</span>
+  <input id="cLegs" type="range" min="4" max="8" step="2" value="8" style="width:70px">
+  <span class="val" id="cLegsv">8</span>
+  <span class="sep"></span>
+  <span class="klbl">shell &nu;</span>
+  <input id="cSub" type="range" min="0" max="3" step="1" value="1" style="width:70px">
+  <span class="val" id="cSubv">2</span>
+  <span class="sep"></span>
+  <span class="klbl">gait</span>
+  <input id="cGait" type="range" min="0" max="100" step="1" value="35" style="width:80px">
+  <span class="val" id="cGaitv">0.35</span>
+  <span class="sep"></span>
+  <button id="bGait" class="on">animate</button>
+  <button id="bTool" class="on pink">tool arm</button>
+  <button id="bSpin" class="on">spin</button>
+  <button id="bReset" class="pink">reset</button>
+</div>
+
+<script>
+"use strict";
+/* ===== GENESIS KERNEL (volumetric software 3D) -- Canvas 2D only ===== */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = innerWidth; H = innerHeight;
+  cv.style.width  = W+'px';
+  cv.style.height = H+'px';
+  cv.width  = Math.floor(W*DPR);
+  cv.height = Math.floor(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize(); addEventListener('resize', resize);
+
+/* ---------- vec3 ---------- */
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const scl=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const len=(a)=>Math.hypot(a[0],a[1],a[2]);
+const norm=(a)=>{const l=len(a)||1;return [a[0]/l,a[1]/l,a[2]/l];};
+
+/* ---------- icosphere (verified builder) ---------- */
+function icosahedron(){
+  const t=(1+Math.sqrt(5))/2;
+  const verts=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],
+    [0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]].map(norm);
+  const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],
+    [11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  return {verts,faces};
+}
+function subdivide(mesh,depth){
+  let {verts,faces}=mesh; verts=verts.map(v=>v.slice());
+  for(let d=0;d<depth;d++){
+    const mid=new Map(), nf=[];
+    const gm=(i,j)=>{const k=i<j?i+'_'+j:j+'_'+i;let m=mid.get(k);
+      if(m!==undefined)return m;const a=verts[i],b=verts[j];
+      const p=norm([(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2]);
+      m=verts.length;verts.push(p);mid.set(k,m);return m;};
+    for(const f of faces){const[a,b,c]=f;const ab=gm(a,b),bc=gm(b,c),ca=gm(c,a);
+      nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);}
+    faces=nf;
+  }
+  return {verts,faces};
+}
+const sphereCache={};
+function sphereMesh(depth){ if(!sphereCache[depth]) sphereCache[depth]=subdivide(icosahedron(),depth); return sphereCache[depth]; }
+
+/* ---------- PARAMS (mm) ---------- */
+const P = {
+  proDia:70, opiDia:85, tubeDia:10,
+  seg:{ coxa:18, troch:8, femur:45, patella:14, tibia:40, meta:30, tarsus:16 },
+  nLegs:8, sub:1, gait:0.35
+};
+let gaitOn=true, toolOn=true, spinOn=true;
+const SEG_ORDER=['coxa','troch','femur','patella','tibia','meta','tarsus'];
+// posture elevation per segment (radians) from horizontal: up to a high knee, then down
+const SEG_ELEV=[ 0.10, 0.05, 0.62, -0.18, -0.72, -1.02, -1.30 ];
+
+/* ---------- camera ---------- */
+let yaw=0.7, pitch=-0.42, zoom=1.0;
+let bound=200;
+function legLenSum(){ let s=0; for(const k of SEG_ORDER) s+=P.seg[k]; return s; }
+function computeBound(){
+  const reach = P.proDia*0.5 + legLenSum()*0.92;
+  bound = Math.max(reach, P.opiDia, P.proDia)*1.05;
+}
+function CAM(){ return bound*2.7/zoom; }
+function FOC(){ return Math.min(W,H)*0.82; }
+
+function rot(p){
+  const cy=Math.cos(yaw),sy=Math.sin(yaw);
+  let x1=p[0]*cy+p[2]*sy, z1=-p[0]*sy+p[2]*cy, y1=p[1];
+  const cx=Math.cos(pitch),sx=Math.sin(pitch);
+  let y2=y1*cx-z1*sx, z2=y1*sx+z1*cx;
+  return [x1,y2,z2];
+}
+function project(c){ const zc=c[2]+CAM(); if(zc<1) return null;
+  const s=FOC()/zc; return {x:W/2+c[0]*s, y:H/2-c[1]*s, z:c[2], s}; }
+
+/* ---------- triangle accumulator ---------- */
+let TRI=[];           // {p:[a,b,c] world mm, col:[r,g,b]}
+const LIGHT = norm([-0.45, 0.82, 0.55]);
+function pushTri(a,b,c,col){ TRI.push({p:[a,b,c],col}); }
+
+function emitSphere(center, r, col, depth, sx, sy, sz){
+  const m=sphereMesh(depth);
+  const tv=m.verts.map(v=>[ center[0]+v[0]*r*(sx||1),
+                            center[1]+v[1]*r*(sy||1),
+                            center[2]+v[2]*r*(sz||1) ]);
+  for(const f of m.faces) pushTri(tv[f[0]],tv[f[1]],tv[f[2]],col);
+}
+function emitTube(A,B,r,col,sides){
+  const axis=sub(B,A); const L=len(axis); if(L<1e-4) return;
+  const d=scl(axis,1/L);
+  const up = Math.abs(d[1])>0.9 ? [1,0,0] : [0,1,0];
+  const u=norm(cross(d,up)); const v=cross(d,u);
+  const N=sides||6; const rA=[],rB=[];
+  for(let k=0;k<N;k++){
+    const a=k/N*Math.PI*2;
+    const off=add(scl(u,Math.cos(a)*r), scl(v,Math.sin(a)*r));
+    rA.push(add(A,off)); rB.push(add(B,off));
+  }
+  for(let k=0;k<N;k++){
+    const k2=(k+1)%N;
+    pushTri(rA[k],rA[k2],rB[k2],col);
+    pushTri(rA[k],rB[k2],rB[k],col);
+  }
+}
+
+/* ---------- leg chain (forward kinematics, prescribed posture) ---------- */
+function legJoints(Rxz, hip, gphase, legPhase){
+  // Rxz: horizontal outward unit dir; hip: start point (mm)
+  const lift = gaitOn ? Math.max(0, Math.sin(gphase*6.283 + legPhase)) : 0;
+  const sweep= gaitOn ? Math.cos(gphase*6.283 + legPhase)*0.10 : 0;
+  const up=[0,1,0];
+  const joints=[hip.slice()];
+  let cur=hip.slice();
+  for(let i=0;i<SEG_ORDER.length;i++){
+    let e=SEG_ELEV[i];
+    if(i>=4) e += lift*0.55;            // swing lifts distal segments
+    if(i===2) e += sweep;               // femur sweeps fore/aft
+    const dir = add(scl(Rxz, Math.cos(e)), scl(up, Math.sin(e)));
+    const L=P.seg[SEG_ORDER[i]];
+    cur = add(cur, scl(dir, L));
+    joints.push(cur.slice());
+  }
+  return joints; // length 8: hip + 7 joint ends (last = tarsus tip = foot)
+}
+
+function legAzimuths(n){
+  // place legs to the sides, fanning fore/aft; x=right, z=forward
+  const res=[]; const pairs=n/2;
+  for(let p=0;p<pairs;p++){
+    const a = (pairs===1)?0 : (0.7 - 1.4*p/(pairs-1)); // +0.7 front .. -0.7 back (radians-ish lean)
+    for(const side of [1,-1]){
+      const Rxz = norm([ side*Math.cos(a), 0, Math.sin(a) ]);
+      res.push({Rxz, phase:(p*0.9 + (side>0?0:Math.PI))});
+    }
+  }
+  return res;
+}
+
+/* ---------- build the whole chassis into TRI ---------- */
+let metrics={span:0,height:0,bodyLen:0,leg:0,volume:0};
+function buildChassis(t){
+  TRI=[];
+  computeBound();
+  const proR=P.proDia/2, opiR=P.opiDia/2, tubeR=P.tubeDia/2;
+  const gphase = (t*P.gait*0.02) % 1;
+
+  // determine bodyY so feet rest near ground (y=0): build a reference leg at gphase
+  const refAz = legAzimuths(P.nLegs)[0];
+  const refHip = [ refAz.Rxz[0]*proR*0.8, 0, 0.10*proR*0 + refAz.Rxz[2]*proR*0.8 ];
+  const refJ = legJoints(refAz.Rxz, refHip, gphase, refAz.phase);
+  const footY = refJ[refJ.length-1][1];
+  const bodyY = -footY + 2;   // lift 2mm so feet sit on grid
+
+  // body centres (mm). prosoma forward (+z), opisthosoma rear (-z)
+  const proC=[0, bodyY, proR*0.45];
+  const opiC=[0, bodyY+ (opiR-proR)*0.25, -(proR*0.45 + opiR*0.9)];
+
+  // --- carapace: geodesic Goldberg shell (slightly squashed) ---
+  emitSphere(proC, proR, [42,110,143], P.sub, 1.05, 0.78, 1.12);
+  // --- opisthosoma: smooth ellipsoid ---
+  emitSphere(opiC, opiR, [104,70,52], Math.min(P.sub,2), 1.0, 0.85, 1.25);
+  // --- pedicel waist tube ---
+  emitTube(add(proC,[0,-proR*0.05,-proR*0.7]), add(opiC,[0,0,opiR*0.7]), proR*0.18, [90,70,55], 8);
+
+  // --- 12 pentagon-seed nodes (the deg-5 vertices of the icosphere base) ---
+  {
+    const m=sphereMesh(P.sub);
+    for(let i=0;i<12;i++){
+      const v=m.verts[i];
+      const c=[ proC[0]+v[0]*proR*1.05, proC[1]+v[1]*proR*0.78, proC[2]+v[2]*proR*1.12 ];
+      emitSphere(c, tubeR*0.55, [255,105,180], 0, 1,1,1);
+    }
+  }
+
+  // --- eyes (8): 2 big AME forward + 6 smaller, anatomical nod ---
+  const eyeFront = add(proC,[0,proR*0.18, proR*1.0]);
+  emitSphere(add(eyeFront,[ proR*0.18,0,0]), proR*0.16, [10,12,20], 1,1,1,1);
+  emitSphere(add(eyeFront,[-proR*0.18,0,0]), proR*0.16, [10,12,20], 1,1,1,1);
+  for(const ex of [0.40,-0.40]){
+    emitSphere(add(proC,[proR*ex, proR*0.40, proR*0.78]), proR*0.07, [12,16,26], 0,1,1,1);
+    emitSphere(add(proC,[proR*ex*0.55, proR*0.52, proR*0.55]), proR*0.06, [12,16,26], 0,1,1,1);
+  }
+
+  // --- legs ---
+  let legTubeVol=0;
+  const az=legAzimuths(P.nLegs);
+  for(const a of az){
+    const hip=[ proC[0]+a.Rxz[0]*proR*0.8, bodyY, proC[2]+a.Rxz[2]*proR*0.8 ];
+    const J=legJoints(a.Rxz, hip, gphase, a.phase);
+    // hip ball
+    emitSphere(hip, tubeR*1.15, [255,215,0], 0,1,1,1);
+    for(let i=0;i<J.length-1;i++){
+      const r = tubeR*(1 - i*0.06);            // taper slightly toward foot
+      emitTube(J[i], J[i+1], r, [120,150,170], 6);
+      legTubeVol += Math.PI*r*r*len(sub(J[i+1],J[i]));
+      // joint balls at the major articulations (knee=idx3, etc.)
+      if(i===2 || i===4) emitSphere(J[i+1], r*1.2, [200,210,225], 0,1,1,1);
+    }
+    // foot
+    emitSphere(J[J.length-1], tubeR*0.8, [0,255,213], 0,1,1,1);
+  }
+
+  // --- pedipalps (2 short "boxing glove" limbs) + chelicerae ---
+  for(const side of [1,-1]){
+    const base=add(proC,[side*proR*0.30, proR*0.0, proR*0.95]);
+    const tip =add(base,[side*proR*0.12, -proR*0.35, proR*0.45]);
+    emitTube(base,tip, tubeR*0.7, [150,120,90], 6);
+    emitSphere(tip, tubeR*0.9, [150,120,90], 0,1,1,1);
+  }
+
+  // --- tool arm (chisel manipulator) ---
+  let toolVol=0;
+  if(toolOn){
+    const sw=Math.sin(t*0.02)*0.35;
+    const b0=add(proC,[0,-proR*0.45, proR*0.55]);
+    const b1=add(b0,[ proR*0.30, -proR*0.30, proR*0.45]);
+    const b2=add(b1,[ proR*0.30, -proR*0.20+sw*proR*0.2, proR*0.40]);
+    const tip=add(b2,[ proR*0.20, -proR*0.15, proR*0.30]);
+    const tr=tubeR*0.7;
+    emitTube(b0,b1,tr,[0,200,170],6); emitTube(b1,b2,tr*0.9,[0,220,180],6); emitTube(b2,tip,tr*0.7,[255,105,180],6);
+    emitSphere(tip, tr*0.8, [255,105,180],0,1,1,1);
+    toolVol = Math.PI*tr*tr*(len(sub(b1,b0))+len(sub(b2,b1))+len(sub(tip,b2)));
+  }
+
+  // ---- metrics ----
+  // span: max horizontal distance between opposite foot tips
+  let maxX=-1e9,minX=1e9,maxZ=-1e9,minZ=1e9, maxFootR=0;
+  for(const a of az){
+    const hip=[ proC[0]+a.Rxz[0]*proR*0.8, bodyY, proC[2]+a.Rxz[2]*proR*0.8 ];
+    const J=legJoints(a.Rxz, hip, 0, a.phase);
+    const f=J[J.length-1];
+    maxX=Math.max(maxX,f[0]);minX=Math.min(minX,f[0]);
+    maxZ=Math.max(maxZ,f[2]);minZ=Math.min(minZ,f[2]);
+    maxFootR=Math.max(maxFootR, Math.hypot(f[0],f[2]));
+  }
+  metrics.span = Math.max(maxX-minX, maxZ-minZ);
+  metrics.height = bodyY + proR*0.78;
+  metrics.bodyLen = (proR*0.45+proR*1.12) + (proR*0.45+opiR*0.9+opiR*1.25);
+  metrics.leg = legLenSum();
+  // volume: two ellipsoids + tubes
+  const ellip=(rx,ry,rz)=>4/3*Math.PI*rx*ry*rz;
+  const proVol=ellip(proR*1.05,proR*0.78,proR*1.12);
+  const opiVol=ellip(opiR,opiR*0.85,opiR*1.25);
+  metrics.volume = proVol+opiVol+legTubeVol+toolVol;
+}
+
+/* ---------- render ---------- */
+function groundGrid(){
+  const step=20, n=8, y=0;       // 20mm cells
+  ctx.strokeStyle='rgba(40,52,70,0.5)'; ctx.lineWidth=1;
+  for(let i=-n;i<=n;i++){
+    let a=project(rot([i*step, y, -n*step])), b=project(rot([i*step, y, n*step]));
+    if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    a=project(rot([-n*step, y, i*step])); b=project(rot([n*step, y, i*step]));
+    if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  }
+  // 50mm scale bar
+  const p0=project(rot([-n*step, y, n*step+20])), p1=project(rot([-n*step+50, y, n*step+20]));
+  if(p0&&p1){
+    ctx.strokeStyle=getCss('--gold'); ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();
+    ctx.fillStyle=getCss('--gold'); ctx.font='10px ui-monospace,Consolas,monospace'; ctx.textAlign='left';
+    ctx.fillText('50 mm', p0.x, p0.y-5);
+  }
+}
+function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+let t=0;
+function frame(){
+  ctx.fillStyle=getCss('--bg'); ctx.fillRect(0,0,W,H);
+  groundGrid();
+
+  buildChassis(t);
+
+  // transform + shade + sort + fill
+  const draw=[];
+  for(const tri of TRI){
+    const [a,b,c]=tri.p;
+    const nrm=norm(cross(sub(b,a),sub(c,a)));
+    const bright=0.30 + 0.62*Math.abs(dot(nrm,LIGHT));   // two-sided
+    const ca=rot(a),cb=rot(b),cc=rot(c);
+    const z=(ca[2]+cb[2]+cc[2])/3;
+    const pa=project(ca),pb=project(cb),pc=project(cc);
+    if(!pa||!pb||!pc) continue;
+    // depth fog toward bg
+    const fog=Math.max(0,Math.min(0.55,(z+bound)/(bound*3)));
+    draw.push({z, pa,pb,pc, col:tri.col, bright, fog});
+  }
+  draw.sort((u,v)=>v.z-u.z);   // far first
+
+  const bgc=[6,7,11];
+  for(const d of draw){
+    let r=d.col[0]*d.bright, g=d.col[1]*d.bright, bl=d.col[2]*d.bright;
+    r=r+(bgc[0]-r)*d.fog; g=g+(bgc[1]-g)*d.fog; bl=bl+(bgc[2]-bl)*d.fog;
+    ctx.fillStyle='rgb('+(r|0)+','+(g|0)+','+(bl|0)+')';
+    ctx.beginPath();
+    ctx.moveTo(d.pa.x,d.pa.y); ctx.lineTo(d.pb.x,d.pb.y); ctx.lineTo(d.pc.x,d.pc.y); ctx.closePath();
+    ctx.fill();
+  }
+
+  updateHUD();
+  if(spinOn) yaw+=0.004;
+  t++;
+  requestAnimationFrame(frame);
+}
+
+/* ---------- HUD ---------- */
+const AA_VOL=8340; // mm^3 per AA cell (approx)
+function mm(x){ return Math.round(x)+' mm'; }
+function updateHUD(){
+  document.getElementById('rSpan').textContent = mm(metrics.span);
+  document.getElementById('rHt').textContent   = mm(metrics.height);
+  document.getElementById('rLen').textContent  = mm(metrics.bodyLen);
+  document.getElementById('rLeg').textContent  = mm(metrics.leg);
+  const cm3=metrics.volume/1000;
+  document.getElementById('rVol').textContent  = cm3.toFixed(1)+' cm\u00B3';
+  document.getElementById('rAA').textContent   = (metrics.volume/AA_VOL).toFixed(1)+' \u00D7';
+  const d=P.sub, nu=Math.pow(2,d);
+  const V=10*nu*nu+2, E=30*nu*nu, F=20*nu*nu;
+  document.getElementById('rChi').textContent = (V-E+F);
+  document.getElementById('rP').textContent   = 12;
+  document.getElementById('rVEF').textContent = V+' / '+E+' / '+F;
+}
+
+/* ---------- controls ---------- */
+const $=id=>document.getElementById(id);
+function bindDim(slider, label, key, sub){
+  $(slider).addEventListener('input',e=>{
+    const val=+e.target.value; $(label).textContent=val;
+    if(sub) P.seg[key]=val; else P[key]=val;
+  });
+}
+bindDim('d_pro','v_pro','proDia',false);
+bindDim('d_opi','v_opi','opiDia',false);
+bindDim('d_tube','v_tube','tubeDia',false);
+bindDim('s_coxa','v_coxa','coxa',true);
+bindDim('s_troch','v_troch','troch',true);
+bindDim('s_femur','v_femur','femur',true);
+bindDim('s_pat','v_pat','patella',true);
+bindDim('s_tib','v_tib','tibia',true);
+bindDim('s_meta','v_meta','meta',true);
+bindDim('s_tar','v_tar','tarsus',true);
+
+$('cLegs').addEventListener('input',e=>{ P.nLegs=+e.target.value; $('cLegsv').textContent=P.nLegs; });
+$('cSub').addEventListener('input',e=>{ P.sub=+e.target.value; $('cSubv').textContent=Math.pow(2,P.sub); });
+$('cGait').addEventListener('input',e=>{ P.gait=+e.target.value/100; $('cGaitv').textContent=P.gait.toFixed(2); });
+
+$('bGait').addEventListener('click',e=>{ gaitOn=!gaitOn; e.target.classList.toggle('on',gaitOn); });
+$('bTool').addEventListener('click',e=>{ toolOn=!toolOn; e.target.classList.toggle('on',toolOn); });
+$('bSpin').addEventListener('click',e=>{ spinOn=!spinOn; e.target.classList.toggle('on',spinOn); });
+$('bReset').addEventListener('click',()=>{
+  P.proDia=70;P.opiDia=85;P.tubeDia=10;P.nLegs=8;P.sub=1;P.gait=0.35;
+  P.seg={coxa:18,troch:8,femur:45,patella:14,tibia:40,meta:30,tarsus:16};
+  gaitOn=toolOn=spinOn=true; yaw=0.7;pitch=-0.42;zoom=1.0;
+  const set=(id,val)=>{const el=$(id);if(el)el.value=val;};
+  set('d_pro',70);set('d_opi',85);set('d_tube',10);
+  set('s_coxa',18);set('s_troch',8);set('s_femur',45);set('s_pat',14);set('s_tib',40);set('s_meta',30);set('s_tar',16);
+  set('cLegs',8);set('cSub',1);set('cGait',35);
+  $('v_pro').textContent=70;$('v_opi').textContent=85;$('v_tube').textContent=10;
+  $('v_coxa').textContent=18;$('v_troch').textContent=8;$('v_femur').textContent=45;
+  $('v_pat').textContent=14;$('v_tib').textContent=40;$('v_meta').textContent=30;$('v_tar').textContent=16;
+  $('cLegsv').textContent=8;$('cSubv').textContent=2;$('cGaitv').textContent='0.35';
+  ['bGait','bTool','bSpin'].forEach(b=>$(b).classList.add('on'));
+});
+
+/* ---------- orbit + zoom ---------- */
+let drag=false,lx=0,ly=0;
+function dn(x,y){drag=true;spinOn=false;$('bSpin').classList.remove('on');lx=x;ly=y;}
+function mv(x,y){ if(!drag)return; yaw+=(x-lx)*0.006; pitch+=(y-ly)*0.006;
+  pitch=Math.max(-1.45,Math.min(1.45,pitch)); lx=x;ly=y; }
+function up(){drag=false;}
+cv.addEventListener('mousedown',e=>dn(e.clientX,e.clientY));
+addEventListener('mousemove',e=>mv(e.clientX,e.clientY));
+addEventListener('mouseup',up);
+cv.addEventListener('wheel',e=>{ zoom*=(e.deltaY<0?1.08:0.926); zoom=Math.max(0.3,Math.min(4,zoom)); e.preventDefault(); },{passive:false});
+cv.addEventListener('touchstart',e=>{const a=e.touches[0];dn(a.clientX,a.clientY);},{passive:true});
+cv.addEventListener('touchmove',e=>{const a=e.touches[0];mv(a.clientX,a.clientY);e.preventDefault();},{passive:false});
+cv.addEventListener('touchend',up);
+
+frame();
+</script>
+</body></html>

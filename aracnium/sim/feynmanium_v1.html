@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>FEYNMANIUM v1 — a Feynman diagram is a graph; the loop number is Euler</title>
+<!--
+  FEYNMANIUM v1 · ARACNIUM kernel · bowing to the titan the way he'd respect.
+  =========================================================================
+  Feynman's first principle: "you must not fool yourself, and you are the
+  easiest person to fool." So this is NOT a beautiful trap that hides its
+  workings. It is a diagram tool that shows exactly which part is real and
+  which is flavour, and lets you catch it.
+
+  THE REAL ENGINE (exact, computed live from each graph):
+    A Feynman diagram is a GRAPH. Its loop order is
+        L = I - V + 1                      (I internal lines, V vertices)
+    which is the FIRST BETTI NUMBER of the graph — the number of independent
+    cycles — the SAME Euler accounting (V-E+F=2) that built Robertino's C60
+    carapace. Vertices, internal/external lines, loop order, coupling order,
+    and the QED vertex rule (every vertex = 2 fermion + 1 photon) are all
+    exact graph theory, recomputed live in classify() below. Verified in Node
+    before this build for all six diagrams.
+
+  HONESTY CAVEATS (read them — they are the point):
+   K1  The TOPOLOGY is real and exact. L=I-V+1, the line/vertex counts, the
+       coupling order e^V, and the vertex-validity check are honest graph theory.
+   K2  The AMPLITUDE is NOT computed here. The real value of a diagram needs its
+       loop integrals + Dirac/gamma-matrix algebra — the hard QFT, and exactly the
+       part that diverges for gravity (see "THE WALL"). NO integral is performed.
+       This is a topology/bookkeeping tool, not an amplitude calculator.
+   K3  A Feynman diagram is a BOOKKEEPING device for one term in a perturbation
+       series — NOT a picture of particles moving through space. The lines are
+       propagators, not trajectories; the layout is convention, not geometry.
+       (Feynman's own point.)
+   K4  The g-2 number (Schwinger alpha/2pi) and the diagram counts are real known
+       facts shown as labels. That alpha/2pi is the leading term of a series that is
+       itself ASYMPTOTIC and divergent (Dyson 1952): each term made finite by
+       renormalization, the sum not convergent. Shown, not hidden.
+  =========================================================================
+-->
+<style>
+  :root{
+    --void:#0a0b12; --ink:#e9e6df; --dim:#717688; --faint:#363b4b;
+    --ferm:#9fc6ff;     /* fermion (electron/muon) lines — blue */
+    --phot:#f4c049;     /* photon — gold wavy */
+    --vtx:#46d6c6;      /* interaction vertex — cyan */
+    --loop:#7fffd0;     /* the live loop number */
+    --warm:#ff8a5d;
+    --wire:#1b2030;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--void);color:var(--ink);font-family:var(--mono);overflow:hidden}
+  #stage{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;height:100%}
+  header{padding:15px 22px 10px;border-bottom:1px solid var(--wire)}
+  .kick{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(19px,3.6vw,30px);line-height:1.05;margin-top:5px;letter-spacing:-.01em}
+  h1 .em{font-style:italic;color:var(--phot)}
+  .sub{margin-top:7px;font-size:12px;color:var(--dim);max-width:74ch;line-height:1.55}
+  .sub b{color:var(--ink);font-weight:600} .sub .g{color:var(--loop)}
+  #main{position:relative;display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+  @media (max-width:760px){ #main{grid-template-columns:1fr} #side{display:none} }
+  #left{position:relative;overflow:hidden;display:flex;flex-direction:column}
+  #gallery{display:flex;gap:7px;flex-wrap:wrap;padding:12px 18px 8px}
+  .chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--dim);
+     background:transparent;border:1px solid var(--wire);border-radius:999px;padding:5px 12px;cursor:pointer;transition:all .14s}
+  .chip:hover{border-color:var(--phot);color:var(--ink)}
+  .chip.on{border-color:var(--loop);color:var(--ink);background:rgba(127,255,208,.06)}
+  .chip small{color:var(--faint)}
+  #canvasWrap{flex:1;position:relative;min-height:0}
+  canvas{display:block;width:100%;height:100%}
+  #legend{position:absolute;left:18px;bottom:12px;font-size:10.5px;color:var(--faint);line-height:1.7;pointer-events:none}
+  #legend i{font-style:normal}
+  .lf{color:var(--ferm)} .lp{color:var(--phot)} .lv{color:var(--vtx)}
+  /* side panel */
+  #side{border-left:1px solid var(--wire);background:rgba(8,9,16,.5);position:relative;overflow-y:auto;padding:16px 18px}
+  .ptitle{font-family:var(--serif);font-size:18px;line-height:1.2}
+  .pproc{font-size:11px;color:var(--dim);margin-top:3px}
+  .lbl{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:18px}
+  .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-top:6px;border-bottom:1px dotted var(--wire);padding-bottom:5px}
+  .row .k{color:var(--dim)} .row .v{font-weight:600}
+  .loopbig{font-family:var(--serif);font-size:40px;color:var(--loop);line-height:1;margin-top:8px}
+  .loopbig small{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:0}
+  .formula{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
+  .formula code{color:var(--loop)}
+  .ok{color:var(--vtx)} .no{color:var(--warm)}
+  .note{font-size:11px;color:var(--dim);line-height:1.55;margin-top:8px;border-left:2px solid var(--wire);padding-left:9px}
+  .note b{color:var(--ink)} .note .g{color:var(--phot)}
+  .tie{font-size:10.5px;color:var(--faint);margin-top:16px;line-height:1.6;border-top:1px solid var(--wire);padding-top:12px}
+  .tie b{color:var(--dim)} .tie code{color:var(--vtx)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div class="kick">FEYNMANIUM v1 · ARACNIUM kernel · the bow to the titan</div>
+    <h1>A Feynman diagram is a <span class="em">graph</span>. Its loop number is Euler.</h1>
+    <div class="sub">Pick a process. The <b>topology</b> is real and computed live from the graph: <span class="g">L = I − V + 1</span> is the loop order — the count of independent cycles, the <b>same V−E+F accounting</b> that built Robertino's carapace. What's <b>not</b> computed — the amplitude, the loop integrals, the Dirac algebra — wears a sign saying so. Cartoon outside, no cheating inside.</div>
+  </header>
+  <div id="main">
+    <div id="left">
+      <div id="gallery"></div>
+      <div id="canvasWrap">
+        <canvas id="cv"></canvas>
+        <div id="legend">
+          <i class="lf">───▶</i> fermion (e⁻, μ⁻) &nbsp;·&nbsp; <i class="lp">∿∿∿</i> photon (γ) &nbsp;·&nbsp; <i class="lv">●</i> vertex (e⁻e⁻γ)<br>
+          time flows left → right · layout is convention, not space (K3)
+        </div>
+      </div>
+    </div>
+    <div id="side">
+      <div class="ptitle" id="pTitle">—</div>
+      <div class="pproc" id="pProc">—</div>
+
+      <div class="lbl">graph invariants — computed live</div>
+      <div class="row"><span class="k">vertices&nbsp; V</span><span class="v" id="vV">—</span></div>
+      <div class="row"><span class="k">internal lines&nbsp; I</span><span class="v" id="vI">—</span></div>
+      <div class="row"><span class="k">external legs&nbsp; E</span><span class="v" id="vE">—</span></div>
+
+      <div class="lbl">loop order</div>
+      <div class="loopbig" id="vL">—<small> &nbsp;L = I − V + 1</small></div>
+      <div class="formula" id="vLf">—</div>
+
+      <div class="lbl">coupling order · vertex rule</div>
+      <div class="row"><span class="k">amplitude ∝</span><span class="v" id="vOrd">—</span></div>
+      <div class="row"><span class="k">every vertex e⁻e⁻γ?</span><span class="v" id="vChk">—</span></div>
+
+      <div class="note" id="vNote"></div>
+
+      <div class="tie">
+        <b>why this is the ARACNIUM kernel:</b> a diagram is a graph, so its loop count is the first Betti number
+        <code>L = I−V+1</code> — the same Euler bookkeeping as the carapace's <code>V−E+F=2</code>. One engine, two costumes.<br><br>
+        <b>K2:</b> no amplitude is computed — the loop integrals (the hard part, the part that breaks for gravity) are not done here.
+        <b>K4:</b> g-2 &amp; counts are real labels; the series they live in is asymptotic (Dyson).
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+/* ============================================================
+   THE DIAGRAMS — node positions in a 0..1 box + typed edges.
+   ext:1 node = external endpoint; otherwise = interaction vertex.
+   edge.kind 'f'=fermion (arrowed), 'photon'=wavy. cp=[x,y] curves it.
+   (All six verified in Node: L = I-V+1 = expected, every vertex valid.)
+   ============================================================ */
+const DIAGRAMS = [
+ { key:'emu', tab:'e⁻μ⁻ → e⁻μ⁻', tag:'tree',
+   title:'Møller-type scattering', proc:'e⁻ μ⁻ → e⁻ μ⁻  ·  one-photon exchange (t-channel)',
+   nodes:{ ein:[0.10,0.26,1], A:[0.50,0.26], eout:[0.90,0.26,1], min:[0.10,0.78,1], B:[0.50,0.78], mout:[0.90,0.78,1] },
+   labels:{ ein:'e⁻', eout:'e⁻', min:'μ⁻', mout:'μ⁻' },
+   edges:[ ['ein','A','f'],['A','eout','f'],['min','B','f'],['B','mout','f'],['A','B','photon'] ],
+   note:'The hydrogen atom of QFT. Two vertices, one virtual photon, no loop. Amplitude ∝ e² ∝ α.' },
+
+ { key:'compton', tab:'Compton', tag:'tree',
+   title:'Compton scattering', proc:'e⁻ γ → e⁻ γ  ·  s-channel',
+   nodes:{ ein:[0.10,0.74,1], gin:[0.10,0.30,1], A:[0.38,0.50], B:[0.64,0.50], eout:[0.92,0.74,1], gout:[0.92,0.30,1] },
+   labels:{ ein:'e⁻', gin:'γ', eout:'e⁻', gout:'γ' },
+   edges:[ ['ein','A','f'],['gin','A','photon'],['A','B','f'],['B','eout','f'],['B','gout','photon'] ],
+   note:'Light scatters off an electron. One internal electron propagator, still tree level (L=0).' },
+
+ { key:'selfE', tab:'self-energy', tag:'1-loop',
+   title:'Electron self-energy', proc:'the electron emits and reabsorbs a virtual photon',
+   nodes:{ ein:[0.10,0.62,1], A:[0.38,0.62], B:[0.64,0.62], eout:[0.90,0.62,1] },
+   labels:{ ein:'e⁻', eout:'e⁻' },
+   edges:[ ['ein','A','f'],['A','B','f'],['B','eout','f'],['A','B','photon',[0.51,0.26]] ],
+   note:'First radiative correction to the electron line. The photon loop makes L=1 — and a divergence that renormalization absorbs into the measured mass (THE WALL: [e]=0, finitely many counterterms).' },
+
+ { key:'vacpol', tab:'vacuum pol.', tag:'1-loop',
+   title:'Vacuum polarization', proc:'a photon briefly becomes an e⁺e⁻ pair',
+   nodes:{ gin:[0.10,0.50,1], A:[0.40,0.50], B:[0.66,0.50], gout:[0.92,0.50,1] },
+   labels:{ gin:'γ', gout:'γ' },
+   edges:[ ['gin','A','photon'],['A','B','f',null,[0.53,0.24]],['B','A','f',null,[0.53,0.76]],['B','gout','photon'] ],
+   note:'The vacuum acts like a dielectric. The fermion loop (L=1) screens charge — it is why α "runs" with energy. Real, measured at LEP.' },
+
+ { key:'vertex', tab:'vertex (g−2)', tag:'1-loop ★',
+   title:'Vertex correction — the g−2 diagram', proc:'a virtual photon dresses the e⁻e⁻γ vertex',
+   nodes:{ ein:[0.12,0.80,1], A:[0.34,0.62], B:[0.50,0.44], C:[0.66,0.62], eout:[0.88,0.80,1], gex:[0.50,0.10,1] },
+   labels:{ ein:'e⁻', eout:'e⁻', gex:'γ' },
+   edges:[ ['ein','A','f'],['A','B','f'],['B','C','f'],['C','eout','f'],['B','gex','photon'],['A','C','photon',[0.50,0.84]] ],
+   note:'Schwinger 1948. This single loop gives the electron an anomalous magnetic moment <span class="g">a_e = α/2π ≈ 0.00116</span> — about <b>99.85%</b> of the measured value, from ONE diagram. Full QED (more loops) agrees with experiment to ~10⁻¹². The most precise prediction humans have made.' },
+
+ { key:'rainbow', tab:'2-loop', tag:'2-loop',
+   title:'Two-loop self-energy (rainbow)', proc:'two nested virtual photons — the tower begins',
+   nodes:{ ein:[0.08,0.64,1], A:[0.26,0.64], B:[0.42,0.64], C:[0.58,0.64], D:[0.74,0.64], eout:[0.92,0.64,1] },
+   labels:{ ein:'e⁻', eout:'e⁻' },
+   edges:[ ['ein','A','f'],['A','B','f'],['B','C','f'],['C','D','f'],['D','eout','f'],
+           ['A','D','photon',[0.50,0.18]],['B','C','photon',[0.50,0.40]] ],
+   note:'Order α². Two independent loops (L=2). The number of diagrams grows factorially with order (Dyson 1952) — the series is asymptotic: it diverges, yet its first terms are the best physics we have.' },
+];
+
+/* ============================================================
+   THE HONEST ENGINE — recompute the invariants from the graph.
+   ============================================================ */
+function classify(d){
+  const isVtx = id => d.nodes[id] && d.nodes[id].length<3;     // not ext -> interaction vertex
+  const V = Object.keys(d.nodes).filter(isVtx).length;
+  let I=0,E=0; const val={};
+  Object.keys(d.nodes).filter(isVtx).forEach(id=>val[id]={f:0,p:0});
+  for(const e of d.edges){
+    const internal = isVtx(e[0]) && isVtx(e[1]);
+    if(internal) I++; else E++;
+    for(const end of [e[0],e[1]]) if(val[end]) val[end][e[2]==='photon'?'p':'f']++;
+  }
+  const L = I - V + 1;
+  const valid = Object.values(val).every(v=>v.f===2 && v.p===1);
+  return {V,I,E,L,valid};
+}
+
+/* ============================================================
+   RENDER — proper Feynman conventions on Canvas-2D.
+   fermion: solid line + mid arrowhead. photon: sine wave.
+   curves via quadratic Bézier through an explicit control point.
+   ============================================================ */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1, cur=DIAGRAMS[0], tNow=0;
+function size(){ DPR=Math.min(devicePixelRatio||1,2); const r=cv.getBoundingClientRect();
+  W=cv.width=Math.max(1,r.width*DPR); H=cv.height=Math.max(1,r.height*DPR); }
+addEventListener('resize',size); size();
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function P(node){ // diagram coords (0..1) -> canvas px, with padding
+  const w=W/DPR, h=H/DPR, padX=w*0.12, padY=h*0.16;
+  return [ padX + node[0]*(w-2*padX), padY + node[1]*(h-2*padY) ];
+}
+function bez(a,c,b,t){ const u=1-t;
+  return [ u*u*a[0]+2*u*t*c[0]+t*t*b[0], u*u*a[1]+2*u*t*c[1]+t*t*b[1] ]; }
+function bezTan(a,c,b,t){ const u=1-t;
+  return [ 2*u*(c[0]-a[0])+2*t*(b[0]-c[0]), 2*u*(c[1]-a[1])+2*t*(b[1]-c[1]) ]; }
+
+function drawFermion(a,b,cp){
+  const c = cp? P(cp) : [(a[0]+b[0])/2,(a[1]+b[1])/2];
+  ctx.strokeStyle=css('--ferm'); ctx.lineWidth=2; ctx.beginPath();
+  const NS=40; for(let i=0;i<=NS;i++){ const p=bez(a,c,b,i/NS); if(i===0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); }
+  ctx.stroke();
+  // arrowhead at t=0.5 along tangent
+  const m=bez(a,c,b,0.5), tg=bezTan(a,c,b,0.5); const ang=Math.atan2(tg[1],tg[0]);
+  ctx.fillStyle=css('--ferm'); ctx.save(); ctx.translate(m[0],m[1]); ctx.rotate(ang);
+  ctx.beginPath(); ctx.moveTo(7,0); ctx.lineTo(-4,4.5); ctx.lineTo(-4,-4.5); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function drawPhoton(a,b,cp,phase){
+  const c = cp? P(cp) : [(a[0]+b[0])/2,(a[1]+b[1])/2];
+  // path length estimate -> wave count for ~constant wavelength
+  let len=0,prev=a; const NS=60;
+  for(let i=1;i<=NS;i++){ const p=bez(a,c,b,i/NS); len+=Math.hypot(p[0]-prev[0],p[1]-prev[1]); prev=p; }
+  const humps=Math.max(3,Math.round(len/13)), amp=4.6;
+  ctx.strokeStyle=css('--phot'); ctx.lineWidth=1.8; ctx.beginPath();
+  for(let i=0;i<=NS;i++){ const t=i/NS; const p=bez(a,c,b,t), tg=bezTan(a,c,b,t);
+    const L=Math.hypot(tg[0],tg[1])||1; const nx=-tg[1]/L, ny=tg[0]/L;
+    const w=Math.sin(t*humps*Math.PI*2 + phase)*amp;
+    const x=p[0]+nx*w, y=p[1]+ny*w; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  ctx.stroke();
+}
+function draw(){
+  const w=W/DPR,h=H/DPR; ctx.clearRect(0,0,w,h);
+  const d=cur, phase=tNow*2.2;
+  // edges
+  for(const e of d.edges){ const a=P(d.nodes[e[0]]), b=P(d.nodes[e[1]]), cp=e[3]||null;
+    if(e[2]==='photon') drawPhoton(a,b,cp,phase); else drawFermion(a,b,cp); }
+  // vertices (interaction dots) + soft pulse
+  for(const id in d.nodes){ const n=d.nodes[id]; if(n.length<3){ const p=P(n);
+    const pulse=1+0.18*Math.sin(tNow*3+ p[0]*0.05);
+    ctx.beginPath(); ctx.arc(p[0],p[1],5.4*pulse,0,7); ctx.fillStyle=css('--vtx'); ctx.fill();
+    ctx.beginPath(); ctx.arc(p[0],p[1],9.5*pulse,0,7); ctx.strokeStyle='rgba(70,214,198,.25)'; ctx.lineWidth=1; ctx.stroke(); } }
+  // external leg labels
+  ctx.font='600 14px '+css('--serif'); ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const id in d.labels){ const n=d.nodes[id]; const p=P(n);
+    const left=n[0]<0.5, top=n[1]<0.5;
+    const lx=p[0]+(left?-18:18), ly=p[1]+(d.labels[id]==='γ'&&Math.abs(n[0]-0.5)<0.1 ? (top?-16:16) : (top?-14:14));
+    ctx.fillStyle = d.labels[id]==='γ'? css('--phot') : css('--ferm');
+    ctx.fillText(d.labels[id], lx, ly); }
+}
+
+/* ============================================================
+   PANEL + GALLERY
+   ============================================================ */
+function refresh(){
+  const d=cur, r=classify(d);
+  document.getElementById('pTitle').textContent=d.title;
+  document.getElementById('pProc').textContent=d.proc;
+  document.getElementById('vV').textContent=r.V;
+  document.getElementById('vI').textContent=r.I;
+  document.getElementById('vE').textContent=r.E;
+  document.getElementById('vL').innerHTML=r.L+'<small> &nbsp;'+(r.L===0?'tree level':r.L+' independent loop'+(r.L>1?'s':''))+'</small>';
+  document.getElementById('vLf').innerHTML='<code>L = I − V + 1 = '+r.I+' − '+r.V+' + 1 = '+r.L+'</code>  (first Betti number)';
+  document.getElementById('vOrd').innerHTML='e<sup>'+r.V+'</sup> ∝ α<sup>'+(r.V/2)+'</sup>';
+  document.getElementById('vChk').innerHTML = r.valid? '<span class="ok">✓ all valid</span>' : '<span class="no">✗ invalid</span>';
+  document.getElementById('vNote').innerHTML=d.note;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.k===d.key));
+}
+const gal=document.getElementById('gallery');
+DIAGRAMS.forEach((d,i)=>{ const b=document.createElement('button'); b.className='chip'; b.dataset.k=d.key;
+  b.innerHTML=d.tab+' <small>'+d.tag+'</small>'; b.onclick=()=>{ cur=d; refresh(); }; gal.appendChild(b); });
+addEventListener('keydown',e=>{ const n=+e.key; if(n>=1&&n<=DIAGRAMS.length){ cur=DIAGRAMS[n-1]; refresh(); } });
+
+function loop(ms){ tNow=ms/1000; draw(); requestAnimationFrame(loop); }
+refresh(); requestAnimationFrame(loop);
+</script>
+</body></html>

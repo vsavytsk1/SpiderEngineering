@@ -9,6 +9,16 @@ not a rewrite.
 
 ---
 
+## 🎯 Centerpiece — the live spider
+
+**[➜ Open the v1.4 HEAVE simulator](aracnium/sim/aracnium_v1_4_heave.html)** (or `index.html` at the repo root for GitHub Pages).
+
+The current single-source digital twin of one ARACNIUM unit. Heave-gait kinematics, drilling/carving end-effector, drone propulsion. This is the geometry the rest of the repo (PCB → CAD → BOM → firmware) is built to physically realize.
+
+The 14-iteration history (`v0_6` graphframe → `v1_4` heave) is preserved in `aracnium/sim/` as the design lineage.
+
+---
+
 ## The one principle
 
 Everything in this repo obeys a single rule:

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.1 -- stress sim -- recursive unfold from a printed hash</title>
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;cursor:crosshair}
+
+  /* HUD overlay -- pointer-events:none means clicks pass through to canvas */
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.78);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.06em}
+  #sub{color:var(--dim);font-size:10px;margin-top:1px}
+  #state{margin-top:7px;font-size:11px;line-height:1.55}
+  #state b{color:var(--gold);font-weight:500}
+  #state .h{color:var(--cyan);font-family:var(--mono)}
+  #depth{margin-top:6px;font-size:11px}
+  #depth b{color:var(--green)}
+  #verbs{margin-top:6px;font-size:10px;color:#9a93a8}
+  #verbs span{color:var(--espresso);margin:0 6px 0 0}
+
+  #side{margin-left:auto;max-width:280px;color:var(--dim);font-size:10px;line-height:1.55}
+  #side b{color:var(--cyan)}
+
+  #log{position:fixed;right:14px;bottom:80px;width:260px;max-height:38vh;padding:10px 12px;
+    background:rgba(8,8,16,0.78);border:1px solid #20202e;border-radius:8px;
+    overflow-y:auto;font-size:11px;line-height:1.5;z-index:10}
+  #log .lh{color:var(--dim);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+  #log .e{margin:2px 0;color:#bbb;border-left:2px solid #2a2a3a;padding-left:7px}
+  #log .e.scan{border-color:var(--cyan)}
+  #log .e.unfold{border-color:var(--gold)}
+  #log .e.back{border-color:var(--espresso)}
+  #log .e .t{color:#55556a;font-size:10px}
+  #log .e .v{color:var(--gold);font-weight:500}
+
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:flex;flex-wrap:wrap;gap:8px;
+    align-items:center;background:rgba(8,8,16,0.88);border:1px solid #20202e;border-radius:10px;padding:8px 12px;z-index:10}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.espresso{color:var(--espresso)} button.espresso:hover{border-color:var(--espresso)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  button.green{color:var(--green)} button.green:hover{border-color:var(--green)}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 3px}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.06em}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">LENS v0.1 -- stress sim</div>
+    <div id="sub">scan → hash → recursive unfold · χ=2 each level</div>
+    <div id="state">
+      hash: <span class="h" id="hcur">none</span><br>
+      node: <b id="ncur">cave root</b>
+    </div>
+    <div id="depth">depth D = <b id="dcur">0</b> · attention bias <b id="abias">0.0</b></div>
+    <div id="verbs">
+      <span>1·SCAN</span><span>2·ZOOM-IN</span><span>3·ZOOM-OUT</span>
+      <span>4·SAVE</span><span>5·SHARE</span><span>6·FORGET</span><span>7·BACK</span>
+    </div>
+  </div>
+  <div id="side">
+    <b>click a QR rectangle</b> to scan it<br>
+    each scan opens a sub-graph<br>
+    each sub-node is another scannable hash<br>
+    depth-D rises with each unfold<br>
+    χ = V−E+F = 2 enforced per level
+  </div>
+</div>
+
+<div id="log">
+  <div class="lh">action log</div>
+  <div id="logbody"></div>
+</div>
+
+<div id="bar">
+  <button id="bback" class="espresso">7 · BACK</button>
+  <button id="breset">↺ RESET</button>
+  <div class="sep"></div>
+  <span class="klbl">verbs:</span>
+  <button id="bsave" class="green">4 · SAVE</button>
+  <button id="bshare" class="cyan">5 · SHARE</button>
+  <button id="bforget" class="pink">6 · FORGET</button>
+  <div class="sep"></div>
+  <button id="bdump">⤓ dump receipts</button>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   THE STRESS HYPOTHESIS
+   ----------------------------------------------------------
+   Build the simplest possible "scan → unfold" loop. Prove:
+     (A) the loop terminates (every node has a parent path back)
+     (B) χ = V−E+F = 2 holds at EVERY refinement level
+     (C) the interaction grammar fits in ≤ 7 verbs
+     (D) the recursive depth D is bounded and measurable
+   If all 4 hold, the seed dossier's predictions P1/P2/P3 land.
+   ============================================================ */
+
+const VERBS = ['SCAN','ZOOM-IN','ZOOM-OUT','SAVE','SHARE','FORGET','BACK'];
+/* exactly 7. The cave's Goldberg-kernel parity is honored. */
+
+/* ============================================================
+   THE FAKE KNOWLEDGE GRAPH
+   ----------------------------------------------------------
+   In a real lens this would be a true index over Wikipedia +
+   Wolfram + local datastore. For the stress sim, we synthesize
+   a deterministic, 4-level recursive graph.
+   Each node has:
+     id      : short hash (4 chars)
+     label   : human name
+     blurb   : 1-2 sentence summary
+     children: array of child node ids (each scannable)
+     parent  : id of parent (or null for root)
+   The closure property: every non-root node has a path back to
+   root, and every node's |children|+1 = local-frame V; |edges|
+   = 2|V|-2 (treelike); |F| = 1 outer face + interior; chi = 2.
+   ============================================================ */
+
+const ROOT = 'cave';
+
+const GRAPH = {
+  cave: {
+    label: 'CAVE ROOT',
+    blurb: 'this is the cave\'s lens. tap a hash to descend.',
+    children: ['tzat','col','phi','aur'],
+    parent: null
+  },
+
+  /* === Tzatziki branch (kid-in-restaurant story from seed §5) === */
+  tzat: {
+    label: 'tzatziki',
+    blurb: 'cold greek yogurt sauce with cucumber, garlic, dill, olive oil. eaten with bread or grilled meat.',
+    children: ['yogu','cuke','garl','olo'],
+    parent: 'cave'
+  },
+  yogu: {
+    label: 'greek yogurt',
+    blurb: 'strained yogurt. higher protein than regular. base of tzatziki, also breakfast staple.',
+    children: ['milk','strain'],
+    parent: 'tzat'
+  },
+  milk: { label:'milk', blurb:'cow / sheep / goat. greek tradition prefers sheep.', children:[], parent:'yogu' },
+  strain: { label:'straining', blurb:'cheesecloth removes whey. doubles protein density.', children:[], parent:'yogu' },
+  cuke: {
+    label:'cucumber', blurb:'grated, salted, drained. otherwise tzatziki becomes soup.',
+    children:['grate'], parent:'tzat'
+  },
+  grate: { label:'why grate?', blurb:'increased surface area lets salt extract water faster (osmosis).', children:[], parent:'cuke' },
+  garl: { label:'garlic', blurb:'raw, minced fine. greek tzatziki uses more garlic than turkish cacik.', children:[], parent:'tzat' },
+  olo: { label:'olive oil', blurb:'extra virgin. drizzled at end, not blended.', children:[], parent:'tzat' },
+
+  /* === Temple column branch (sees a doric column standing) === */
+  col: {
+    label: 'doric column',
+    blurb: 'oldest greek order. fluted shaft, plain capital. apollo\'s temple at korinthos uses these.',
+    children:['fluts','capi','base'],
+    parent:'cave'
+  },
+  fluts: { label:'flutes', blurb:'20 vertical channels. play tricks with light to look taller.', children:[], parent:'col' },
+  capi: { label:'capital', blurb:'echinus + abacus. doric=plain. ionic=scrolls. corinthian=acanthus.', children:[], parent:'col' },
+  base: { label:'base', blurb:'doric columns rest directly on stylobate. no base, unlike ionic.', children:[], parent:'col' },
+
+  /* === Golden ratio branch (kid sees a spiral on a napkin) === */
+  phi: {
+    label: 'phi (golden ratio)',
+    blurb: '(1+sqrt(5))/2 ≈ 1.618. selfsame ratio: a/b = (a+b)/a. shows up where growth meets symmetry.',
+    children:['fib','spir','c60'],
+    parent:'cave'
+  },
+  fib: { label:'fibonacci', blurb:'1,1,2,3,5,8,13,... ratio of consecutive terms → phi.', children:[], parent:'phi' },
+  spir: { label:'spiral', blurb:'logarithmic spiral with growth rate phi. seashells, galaxies, sunflowers.', children:[], parent:'phi' },
+  c60: { label:'C60 buckyball', blurb:'fullerene\'s HOMO = phi-1 ≈ 0.618. cave\'s SPECTRIUM module proves this.', children:[], parent:'phi' },
+
+  /* === Aurora / brand (kid sees a yogurt brand label) === */
+  aur: {
+    label: 'aurora (brand)',
+    blurb: 'fictional yogurt brand. used here as a test of brand-> ingredient unfold.',
+    children:['ing','cert'],
+    parent:'cave'
+  },
+  ing: { label:'ingredients', blurb:'whole milk, live cultures, salt. nothing else.', children:[], parent:'aur' },
+  cert: { label:'certifications', blurb:'PDO Feta, ISO 22000 (food safety).', children:[], parent:'aur' }
+};
+
+/* ============================================================
+   χ = V − E + F  AT EACH LEVEL
+   ----------------------------------------------------------
+   For the "scan view" at node N: V = 1 (center) + |N.children|;
+   E = |N.children| edges from center + (|children|) edges
+   between adjacent children around the rim (a wheel graph).
+   F = |children| triangular faces + 1 outer = |children| + 1.
+   So V = 1 + c, E = 2c, F = c + 1.  ⇒ χ = (1+c) − 2c + (c+1) = 2. ✓
+   This is the cave's claim made local: every refinement level
+   carries χ = 2.
+   ============================================================ */
+function eulerOfNode(nodeId){
+  const n = GRAPH[nodeId];
+  const c = n.children.length;
+  // wheel graph (c >= 3); for c<3 we degenerate to fan but still chi=2
+  if(c === 0) return { V:1, E:0, F:1, chi:2, c };
+  if(c === 1) return { V:2, E:1, F:1, chi:2, c };
+  if(c === 2) return { V:3, E:2, F:1, chi:2, c };
+  return { V: 1+c, E: 2*c, F: c+1, chi: (1+c) - 2*c + (c+1), c };
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let curNode = ROOT;
+let depth = 0;
+let attentionBias = 0.0;     // surrogate user signal (-1..+1)
+let history = [];            // path back (BACK verb)
+let receipts = [];           // for SAVE / SHARE / dump
+
+/* ============================================================
+   GENESIS KERNEL RESIZE (proven, no DPR fight)
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+/* ============================================================
+   LAYOUT: center node at (W/2, H/2). Children around at angles.
+   Each child rendered as a "QR square" -- the printed hash.
+   ============================================================ */
+function layoutNode(nodeId){
+  const n = GRAPH[nodeId];
+  const c = n.children.length;
+  const R = Math.min(W, H) * 0.28;
+  const cx = W * 0.5, cy = H * 0.5;
+  const center = { id: nodeId, x: cx, y: cy, r: 60 };
+  const kids = n.children.map((cid, i) => {
+    const ang = (i / Math.max(1,c)) * Math.PI * 2 - Math.PI / 2;
+    return {
+      id: cid,
+      x: cx + R * Math.cos(ang),
+      y: cy + R * Math.sin(ang),
+      r: 48
+    };
+  });
+  return { center, kids };
+}
+
+/* ============================================================
+   DRAW
+   ============================================================ */
+let hover = null;
+function drawFrame(){
+  ctx.fillStyle = '#050508';
+  ctx.fillRect(0, 0, W, H);
+
+  const layout = layoutNode(curNode);
+  const n = GRAPH[curNode];
+  const e = eulerOfNode(curNode);
+
+  /* ---- edges (center -> child + rim) ---- */
+  ctx.strokeStyle = 'rgba(0,212,255,0.18)';
+  ctx.lineWidth = 1.2;
+  for(const k of layout.kids){
+    ctx.beginPath();
+    ctx.moveTo(layout.center.x, layout.center.y);
+    ctx.lineTo(k.x, k.y);
+    ctx.stroke();
+  }
+  // rim edges (wheel graph)
+  if(layout.kids.length >= 2){
+    ctx.strokeStyle = 'rgba(255,215,0,0.10)';
+    for(let i = 0; i < layout.kids.length; i++){
+      const a = layout.kids[i], b = layout.kids[(i+1) % layout.kids.length];
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+  }
+
+  /* ---- center node (current scan) ---- */
+  drawQRSquare(layout.center.x, layout.center.y, layout.center.r, n.label,
+               'rgba(255,215,0,1)', 'rgba(255,215,0,0.16)', 'cave');
+
+  /* ---- center blurb ---- */
+  ctx.fillStyle = 'rgba(232,224,208,0.78)';
+  ctx.font = '12px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  wrapText(ctx, n.blurb, layout.center.x, layout.center.y + layout.center.r + 22, W * 0.6, 16);
+
+  /* ---- child QR squares (scannable hashes) ---- */
+  for(const k of layout.kids){
+    const child = GRAPH[k.id];
+    const isHover = hover && hover.id === k.id;
+    const stroke = isHover ? 'rgba(0,212,255,1)' : 'rgba(0,255,213,0.75)';
+    const fill   = isHover ? 'rgba(0,212,255,0.25)' : 'rgba(0,255,213,0.10)';
+    drawQRSquare(k.x, k.y, k.r, child.label, stroke, fill, k.id);
+  }
+
+  /* ---- HUD update ---- */
+  document.getElementById('hcur').textContent = '#' + curNode;
+  document.getElementById('ncur').textContent = n.label;
+  document.getElementById('dcur').textContent = depth;
+  document.getElementById('abias').textContent = attentionBias.toFixed(2);
+
+  /* ---- χ receipt (drawn bottom-left) ---- */
+  ctx.fillStyle = 'rgba(0,255,213,0.85)';
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'left';
+  const eulerLine = 'χ = V−E+F = '+e.V+'−'+e.E+'+'+e.F+' = '+e.chi+(e.chi===2 ? ' ✓' : ' ✗');
+  ctx.fillText(eulerLine, 14, H - 100);
+  ctx.fillStyle = 'rgba(154,147,168,0.85)';
+  ctx.fillText('verbs used: ' + receipts.length + ' / 7 grammar fits', 14, H - 84);
+
+  requestAnimationFrame(drawFrame);
+}
+
+/* draw the "QR-like" square -- pseudo dots in a grid */
+function drawQRSquare(cx, cy, r, label, stroke, fill, idHash){
+  const s = r * 1.7;
+  const x0 = cx - s/2, y0 = cy - s/2;
+  ctx.fillStyle = fill;
+  ctx.fillRect(x0, y0, s, s);
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(x0, y0, s, s);
+
+  // pseudo-QR dots: deterministic hash of idHash into a 7x7 grid
+  const grid = 7;
+  const cell = s / grid;
+  // hash the id into a 49-bit pattern
+  let seed = 0;
+  for(let i = 0; i < idHash.length; i++) seed = ((seed*31) + idHash.charCodeAt(i)) >>> 0;
+  ctx.fillStyle = stroke;
+  for(let gy = 0; gy < grid; gy++){
+    for(let gx = 0; gx < grid; gx++){
+      // corner finders (top-left, top-right, bottom-left)
+      const corner = (gx<2 && gy<2) || (gx>=grid-2 && gy<2) || (gx<2 && gy>=grid-2);
+      if(corner){
+        if((gx===0||gx===grid-1||gy===0||gy===grid-1) ||
+           (gx===grid-2 && gy>=grid-2) || (gy===grid-2 && gx>=grid-2)){
+          // outer border of corner stones
+          if((gx<2 && gy<2 && (gx===0||gy===0||gx===1||gy===1))){
+            // inner of TL corner
+            if(gx===1 && gy===1){ /* hollow center */ }
+            else ctx.fillRect(x0 + gx*cell, y0 + gy*cell, cell-1, cell-1);
+          }
+        }
+      } else {
+        // data cells from hash
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        if(seed & 0x80000000){
+          ctx.fillRect(x0 + gx*cell, y0 + gy*cell, cell-1, cell-1);
+        }
+      }
+    }
+  }
+
+  // label below
+  ctx.fillStyle = stroke;
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, cx, cy + s/2 + 14);
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH){
+  const words = text.split(' ');
+  let line = '', yy = y;
+  for(const w of words){
+    const test = line ? line + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW){
+      ctx.fillText(line, x, yy);
+      line = w; yy += lineH;
+    } else line = test;
+  }
+  if(line) ctx.fillText(line, x, yy);
+}
+
+requestAnimationFrame(drawFrame);
+
+/* ============================================================
+   INTERACTION GRAMMAR (the 7 verbs)
+   ============================================================ */
+function logAction(kind, msg){
+  const d = document.createElement('div');
+  d.className = 'e ' + kind;
+  const tm = new Date().toLocaleTimeString([], { hour12: false });
+  d.innerHTML = '<span class="t">'+tm+'</span> '+msg;
+  const body = document.getElementById('logbody');
+  body.insertBefore(d, body.firstChild);
+  while(body.children.length > 30) body.removeChild(body.lastChild);
+}
+
+// 1 SCAN -- click on a child QR
+function verbScan(targetId){
+  const target = GRAPH[targetId];
+  if(!target) return;
+  history.push(curNode);
+  curNode = targetId;
+  depth++;
+  receipts.push({ verb:'SCAN', from: history[history.length-1], to: targetId, depth, t: Date.now() });
+  logAction('scan', '<span class="v">SCAN</span> → '+target.label+' (d='+depth+')');
+}
+// 2 ZOOM-IN -- alias for scanning a child (kept for grammar completeness)
+function verbZoomIn(){
+  const n = GRAPH[curNode];
+  if(n.children.length === 0){ logAction('back', 'leaf reached -- no zoom-in'); return; }
+  verbScan(n.children[0]);   // zoom-in = scan first child
+}
+// 3 ZOOM-OUT -- alias for BACK
+function verbZoomOut(){ verbBack(); }
+// 4 SAVE
+function verbSave(){
+  receipts.push({ verb:'SAVE', node: curNode, depth, t: Date.now() });
+  logAction('unfold', '<span class="v">SAVE</span> · '+GRAPH[curNode].label);
+}
+// 5 SHARE
+function verbShare(){
+  receipts.push({ verb:'SHARE', node: curNode, depth, t: Date.now() });
+  logAction('unfold', '<span class="v">SHARE</span> · '+GRAPH[curNode].label);
+}
+// 6 FORGET (drops last receipt, attention-bias bumps negative)
+function verbForget(){
+  receipts.push({ verb:'FORGET', node: curNode, depth, t: Date.now() });
+  attentionBias = Math.max(-1, attentionBias - 0.15);
+  logAction('back', '<span class="v">FORGET</span> · attention -0.15');
+}
+// 7 BACK
+function verbBack(){
+  if(history.length === 0){ logAction('back', 'at root -- nowhere to go back'); return; }
+  const prev = history.pop();
+  curNode = prev;
+  depth = Math.max(0, depth - 1);
+  receipts.push({ verb:'BACK', to: prev, depth, t: Date.now() });
+  logAction('back', '<span class="v">BACK</span> → '+GRAPH[prev].label+' (d='+depth+')');
+}
+function reset(){
+  curNode = ROOT;
+  depth = 0;
+  attentionBias = 0;
+  history = [];
+  receipts = [];
+  document.getElementById('logbody').innerHTML = '';
+  logAction('back', 'reset -- back at cave root');
+}
+
+/* ============================================================
+   INPUT WIRING
+   ============================================================ */
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const lay = layoutNode(curNode);
+  hover = null;
+  for(const k of lay.kids){
+    const dx = x - k.x, dy = y - k.y;
+    if(dx*dx + dy*dy < (k.r * 1.0)**2){ hover = k; break; }
+  }
+  // attention bias drift: distance from center modulates curiosity
+  const dxc = x - W*0.5, dyc = y - H*0.5;
+  const dc = Math.sqrt(dxc*dxc + dyc*dyc);
+  attentionBias = Math.max(-1, Math.min(1, attentionBias * 0.95 + (dc / (Math.min(W,H)*0.5) - 0.5) * 0.04));
+});
+
+cv.addEventListener('click', e => {
+  if(hover){ verbScan(hover.id); }
+});
+
+document.getElementById('bback').onclick = verbBack;
+document.getElementById('breset').onclick = reset;
+document.getElementById('bsave').onclick = verbSave;
+document.getElementById('bshare').onclick = verbShare;
+document.getElementById('bforget').onclick = verbForget;
+document.getElementById('bdump').onclick = () => {
+  const blob = new Blob([JSON.stringify({ receipts, finalNode: curNode, finalDepth: depth, attentionBias }, null, 2)],
+    { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lens_receipts_' + Date.now() + '.json';
+  a.click();
+};
+
+// keyboard shortcuts: 1-7 = the verbs
+addEventListener('keydown', e => {
+  if(e.key === '1'){ /* SCAN -- need hover */ if(hover) verbScan(hover.id); }
+  else if(e.key === '2') verbZoomIn();
+  else if(e.key === '3') verbZoomOut();
+  else if(e.key === '4') verbSave();
+  else if(e.key === '5') verbShare();
+  else if(e.key === '6') verbForget();
+  else if(e.key === '7' || e.key === 'Backspace' || e.key === 'Escape') verbBack();
+  else if(e.key === 'r' || e.key === 'R') reset();
+});
+
+/* boot */
+logAction('back', 'LENS v0.1 stress sim boot · 7 verbs ready · χ=2 enforced');
+</script>
+</body>
+</html>

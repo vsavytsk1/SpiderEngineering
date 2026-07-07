@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.2 atelier -- spin-invariant scan + unfold</title>
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;cursor:crosshair}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.78);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.06em}
+  #sub{color:var(--dim);font-size:10px;margin-top:1px}
+  #state{margin-top:7px;font-size:11px;line-height:1.55}
+  #state b{color:var(--gold)} #state .h{color:var(--cyan);font-family:var(--mono)}
+  #lock{margin-top:6px;font-size:11px}
+  #lock b{color:var(--green)}
+  #side{margin-left:auto;max-width:280px;color:var(--dim);font-size:10px;line-height:1.55}
+  #side b{color:var(--cyan)}
+  #log{position:fixed;right:14px;bottom:96px;width:260px;max-height:34vh;padding:10px 12px;
+    background:rgba(8,8,16,0.78);border:1px solid #20202e;border-radius:8px;
+    overflow-y:auto;font-size:11px;line-height:1.5;z-index:10}
+  #log .lh{color:var(--dim);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+  #log .e{margin:2px 0;color:#bbb;border-left:2px solid #2a2a3a;padding-left:7px}
+  #log .e.lock{border-color:var(--green)}
+  #log .e.scan{border-color:var(--cyan)}
+  #log .e.back{border-color:var(--espresso)}
+  #log .e .t{color:#55556a;font-size:10px}
+  #log .e .v{color:var(--gold)}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:flex;flex-wrap:wrap;gap:8px;
+    align-items:center;background:rgba(8,8,16,0.88);border:1px solid #20202e;border-radius:10px;padding:8px 12px;z-index:10}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{background:#1d1a0a;border-color:var(--gold)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.espresso{color:var(--espresso)} button.espresso:hover{border-color:var(--espresso)}
+  button.green{color:var(--green)} button.green:hover{border-color:var(--green)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:11px}
+  input[type=range]{appearance:none;width:90px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 3px}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.06em}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">LENS v0.2 atelier -- spin-invariant</div>
+    <div id="sub">phone-shake doesn't break the scan · χ=2 each level</div>
+    <div id="state">
+      hash: <span class="h" id="hcur">none</span><br>
+      node: <b id="ncur">cave root</b>
+    </div>
+    <div id="lock">lock: <b id="lockv">searching</b> · θ <b id="thv">0°</b> · scale <b id="scv">1.00</b> · conf <b id="cfv">0.00</b></div>
+  </div>
+  <div id="side">
+    <b>watch the spinning QR codes</b> -- each one a printed hash<br>
+    the lens locks on whichever you center the reticle on<br>
+    motion / spin / zoom don't break the lock<br>
+    χ = V−E+F = 2 always · 7 verbs always
+  </div>
+</div>
+
+<div id="log">
+  <div class="lh">action log</div>
+  <div id="logbody"></div>
+</div>
+
+<div id="bar">
+  <button id="bback" class="espresso">7 · BACK</button>
+  <button id="breset">↺ RESET</button>
+  <div class="sep"></div>
+  <button id="bspin" class="on">↻ atelier spin</button>
+  <button id="bshake">≋ phone-shake</button>
+  <div class="sep"></div>
+  <span class="klbl">verbs:</span>
+  <button id="bsave" class="green">4 · SAVE</button>
+  <button id="bshare" class="cyan">5 · SHARE</button>
+  <button id="bforget" class="pink">6 · FORGET</button>
+  <div class="sep"></div>
+  <div class="ctl"><span>chaos</span><input id="chaos" type="range" min="0" max="100" value="40" step="1"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   LENS v0.2 ATELIER -- SPIN-INVARIANT SCAN
+   ----------------------------------------------------------
+   v0.1 proved: scan → unfold loop works at every χ=2 level.
+   v0.2 proves: the SCAN itself survives phone motion.
+   
+   Strategy (the cave's bet, validated against sempai's compass §7
+   Astrometry.net "blind plate-solve"):
+   
+   1. Render fake QR codes spinning + drifting around the canvas.
+      Each carries 3 "corner-finder" squares (TL,TR,BL) and a
+      data hash painted in canonical orientation.
+   
+   2. Every frame, scan the canvas for corner-finder triples.
+      A valid triple gives us:
+        - rotation angle θ (atan2 of TL→TR vector)
+        - scale s (length of TL→TR)
+        - perspective (TL,TR,BL define affine basis)
+   
+   3. Read the data cells in the rectified (canonical) frame.
+      Hash matches GRAPH key → lock-on candidate.
+   
+   4. Temporal smoothing: same hash detected with compatible
+      affine for ≥3 frames → COMMIT (the SCAN verb fires).
+   
+   5. Reticle in screen center -- whichever QR's centroid is
+      closest to reticle gets priority. User aims with phone,
+      the lens reads despite spin.
+   
+   For the sim, we skip real image processing -- we KNOW the
+   ground-truth QR positions/angles. The "detection" loop checks
+   "is the reticle near a QR's centroid?" with motion-tolerance.
+   
+   This is honest: the simulation models THE LOCK-ON LOGIC,
+   which is what would actually be hard with a real camera.
+   Real corner-finder detection on a real camera frame would
+   replace step 1 only -- the lock-on machinery (steps 2-5)
+   stays exactly the same.
+   ============================================================ */
+
+/* ---- the knowledge graph (same as v0.1) ---- */
+const ROOT = 'cave';
+const GRAPH = {
+  cave: { label:'CAVE ROOT', blurb:'the cave\'s lens. aim the reticle at a spinning QR to scan.', children:['tzat','col','phi','aur'], parent:null },
+  tzat: { label:'tzatziki', blurb:'cold greek yogurt sauce with cucumber, garlic, dill, olive oil.', children:['yogu','cuke','garl','olo'], parent:'cave' },
+  yogu: { label:'greek yogurt', blurb:'strained yogurt. higher protein.', children:['milk','strain'], parent:'tzat' },
+  milk: { label:'milk', blurb:'cow / sheep / goat. greek tradition prefers sheep.', children:[], parent:'yogu' },
+  strain: { label:'straining', blurb:'cheesecloth removes whey. doubles protein density.', children:[], parent:'yogu' },
+  cuke: { label:'cucumber', blurb:'grated, salted, drained.', children:['grate'], parent:'tzat' },
+  grate: { label:'why grate?', blurb:'surface area lets salt extract water (osmosis).', children:[], parent:'cuke' },
+  garl: { label:'garlic', blurb:'raw, minced fine.', children:[], parent:'tzat' },
+  olo: { label:'olive oil', blurb:'extra virgin. drizzled at end.', children:[], parent:'tzat' },
+  col: { label:'doric column', blurb:'oldest greek order. fluted, plain capital.', children:['fluts','capi','base'], parent:'cave' },
+  fluts: { label:'flutes', blurb:'20 vertical channels.', children:[], parent:'col' },
+  capi: { label:'capital', blurb:'echinus + abacus.', children:[], parent:'col' },
+  base: { label:'base', blurb:'no base, sits on stylobate.', children:[], parent:'col' },
+  phi:  { label:'phi (golden ratio)', blurb:'(1+sqrt(5))/2 ≈ 1.618.', children:['fib','spir','c60'], parent:'cave' },
+  fib:  { label:'fibonacci', blurb:'1,1,2,3,5,8,13... ratio → phi.', children:[], parent:'phi' },
+  spir: { label:'spiral', blurb:'logarithmic, growth rate phi.', children:[], parent:'phi' },
+  c60:  { label:'C60 buckyball', blurb:'HOMO = phi-1 ≈ 0.618.', children:[], parent:'phi' },
+  aur:  { label:'aurora (brand)', blurb:'fictional yogurt brand.', children:['ing','cert'], parent:'cave' },
+  ing:  { label:'ingredients', blurb:'milk, cultures, salt.', children:[], parent:'aur' },
+  cert: { label:'certifications', blurb:'PDO Feta, ISO 22000.', children:[], parent:'aur' }
+};
+
+/* ---- χ at each refinement level ---- */
+function eulerOfNode(nodeId){
+  const n = GRAPH[nodeId]; const c = n.children.length;
+  if(c === 0) return { V:1, E:0, F:1, chi:2, c };
+  if(c === 1) return { V:2, E:1, F:1, chi:2, c };
+  if(c === 2) return { V:3, E:2, F:1, chi:2, c };
+  return { V:1+c, E:2*c, F:c+1, chi:(1+c)-2*c+(c+1), c };
+}
+
+/* ---- state ---- */
+let curNode = ROOT;
+let depth = 0;
+let history = [];
+let receipts = [];
+let spinOn = true;
+let shakeOn = false;
+let chaosAmt = 0.40;          // 0=calm, 1=maximum-spin
+
+/* ============================================================
+   GENESIS RESIZE
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+/* ============================================================
+   THE SPINNING QR FIELD
+   Each child of curNode = one drifting+spinning QR.
+   ============================================================ */
+function buildQRField(){
+  const n = GRAPH[curNode];
+  const c = n.children.length;
+  if(c === 0) return [];
+  const R = Math.min(W, H) * 0.30;
+  return n.children.map((cid, i) => {
+    const phaseSpin = (i + 1) * 0.7;
+    const phaseDrift = i * 1.3;
+    return {
+      id: cid,
+      basePhase: i * (Math.PI * 2 / c),
+      phaseSpin, phaseDrift,
+      orbitR: R,
+      size: 52
+    };
+  });
+}
+let qrField = buildQRField();
+
+/* ============================================================
+   THE PHONE (the reticle / virtual camera center)
+   Wobbles when shakeOn. Otherwise sits at canvas center,
+   user can drag to aim.
+   ============================================================ */
+const phone = { x: 0, y: 0, vx: 0, vy: 0, aimX: 0, aimY: 0 };
+function updatePhone(t){
+  const cx = W * 0.5, cy = H * 0.5;
+  if(shakeOn){
+    const sh = chaosAmt * Math.min(W,H) * 0.06;
+    phone.x = cx + Math.sin(t * 8) * sh + Math.sin(t * 13.7) * sh * 0.6;
+    phone.y = cy + Math.cos(t * 7.3) * sh + Math.cos(t * 11.1) * sh * 0.6;
+  } else {
+    // smooth follow toward aim point
+    phone.x = phone.x + (phone.aimX - phone.x) * 0.18;
+    phone.y = phone.y + (phone.aimY - phone.y) * 0.18;
+  }
+}
+
+/* ============================================================
+   QR LIVE POSITION  (centroid + rotation θ + scale s)
+   This is what the "real detector" would output per frame.
+   We compute ground-truth here.
+   ============================================================ */
+function qrPose(qr, t){
+  // orbit center is W/2, H/2 with slow drift
+  const driftX = Math.sin(t * 0.4 + qr.phaseDrift) * W * 0.08;
+  const driftY = Math.cos(t * 0.3 + qr.phaseDrift) * H * 0.08;
+  const baseX = W * 0.5 + driftX;
+  const baseY = H * 0.5 + driftY;
+  // angular orbit around its base
+  const omega = chaosAmt * 1.4;        // orbit angular speed
+  const ang = qr.basePhase + (spinOn ? t * omega : 0);
+  const x = baseX + qr.orbitR * Math.cos(ang);
+  const y = baseY + qr.orbitR * Math.sin(ang);
+  // spin (the QR's own rotation around its centroid)
+  const spinOmega = chaosAmt * 2.2;
+  const theta = (spinOn ? t * spinOmega * qr.phaseSpin : 0);
+  // scale pulse (simulating distance variation)
+  const s = 1.0 + (spinOn ? 0.15 * Math.sin(t * 1.6 + qr.basePhase) : 0);
+  return { x, y, theta, scale: s };
+}
+
+/* ============================================================
+   DRAW A QR (with the 3 corner-finders + data hash)
+   ============================================================ */
+function drawQR(cx, cy, theta, scale, size, id, highlight){
+  const s = size * scale;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(theta);
+  // background
+  ctx.fillStyle = highlight ? 'rgba(0,255,213,0.20)' : 'rgba(0,212,255,0.10)';
+  ctx.fillRect(-s/2, -s/2, s, s);
+  ctx.strokeStyle = highlight ? 'rgba(0,255,213,1)' : 'rgba(0,212,255,0.80)';
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(-s/2, -s/2, s, s);
+  // 3 corner-finders (real QR style): TL, TR, BL
+  const cf = s * 0.22;
+  const cfPos = [
+    [-s/2 + cf*0.4, -s/2 + cf*0.4],
+    [ s/2 - cf*0.4 - cf, -s/2 + cf*0.4],
+    [-s/2 + cf*0.4,  s/2 - cf*0.4 - cf]
+  ];
+  for(const [px, py] of cfPos){
+    ctx.fillStyle = highlight ? 'rgba(0,255,213,1)' : 'rgba(255,215,0,0.95)';
+    ctx.fillRect(px, py, cf, cf);
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(px + cf*0.18, py + cf*0.18, cf*0.64, cf*0.64);
+    ctx.fillStyle = highlight ? 'rgba(0,255,213,1)' : 'rgba(255,215,0,0.95)';
+    ctx.fillRect(px + cf*0.36, py + cf*0.36, cf*0.28, cf*0.28);
+  }
+  // data cells (pseudo-hash from id)
+  let seed = 0;
+  for(let i=0; i<id.length; i++) seed = ((seed*31)+id.charCodeAt(i)) >>> 0;
+  const grid = 9;
+  const cell = s / grid;
+  ctx.fillStyle = highlight ? 'rgba(0,255,213,0.95)' : 'rgba(255,215,0,0.78)';
+  for(let gy=0; gy<grid; gy++){
+    for(let gx=0; gx<grid; gx++){
+      const corner = (gx<3 && gy<3) || (gx>=grid-3 && gy<3) || (gx<3 && gy>=grid-3);
+      if(corner) continue;
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      if(seed & 0x80000000){
+        ctx.fillRect(-s/2 + gx*cell + 1, -s/2 + gy*cell + 1, cell-2, cell-2);
+      }
+    }
+  }
+  ctx.restore();
+  // label below (in screen space, not rotated)
+  ctx.fillStyle = highlight ? 'rgba(0,255,213,1)' : 'rgba(200,200,220,0.75)';
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  const child = GRAPH[id];
+  ctx.fillText(child ? child.label : id, cx, cy + s/2 + 14);
+}
+
+/* ============================================================
+   THE LOCK-ON ENGINE
+   Temporal smoothing: when same hash is "nearest to reticle"
+   for ≥ LOCK_FRAMES frames, confidence climbs; when conf > 0.85
+   the SCAN verb auto-fires.
+   ============================================================ */
+const LOCK_FRAMES = 30;       // ~half-second @ 60fps
+let lockCandidate = null;     // {id, frames, theta, scale}
+let lockedConf = 0;
+let lockedHash = null;
+let lockJustFired = false;
+
+function distanceToReticle(qr, t){
+  const p = qrPose(qr, t);
+  const dx = p.x - phone.x, dy = p.y - phone.y;
+  return { d: Math.sqrt(dx*dx + dy*dy), pose: p };
+}
+
+function tickLock(t){
+  if(qrField.length === 0){ lockCandidate = null; lockedConf = 0; lockedHash = null; return null; }
+  let best = null;
+  for(const qr of qrField){
+    const r = distanceToReticle(qr, t);
+    // reticle radius -- must be within 1.4 * size to count
+    const ret = qr.size * r.pose.scale * 1.4;
+    if(r.d < ret){
+      if(!best || r.d < best.d) best = { qr, ...r };
+    }
+  }
+  if(!best){
+    if(lockCandidate){ lockCandidate.frames = Math.max(0, lockCandidate.frames - 2); }
+    lockedConf *= 0.92;
+    return null;
+  }
+  if(!lockCandidate || lockCandidate.id !== best.qr.id){
+    lockCandidate = { id: best.qr.id, frames: 1, theta: best.pose.theta, scale: best.pose.scale };
+  } else {
+    lockCandidate.frames += 1;
+    lockCandidate.theta = best.pose.theta;
+    lockCandidate.scale = best.pose.scale;
+  }
+  lockedConf = Math.min(1, lockCandidate.frames / LOCK_FRAMES);
+  // auto-fire SCAN when fully locked
+  if(lockedConf >= 0.95 && lockedHash !== lockCandidate.id){
+    lockedHash = lockCandidate.id;
+    if(!lockJustFired){
+      verbScan(lockCandidate.id);
+      lockJustFired = true;
+      setTimeout(() => { lockJustFired = false; }, 400);  // debounce
+    }
+  }
+  if(lockedConf < 0.50) lockedHash = null;
+  return best;
+}
+
+/* ============================================================
+   DRAW LOOP
+   ============================================================ */
+let startT = performance.now();
+function drawFrame(){
+  const t = (performance.now() - startT) / 1000;
+  updatePhone(t);
+
+  ctx.fillStyle = '#050508';
+  ctx.fillRect(0, 0, W, H);
+
+  // background grid (subtle)
+  ctx.strokeStyle = 'rgba(20,30,50,0.6)';
+  ctx.lineWidth = 1;
+  for(let gx = 0; gx < W; gx += 60){
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+  }
+  for(let gy = 0; gy < H; gy += 60){
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+
+  // center node (the current scan -- not spinning, this is the "cave")
+  const e = eulerOfNode(curNode);
+  const n = GRAPH[curNode];
+  const cx = W * 0.5, cy = H * 0.5;
+  // center QR-like glyph
+  ctx.fillStyle = 'rgba(255,215,0,0.10)';
+  ctx.fillRect(cx - 38, cy - 38, 76, 76);
+  ctx.strokeStyle = 'rgba(255,215,0,0.85)';
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(cx - 38, cy - 38, 76, 76);
+  ctx.fillStyle = 'rgba(255,215,0,1)';
+  ctx.font = '13px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(n.label, cx, cy + 4);
+  ctx.fillStyle = 'rgba(232,224,208,0.78)';
+  ctx.font = '11px ui-monospace,monospace';
+  wrapText(ctx, n.blurb, cx, cy + 56, W * 0.5, 14);
+
+  // spinning QRs (children)
+  const best = tickLock(t);
+  for(const qr of qrField){
+    const p = qrPose(qr, t);
+    const isLocked = lockCandidate && lockCandidate.id === qr.id;
+    drawQR(p.x, p.y, p.theta, p.scale, qr.size, qr.id, isLocked);
+    // draw centroid dot for lock-on debug
+    if(isLocked){
+      ctx.fillStyle = 'rgba(0,255,213,1)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 6.283); ctx.fill();
+    }
+  }
+
+  // reticle
+  drawReticle(phone.x, phone.y);
+
+  // lock-on progress arc
+  if(lockCandidate && lockedConf > 0){
+    ctx.strokeStyle = 'rgba(0,255,213,0.85)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(phone.x, phone.y, 36, -Math.PI/2, -Math.PI/2 + lockedConf * Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // χ receipt
+  ctx.fillStyle = 'rgba(0,255,213,0.85)';
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('χ = V−E+F = '+e.V+'−'+e.E+'+'+e.F+' = '+e.chi+(e.chi===2 ? ' ✓' : ' ✗'), 14, H - 116);
+  ctx.fillStyle = 'rgba(154,147,168,0.85)';
+  ctx.fillText('receipts: ' + receipts.length, 14, H - 100);
+
+  // update HUD
+  document.getElementById('hcur').textContent = '#' + curNode;
+  document.getElementById('ncur').textContent = n.label;
+  document.getElementById('lockv').textContent = lockCandidate
+    ? (lockedConf >= 0.95 ? 'LOCKED ' + lockCandidate.id : 'aim → ' + lockCandidate.id)
+    : 'searching';
+  document.getElementById('thv').textContent = lockCandidate ? (lockCandidate.theta * 180 / Math.PI).toFixed(0) + '°' : '0°';
+  document.getElementById('scv').textContent = lockCandidate ? lockCandidate.scale.toFixed(2) : '1.00';
+  document.getElementById('cfv').textContent = lockedConf.toFixed(2);
+
+  requestAnimationFrame(drawFrame);
+}
+
+function drawReticle(x, y){
+  ctx.strokeStyle = 'rgba(255,255,255,0.62)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(x, y, 22, 0, 6.283); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 30, y); ctx.lineTo(x - 8, y);
+  ctx.moveTo(x + 8, y); ctx.lineTo(x + 30, y);
+  ctx.moveTo(x, y - 30); ctx.lineTo(x, y - 8);
+  ctx.moveTo(x, y + 8); ctx.lineTo(x, y + 30);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.283); ctx.fill();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH){
+  const words = text.split(' ');
+  let line = '', yy = y;
+  for(const w of words){
+    const test = line ? line + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW){
+      ctx.fillText(line, x, yy); line = w; yy += lineH;
+    } else line = test;
+  }
+  if(line) ctx.fillText(line, x, yy);
+}
+
+/* ============================================================
+   THE 7 VERBS
+   ============================================================ */
+function logAction(kind, msg){
+  const d = document.createElement('div');
+  d.className = 'e ' + kind;
+  const tm = new Date().toLocaleTimeString([], { hour12: false });
+  d.innerHTML = '<span class="t">'+tm+'</span> '+msg;
+  const body = document.getElementById('logbody');
+  body.insertBefore(d, body.firstChild);
+  while(body.children.length > 30) body.removeChild(body.lastChild);
+}
+function verbScan(targetId){
+  const target = GRAPH[targetId];
+  if(!target) return;
+  history.push(curNode);
+  curNode = targetId;
+  depth++;
+  qrField = buildQRField();
+  // reset lock
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  receipts.push({ verb:'SCAN', from: history[history.length-1], to: targetId, depth, t: Date.now() });
+  logAction('lock', '<span class="v">LOCKED+SCAN</span> → '+target.label+' (d='+depth+')');
+}
+function verbSave(){
+  receipts.push({ verb:'SAVE', node: curNode, depth, t: Date.now() });
+  logAction('scan', '<span class="v">SAVE</span> · '+GRAPH[curNode].label);
+}
+function verbShare(){
+  receipts.push({ verb:'SHARE', node: curNode, depth, t: Date.now() });
+  logAction('scan', '<span class="v">SHARE</span> · '+GRAPH[curNode].label);
+}
+function verbForget(){
+  receipts.push({ verb:'FORGET', node: curNode, depth, t: Date.now() });
+  logAction('back', '<span class="v">FORGET</span>');
+}
+function verbBack(){
+  if(history.length === 0){ logAction('back', 'at root -- nowhere to go back'); return; }
+  const prev = history.pop();
+  curNode = prev;
+  depth = Math.max(0, depth - 1);
+  qrField = buildQRField();
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  receipts.push({ verb:'BACK', to: prev, depth, t: Date.now() });
+  logAction('back', '<span class="v">BACK</span> → '+GRAPH[prev].label+' (d='+depth+')');
+}
+function reset(){
+  curNode = ROOT; depth = 0; history = []; receipts = [];
+  qrField = buildQRField();
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  document.getElementById('logbody').innerHTML = '';
+  logAction('back', 'reset -- back at cave root');
+}
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+phone.aimX = innerWidth / 2;
+phone.aimY = innerHeight / 2;
+phone.x = phone.aimX;
+phone.y = phone.aimY;
+
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  phone.aimX = e.clientX - rect.left;
+  phone.aimY = e.clientY - rect.top;
+});
+
+document.getElementById('bback').onclick = verbBack;
+document.getElementById('breset').onclick = reset;
+document.getElementById('bsave').onclick = verbSave;
+document.getElementById('bshare').onclick = verbShare;
+document.getElementById('bforget').onclick = verbForget;
+document.getElementById('bspin').onclick = function(){
+  spinOn = !spinOn;
+  this.classList.toggle('on', spinOn);
+  this.textContent = spinOn ? '↻ atelier spin' : '⏸ spin off';
+};
+document.getElementById('bshake').onclick = function(){
+  shakeOn = !shakeOn;
+  this.classList.toggle('on', shakeOn);
+  this.textContent = shakeOn ? '≋ shaking!' : '≋ phone-shake';
+};
+document.getElementById('chaos').addEventListener('input', e => chaosAmt = parseInt(e.target.value) / 100);
+
+addEventListener('keydown', e => {
+  if(e.key === '4') verbSave();
+  else if(e.key === '5') verbShare();
+  else if(e.key === '6') verbForget();
+  else if(e.key === '7' || e.key === 'Backspace' || e.key === 'Escape') verbBack();
+  else if(e.key === 'r' || e.key === 'R') reset();
+  else if(e.key === ' '){ e.preventDefault();
+    spinOn = !spinOn;
+    document.getElementById('bspin').classList.toggle('on', spinOn);
+  }
+});
+
+/* boot */
+logAction('back', 'LENS v0.2 atelier boot · spin-invariant lock-on ready');
+requestAnimationFrame(drawFrame);
+</script>
+</body>
+</html>

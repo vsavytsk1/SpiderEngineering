@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.5 GENESIS-LLM -- the circle first: bytecode ring + gate node (0.7)</title>
+<!--
+  LENS v0.5 GENESIS-LLM  ·  "the circle first"  ·  Ancient Korinthos, 2026-07-07
+  ===========================================================================
+  Vlad's abstraction, rendered honestly:
+    - THE CIRCLE = the bytecode. Each glyph of the stone's words (1 Cor 13:1)
+      becomes UTF-8 bytes -> bits (1/0). Each BIT is a node on the ring.
+    - THE GATE = the central node. Weight EXACTLY 0.7 (byte 178/255 = 0.698).
+      Per Galactic Law AXIOM 08 its MEANING is never rendered -- only a neutral
+      marker is drawn. We show the gate exists; we never display what it holds.
+    - FRACTALIZE = polyhedron (Goldberg) nodes bloom outward; each fractal node
+      connects to circle nodes, and its weight is read from the "atom
+      concentration" field we seed (a Genesis-style radial density).
+
+  HONESTY (K1-K5), stated before the pretty part:
+    K1  This is a VISUAL TOY of the design in grimoire/GENESIS_LLM.md. It does
+        NOT train a model. Nothing here is learned; weights are seeded/derived,
+        not optimized. It is a picture of the architecture, not the architecture.
+    K2  "Fractalize" = HIERARCHY (a few refinement shells), not literal infinite
+        self-similarity. Say HIERARCHY when precision matters.
+    K3  The language coverage of the stone is INTENTIONALLY INCOMPLETE. We add
+        what we can render accurately and iterate. Missing tongues are marked.
+    K4  0.7 is a chosen SEED (byte 178). Shown as a target, tested, not magic.
+    K5  AXIOM 08: the center's meaning stays unrendered. The gate marker is a
+        plain node; no text, no glyph, no reveal. Honored in code below.
+
+  Pure Canvas 2D, no deps. P=12 in spirit (dodeca seed). chi=2. Built 2026-07-07.
+-->
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --purple:#cc44ff; --dim:#6a6a82; --txt:#e8e0d0; --one:#00d4ff; --zero:#243244;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.80);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.05em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:560px;line-height:1.45}
+  #note{color:var(--espresso);font-size:10px;margin-top:6px;max-width:560px;line-height:1.45}
+  #note b{color:var(--gold)}
+  #side{margin-left:auto;max-width:280px;color:var(--dim);font-size:10px;line-height:1.55}
+  #side b{color:var(--cyan)} #side .l{color:var(--gold)}
+  #side .row{display:flex;align-items:center;gap:6px;margin:2px 0}
+  #side .sw{width:14px;height:9px;border-radius:2px;display:inline-block}
+  #metrics{position:fixed;top:112px;left:14px;display:flex;gap:6px;flex-wrap:wrap;z-index:10;max-width:300px}
+  .mc{background:rgba(8,8,16,0.85);border:1px solid #20202e;border-radius:6px;padding:5px 10px;min-width:80px}
+  .mc .lab{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:0.07em}
+  .mc .val{font-size:15px;font-weight:bold;color:var(--gold)}
+  .mc .val.cyan{color:var(--cyan)} .mc .val.green{color:var(--green)} .mc .val.pink{color:var(--pink)}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:8px 12px;
+    align-items:center;background:rgba(8,8,16,0.90);border:1px solid #20202e;border-radius:10px;padding:10px 16px;z-index:10}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.03em}
+  input[type=range]{appearance:none;-webkit-appearance:none;width:104px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:var(--gold);cursor:pointer}
+  .v2{color:var(--gold);font-size:11px;min-width:34px;text-align:right}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{border-color:var(--cyan);color:var(--cyan)}
+  #lang{position:fixed;bottom:96px;right:14px;background:rgba(8,8,16,0.9);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;z-index:10;font-size:10px;color:var(--dim);max-width:220px;line-height:1.7}
+  #lang b{color:var(--cyan)}
+  #stamp{position:fixed;bottom:12px;right:14px;color:var(--dim);font-size:9px;text-align:right;z-index:9;line-height:1.5}
+  #stamp b{color:var(--gold)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">GENESIS-LLM &middot; the circle first</div>
+    <div id="sub">THE CIRCLE = bytecode: the stone's words (1 Cor 13:1) -&gt; UTF-8 bytes -&gt; bits.
+      each bit is a node (cyan = 1, dim = 0). THE GATE = the center node, weight <b>0.700</b>.
+      fractalize: Goldberg shells bloom; each fractal node wires to the circle; its weight =
+      the seeded atom-concentration at its radius.</div>
+    <div id="note">claim under test: an LLM is <b>points + lines with weights in [0,1]</b>. here the
+      bits are the ground ring, the gate is the frozen anchor (0.700), and hierarchy carries signal
+      center&harr;rim. <b>the gate's meaning is never rendered</b> (Axiom 08) -- only its marker.</div>
+  </div>
+  <div id="side">
+    <div class="row"><span class="sw" style="background:#00d4ff"></span> circle bit = <b>1</b></div>
+    <div class="row"><span class="sw" style="background:#243244"></span> circle bit = <b>0</b></div>
+    <div class="row"><span class="sw" style="background:#ffd700"></span> gate node <span class="l">w=0.700</span></div>
+    <div class="row"><span class="sw" style="background:#ff69b4"></span> fractal node (w by atom conc.)</div>
+    <div class="row" style="margin-top:5px;color:#6a6a82">line = a weighted connection</div>
+  </div>
+</div>
+
+<div id="metrics">
+  <div class="mc"><div class="lab">circle bits</div><div class="val cyan" id="m-bits">0</div></div>
+  <div class="mc"><div class="lab">fractal nodes</div><div class="val pink" id="m-nodes">0</div></div>
+  <div class="mc"><div class="lab">edges (lines)</div><div class="val" id="m-edges">0</div></div>
+  <div class="mc"><div class="lab">gate weight</div><div class="val green" id="m-gate">0.700</div></div>
+  <div class="mc"><div class="lab">mean |w-0.7|</div><div class="val" id="m-drift">0.000</div></div>
+  <div class="mc"><div class="lab">fps</div><div class="val" id="m-fps">0</div></div>
+</div>
+
+<div id="lang">
+  <b>languages baked</b> (K3: incomplete, iterating)<br>
+  <span id="langlist"></span>
+</div>
+
+<div id="bar">
+  <span class="klbl">language</span>
+  <button id="b-lang" onclick="cycleLang()">EN</button>
+  <span class="klbl">shells</span>
+  <input id="s-shell" type="range" min="0" max="3" step="1" value="2"><span class="v2" id="v-shell">2</span>
+  <span class="klbl">atoms</span>
+  <input id="s-atom" type="range" min="0" max="100" step="1" value="55"><span class="v2" id="v-atom">55</span>
+  <span class="klbl">wires/node</span>
+  <input id="s-wire" type="range" min="1" max="6" step="1" value="3"><span class="v2" id="v-wire">3</span>
+  <button id="b-spin" class="on" onclick="toggleSpin()">spin</button>
+  <button id="b-links" class="on" onclick="toggleLinks()">links</button>
+  <button onclick="reseed()">reseed atoms</button>
+</div>
+
+<div id="stamp">
+  LENS v0.5 &middot; GENESIS-LLM<br>
+  points + lines &middot; gate <b>0.700</b> &middot; center unseen<br>
+  P=12 &middot; &chi;=2 &middot; always
+</div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------------------
+// GENESIS-LLM circle lens. No Python builtins in this JS (Curse 23). ASCII-safe
+// logic; the only non-ASCII lives in the language DATA strings (rendered, not code).
+// ---------------------------------------------------------------------------
+
+var cv = document.getElementById("cv");
+var ctx = cv.getContext("2d");
+var W = 0, H = 0;
+function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+window.addEventListener("resize", resize); resize();
+
+// ---- THE STONE: 1 Corinthians 13:1, baked in known tongues (K3: incomplete) ----
+// Each entry: code, label, text. Kept short (verse 1) so the ring stays readable.
+var STONE = [
+  ["EN", "English",     "If I speak in the tongues of men and of angels, but have not love, I am a noisy gong."],
+  ["EL", "Greek",       "Ean tais glossais ton anthropon lalo kai ton aggelon, agapen de me echo, gegona chalkos echon."],
+  ["ES", "Espanol",     "Si yo hablase lenguas humanas y angelicas, y no tengo amor, vengo a ser como metal que resuena."],
+  ["PT", "Portugues",   "Ainda que eu fale as linguas dos homens e dos anjos, e nao tenha amor, sou como o metal que soa."],
+  ["RU", "Russkij",     "Esli ya govoryu yazykami chelovecheskimi i angelskimi, a lyubvi ne imeyu, to ya med zvenyashchaya."],
+  ["UK", "Ukrainska",   "Koly ya movlyu movamy lyudskymy y anhelskymy, ta lyubovi ne mayu, to ya med, shcho dzvenyt."],
+  ["LA", "Latina",      "Si linguis hominum loquar et angelorum, caritatem autem non habeam, factus sum velut aes sonans."]
+];
+// languages we KNOW are still missing accurate byte-forms (honest marker, K3):
+var MISSING = ["Hebrew", "Aramaic", "Coptic", "Arabic", "Church Slavonic (glagolitic)"];
+
+var langIdx = 0;
+
+// ---- bytecode: text -> UTF-8 bytes -> bits (the circle) ----
+function textToBits(s){
+  var bytes = [];
+  for (var i = 0; i < s.length; i++){
+    var cp = s.charCodeAt(i);
+    if (cp < 0x80){ bytes.push(cp); }
+    else if (cp < 0x800){ bytes.push(0xC0 | (cp >> 6)); bytes.push(0x80 | (cp & 0x3F)); }
+    else { bytes.push(0xE0 | (cp >> 12)); bytes.push(0x80 | ((cp >> 6) & 0x3F)); bytes.push(0x80 | (cp & 0x3F)); }
+  }
+  var bits = [];
+  for (var b = 0; b < bytes.length; b++){
+    for (var k = 7; k >= 0; k--){ bits.push((bytes[b] >> k) & 1); }
+  }
+  return bits;
+}
+
+// ---- deterministic small PRNG (so "reseed" is reproducible per seed) ----
+var seed = 1337;
+function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+function reseed(){ seed = (Date.now() & 0x7fffffff); build(); }
+
+// ---- state ----
+var GATE_W = 0.7;              // K4: the chosen seed weight (byte 178/255 = 0.698)
+var circle = [];              // {ang, bit}
+var atoms = [];               // {r, ang, mass}  -- the Genesis "atom concentration" field
+var fnodes = [];             // fractal nodes {r, ang, w, links:[circleIdx...]}
+var shells = 2, atomN = 55, wiresPer = 3;
+var spin = true, showLinks = true, rot = 0;
+
+// atom-concentration density at a given radius fraction (0..1). A Genesis-style
+// radial field: denser near the pentagons' band, thinning to the rim.
+function densityAt(rf){
+  var d = 0;
+  for (var i = 0; i < atoms.length; i++){
+    var dr = rf - atoms[i].r;
+    d += atoms[i].mass * Math.exp(-(dr * dr) / 0.02);
+  }
+  return d;
+}
+
+function build(){
+  // 1) THE CIRCLE from the current language's bytecode
+  var bits = textToBits(STONE[langIdx][2]);
+  // cap ring size so it stays legible but still "big"
+  if (bits.length > 384) bits = bits.slice(0, 384);
+  circle = [];
+  for (var i = 0; i < bits.length; i++){
+    circle.push({ ang: (i / bits.length) * Math.PI * 2, bit: bits[i] });
+  }
+
+  // 2) THE ATOMS (Genesis concentration field)
+  atoms = [];
+  for (var a = 0; a < atomN; a++){
+    atoms.push({ r: rnd(), ang: rnd() * Math.PI * 2, mass: 0.4 + rnd() * 0.9 });
+  }
+
+  // 3) FRACTALIZE: Goldberg-ish shells of nodes (hierarchy, K2)
+  fnodes = [];
+  var perShell = [12, 24, 48, 96];   // dodeca seed -> refine (P=12 spirit)
+  for (var s = 0; s <= shells; s++){
+    var cnt = perShell[s];
+    var rf = 0.16 + (s / 4) * 0.62;   // radius fraction per shell (inside the ring)
+    for (var n = 0; n < cnt; n++){
+      var ang = (n / cnt) * Math.PI * 2 + s * 0.21;
+      // weight = atom concentration at this radius, squashed toward [0,1], seeded near 0.7
+      var conc = densityAt(rf);
+      var w = 0.7 + 0.28 * Math.tanh(conc - 1.0) * (rnd() - 0.15);
+      if (w < 0) w = 0; if (w > 1) w = 1;
+      // wire this fractal node to a few circle nodes (each fractal node -> circle)
+      var links = [];
+      if (circle.length > 0){
+        for (var L = 0; L < wiresPer; L++){
+          links.push(((n * 7 + L * 31 + s * 13) % circle.length + circle.length) % circle.length);
+        }
+      }
+      fnodes.push({ r: rf, ang: ang, w: w, links: links });
+    }
+  }
+  updateMetrics();
+  refreshLangUI();
+}
+
+function updateMetrics(){
+  var edges = 0, drift = 0;
+  for (var i = 0; i < fnodes.length; i++){ edges += fnodes[i].links.length; drift += Math.abs(fnodes[i].w - 0.7); }
+  document.getElementById("m-bits").textContent = circle.length;
+  document.getElementById("m-nodes").textContent = fnodes.length;
+  document.getElementById("m-edges").textContent = edges;
+  document.getElementById("m-gate").textContent = GATE_W.toFixed(3);
+  document.getElementById("m-drift").textContent = (fnodes.length ? drift / fnodes.length : 0).toFixed(3);
+}
+
+function refreshLangUI(){
+  document.getElementById("b-lang").textContent = STONE[langIdx][0];
+  var baked = STONE.map(function(s){ return s[0]; }).join(" ");
+  document.getElementById("langlist").innerHTML =
+    "<b>" + baked + "</b><br>missing: " + MISSING.join(", ");
+}
+
+// ---- render ----
+function project(rf, ang){
+  var R = Math.min(W, H) * 0.40;
+  var x = W / 2 + Math.cos(ang + rot) * rf * R;
+  var y = H / 2 + Math.sin(ang + rot) * rf * R;
+  return [x, y];
+}
+
+var last = performance.now(), fps = 0;
+function frame(now){
+  var dt = now - last; last = now;
+  fps = fps * 0.9 + (1000 / Math.max(1, dt)) * 0.1;
+  if (spin) rot += 0.0016;
+
+  ctx.clearRect(0, 0, W, H);
+  var R = Math.min(W, H) * 0.40;
+  var cx = W / 2, cy = H / 2;
+
+  // (a) the lines: fractal node -> its circle bits (drawn faint, behind)
+  if (showLinks){
+    ctx.lineWidth = 0.5;
+    for (var i = 0; i < fnodes.length; i++){
+      var fn = fnodes[i];
+      var p = project(fn.r, fn.ang);
+      for (var L = 0; L < fn.links.length; L++){
+        var c = circle[fn.links[L]];
+        var q = project(1.0, c.ang);
+        // line brightness follows the fractal node weight (the "point weight")
+        ctx.strokeStyle = "rgba(0,212,255," + (0.04 + fn.w * 0.10).toFixed(3) + ")";
+        ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+      }
+    }
+    // (a2) faint spokes from gate to fractal nodes (center connects the whole)
+    for (var g = 0; g < fnodes.length; g++){
+      var fp = project(fnodes[g].r, fnodes[g].ang);
+      ctx.strokeStyle = "rgba(255,215,0,0.05)";
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(fp[0], fp[1]); ctx.stroke();
+    }
+  }
+
+  // (b) the circle = the bytecode ring
+  for (var b = 0; b < circle.length; b++){
+    var cc = circle[b];
+    var pt = project(1.0, cc.ang);
+    if (cc.bit === 1){ ctx.fillStyle = "#00d4ff"; ctx.beginPath(); ctx.arc(pt[0], pt[1], 2.4, 0, 7); ctx.fill(); }
+    else { ctx.fillStyle = "#243244"; ctx.beginPath(); ctx.arc(pt[0], pt[1], 1.4, 0, 7); ctx.fill(); }
+  }
+  // ring guide
+  ctx.strokeStyle = "rgba(0,212,255,0.12)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+
+  // (c) the fractal nodes (points), color pink, size + glow by weight
+  for (var f = 0; f < fnodes.length; f++){
+    var fn2 = fnodes[f];
+    var pp = project(fn2.r, fn2.ang);
+    var rad = 1.6 + fn2.w * 3.2;
+    ctx.fillStyle = "rgba(255,105,180," + (0.35 + fn2.w * 0.5).toFixed(3) + ")";
+    ctx.beginPath(); ctx.arc(pp[0], pp[1], rad, 0, 7); ctx.fill();
+  }
+
+  // (d) THE GATE -- center node. AXIOM 08: only a neutral marker, no meaning shown.
+  // A calm blue-gold ring + dot. We render THAT IT IS, never WHAT IT HOLDS.
+  var pulse = 0.5 + 0.5 * Math.sin(now * 0.0018);
+  ctx.strokeStyle = "rgba(0,212,255," + (0.30 + pulse * 0.25).toFixed(3) + ")";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 12 + pulse * 3, 0, 7); ctx.stroke();
+  ctx.fillStyle = "#ffd700";
+  ctx.beginPath(); ctx.arc(cx, cy, 5.5, 0, 7); ctx.fill();
+  // a thin gold aura sized to the gate weight (0.7) -- the only "0.7" we show
+  ctx.strokeStyle = "rgba(255,215,0,0.18)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, GATE_W * 26, 0, 7); ctx.stroke();
+
+  document.getElementById("m-fps").textContent = Math.round(fps);
+  requestAnimationFrame(frame);
+}
+
+// ---- controls ----
+function cycleLang(){ langIdx = (langIdx + 1) % STONE.length; build(); }
+function toggleSpin(){ spin = !spin; document.getElementById("b-spin").className = spin ? "on" : ""; }
+function toggleLinks(){ showLinks = !showLinks; document.getElementById("b-links").className = showLinks ? "on" : ""; }
+document.getElementById("s-shell").addEventListener("input", function(e){
+  shells = +e.target.value; document.getElementById("v-shell").textContent = shells; build();
+});
+document.getElementById("s-atom").addEventListener("input", function(e){
+  atomN = +e.target.value; document.getElementById("v-atom").textContent = atomN; build();
+});
+document.getElementById("s-wire").addEventListener("input", function(e){
+  wiresPer = +e.target.value; document.getElementById("v-wire").textContent = wiresPer; build();
+});
+
+build();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

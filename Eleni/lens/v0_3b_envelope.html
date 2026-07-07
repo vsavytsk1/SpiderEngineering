@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.3b envelope -- all spini families on one screen</title>
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --purple:#cc44ff; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block;cursor:crosshair}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.78);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.06em}
+  #sub{color:var(--dim);font-size:10px;margin-top:1px}
+  #state{margin-top:7px;font-size:11px;line-height:1.55}
+  #state b{color:var(--gold)} #state .h{color:var(--cyan);font-family:var(--mono)}
+  #lock{margin-top:6px;font-size:11px}
+  #lock b{color:var(--green)}
+  #fam{margin-top:5px;font-size:10px;color:#9a93a8}
+  #fam b{color:var(--gold)}
+  #side{margin-left:auto;max-width:300px;color:var(--dim);font-size:10px;line-height:1.55}
+  #side b{color:var(--cyan)}
+  #side .row{display:flex;align-items:center;gap:6px;margin:1px 0}
+  #side .sw{width:14px;height:8px;border-radius:2px;display:inline-block}
+  #log{position:fixed;right:14px;bottom:96px;width:260px;max-height:34vh;padding:10px 12px;
+    background:rgba(8,8,16,0.78);border:1px solid #20202e;border-radius:8px;
+    overflow-y:auto;font-size:11px;line-height:1.5;z-index:10}
+  #log .lh{color:var(--dim);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+  #log .e{margin:2px 0;color:#bbb;border-left:2px solid #2a2a3a;padding-left:7px}
+  #log .e.lock{border-color:var(--green)}
+  #log .e.scan{border-color:var(--cyan)}
+  #log .e.back{border-color:var(--espresso)}
+  #log .e .t{color:#55556a;font-size:10px}
+  #log .e .v{color:var(--gold)}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:flex;flex-wrap:wrap;gap:8px;
+    align-items:center;background:rgba(8,8,16,0.88);border:1px solid #20202e;border-radius:10px;padding:8px 12px;z-index:10}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.on{background:#1d1a0a;border-color:var(--gold)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.espresso{color:var(--espresso)} button.espresso:hover{border-color:var(--espresso)}
+  button.green{color:var(--green)} button.green:hover{border-color:var(--green)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:11px}
+  input[type=range]{appearance:none;width:90px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 3px}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.06em}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">LENS v0.3b envelope</div>
+    <div id="sub">all spini families · CARD · NEPH · ASTRO · NESTED · χ=2 each level</div>
+    <div id="state">
+      hash: <span class="h" id="hcur">none</span><br>
+      node: <b id="ncur">cave root</b>
+    </div>
+    <div id="lock">lock: <b id="lockv">searching</b> · ring <b id="ringv">0</b> · conf <b id="cfv">0.00</b></div>
+    <div id="fam">family: <b id="famv">—</b></div>
+  </div>
+  <div id="side">
+    each child = one <b>spini family</b>:<br>
+    <div class="row"><span class="sw" style="background:#00d4ff"></span>CARD &nbsp;chord k→2k · cardioid</div>
+    <div class="row"><span class="sw" style="background:#ffd700"></span>NEPH &nbsp;chord k→3k · nephroid</div>
+    <div class="row"><span class="sw" style="background:#ff69b4"></span>ASTRO sliding-ladder · astroid</div>
+    <div class="row"><span class="sw" style="background:#00ffd5"></span>NESTED concentric rings · fibonacci</div>
+    aim reticle · the lock holds through spin
+  </div>
+</div>
+
+<div id="log">
+  <div class="lh">action log</div>
+  <div id="logbody"></div>
+</div>
+
+<div id="bar">
+  <button id="bback" class="espresso">7 · BACK</button>
+  <button id="breset">↺ RESET</button>
+  <div class="sep"></div>
+  <button id="bspin" class="on">↻ atelier spin</button>
+  <button id="bshake">≋ phone-shake</button>
+  <button id="benv" class="on">✦ envelopes</button>
+  <div class="sep"></div>
+  <span class="klbl">verbs:</span>
+  <button id="bsave" class="green">4 · SAVE</button>
+  <button id="bshare" class="cyan">5 · SHARE</button>
+  <button id="bforget" class="pink">6 · FORGET</button>
+  <div class="sep"></div>
+  <div class="ctl"><span>chaos</span><input id="chaos" type="range" min="0" max="100" value="40" step="1"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   LENS v0.3b ENVELOPE -- ALL SPINI FAMILIES ON ONE SCREEN
+   ----------------------------------------------------------
+   v0.3a proved: spinning peg-rings replace fake-QR squares, lock-on
+   still works at chaos=100. v0.3b adds the FOUR ATELIER FAMILIES
+   each child gets visually:
+   
+     CARD (cardioid):    chord k -> 2k mod N        1-cusped envelope
+     NEPH (nephroid):    chord k -> 3k mod N        2-cusped envelope
+     ASTRO (astroid):    sliding ladder x/cos+y/sin=1
+                           parameterised (R cos^3 t, R sin^3 t)   4-cusped
+     NESTED:             concentric rings, peg counts 3,5,8 (fibonacci)
+   
+   The family is deterministic from the child id (a different hash
+   slice from N-pegs). So:
+     ringNFromId(id)  = 5 + (hash % 8)        -> N pegs (5..12)
+     familyFromId(id) = ['CARD','NEPH','ASTRO','NESTED'][hash>>3 & 3]
+   
+   That means every node in the GRAPH has a deterministic
+   (family, N) signature -- the visible MATHEMATICAL HASH.
+   
+   Lock-on engine UNCHANGED from v0.2/v0.3a.
+   χ = V - E + F = 2 still enforced for the GRAPH navigation level.
+   ============================================================ */
+
+const ROOT = 'cave';
+const GRAPH = {
+  cave: { label:'CAVE ROOT', blurb:'all four spini families orbit here. each child a different math.', children:['tzat','col','phi','aur'], parent:null },
+  tzat: { label:'tzatziki', blurb:'cold greek yogurt sauce with cucumber, garlic, dill, olive oil.', children:['yogu','cuke','garl','olo'], parent:'cave' },
+  yogu: { label:'greek yogurt', blurb:'strained yogurt. higher protein.', children:['milk','strain'], parent:'tzat' },
+  milk: { label:'milk', blurb:'cow / sheep / goat. greek tradition prefers sheep.', children:[], parent:'yogu' },
+  strain: { label:'straining', blurb:'cheesecloth removes whey. doubles protein density.', children:[], parent:'yogu' },
+  cuke: { label:'cucumber', blurb:'grated, salted, drained.', children:['grate'], parent:'tzat' },
+  grate: { label:'why grate?', blurb:'surface area lets salt extract water (osmosis).', children:[], parent:'cuke' },
+  garl: { label:'garlic', blurb:'raw, minced fine.', children:[], parent:'tzat' },
+  olo: { label:'olive oil', blurb:'extra virgin. drizzled at end.', children:[], parent:'tzat' },
+  col: { label:'doric column', blurb:'oldest greek order. fluted, plain capital.', children:['fluts','capi','base'], parent:'cave' },
+  fluts: { label:'flutes', blurb:'20 vertical channels.', children:[], parent:'col' },
+  capi: { label:'capital', blurb:'echinus + abacus.', children:[], parent:'col' },
+  base: { label:'base', blurb:'no base, sits on stylobate.', children:[], parent:'col' },
+  phi:  { label:'phi (golden ratio)', blurb:'(1+sqrt(5))/2 ≈ 1.618.', children:['fib','spir','c60'], parent:'cave' },
+  fib:  { label:'fibonacci', blurb:'1,1,2,3,5,8,13... ratio → phi.', children:[], parent:'phi' },
+  spir: { label:'spiral', blurb:'logarithmic, growth rate phi.', children:[], parent:'phi' },
+  c60:  { label:'C60 buckyball', blurb:'HOMO = phi-1 ≈ 0.618.', children:[], parent:'phi' },
+  aur:  { label:'aurora (brand)', blurb:'fictional yogurt brand.', children:['ing','cert'], parent:'cave' },
+  ing:  { label:'ingredients', blurb:'milk, cultures, salt.', children:[], parent:'aur' },
+  cert: { label:'certifications', blurb:'PDO Feta, ISO 22000.', children:[], parent:'aur' }
+};
+
+/* ============================================================
+   THE HASH FUNCTIONS -- one id -> (family, N)
+   ============================================================ */
+function hash32(id){
+  let s = 0;
+  for(let i=0; i<id.length; i++) s = ((s*31) + id.charCodeAt(i)) >>> 0;
+  return s;
+}
+function ringNFromId(id){
+  return 5 + (hash32(id) % 8);
+}
+const FAMILIES = ['CARD','NEPH','ASTRO','NESTED'];
+const FAM_COL  = {
+  CARD:   [0,212,255],   // cyan
+  NEPH:   [255,215,0],   // gold
+  ASTRO:  [255,105,180], // pink
+  NESTED: [0,255,213]    // green
+};
+function familyFromId(id){
+  return FAMILIES[(hash32(id) >>> 3) % 4];
+}
+
+/* chi at the navigation level (unchanged) */
+function eulerOfNode(nodeId){
+  const n = GRAPH[nodeId]; const c = n.children.length;
+  if(c === 0) return { V:1, E:0, F:1, chi:2, c };
+  if(c === 1) return { V:2, E:1, F:1, chi:2, c };
+  if(c === 2) return { V:3, E:2, F:1, chi:2, c };
+  return { V:1+c, E:2*c, F:c+1, chi:(1+c)-2*c+(c+1), c };
+}
+
+/* state */
+let curNode = ROOT;
+let depth = 0;
+let history = [];
+let receipts = [];
+let spinOn = true;
+let shakeOn = false;
+let chaosAmt = 0.40;
+let envelopesOn = true;
+
+/* genesis kernel resize */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+/* ============================================================
+   THE RING FIELD -- now each carries (family, N)
+   ============================================================ */
+function buildRingField(){
+  const n = GRAPH[curNode];
+  const c = n.children.length;
+  if(c === 0) return [];
+  const orbitR = Math.min(W, H) * 0.30;
+  return n.children.map((cid, i) => ({
+    id: cid,
+    basePhase: i * (Math.PI * 2 / c),
+    phaseSpin: (i + 1) * 0.7,
+    phaseDrift: i * 1.3,
+    orbitR,
+    ringR: 64,
+    N: ringNFromId(cid),
+    family: familyFromId(cid)
+  }));
+}
+let ringField = buildRingField();
+
+/* phone / reticle */
+const phone = { x: 0, y: 0, aimX: 0, aimY: 0 };
+function updatePhone(t){
+  const cx = W * 0.5, cy = H * 0.5;
+  if(shakeOn){
+    const sh = chaosAmt * Math.min(W,H) * 0.06;
+    phone.x = cx + Math.sin(t * 8) * sh + Math.sin(t * 13.7) * sh * 0.6;
+    phone.y = cy + Math.cos(t * 7.3) * sh + Math.cos(t * 11.1) * sh * 0.6;
+  } else {
+    phone.x = phone.x + (phone.aimX - phone.x) * 0.18;
+    phone.y = phone.y + (phone.aimY - phone.y) * 0.18;
+  }
+}
+
+/* ring pose -- unchanged */
+function ringPose(ring, t){
+  const driftX = Math.sin(t * 0.4 + ring.phaseDrift) * W * 0.08;
+  const driftY = Math.cos(t * 0.3 + ring.phaseDrift) * H * 0.08;
+  const baseX = W * 0.5 + driftX;
+  const baseY = H * 0.5 + driftY;
+  const omega = chaosAmt * 1.4;
+  const ang = ring.basePhase + (spinOn ? t * omega : 0);
+  const x = baseX + ring.orbitR * Math.cos(ang);
+  const y = baseY + ring.orbitR * Math.sin(ang);
+  const spinOmega = chaosAmt * 2.2;
+  const theta = (spinOn ? t * spinOmega * ring.phaseSpin : 0);
+  const s = 1.0 + (spinOn ? 0.15 * Math.sin(t * 1.6 + ring.basePhase) : 0);
+  return { x, y, theta, scale: s };
+}
+
+/* ============================================================
+   THE FOUR SPINI DRAWERS
+   ============================================================ */
+
+/* peg position helper: peg k of N on radius r, rotated by theta */
+function pegXY(cx, cy, theta, r, k, N){
+  const ang = theta + (k / N) * Math.PI * 2;
+  return { x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
+}
+
+/* CARD: chord rule k -> (m*k mod N). m=2 for cardioid. */
+function drawCardOrNeph(cx, cy, theta, r, N, m, col, alpha){
+  // chord weave
+  if(envelopesOn){
+    ctx.strokeStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+(alpha*0.6).toFixed(3)+')';
+    ctx.lineWidth = 0.7;
+    for(let k = 0; k < N; k++){
+      const a = pegXY(cx, cy, theta, r, k, N);
+      const b = pegXY(cx, cy, theta, r, (m * k) % N, N);
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+  }
+  // pegs around the circle
+  ctx.fillStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+alpha.toFixed(3)+')';
+  for(let k = 0; k < N; k++){
+    const p = pegXY(cx, cy, theta, r, k, N);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ASTRO: sliding-ladder. Draws chords from (cos θ_k, 0) to (0, sin θ_k). */
+function drawAstro(cx, cy, theta, r, N, col, alpha){
+  if(envelopesOn){
+    ctx.strokeStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+(alpha*0.6).toFixed(3)+')';
+    ctx.lineWidth = 0.7;
+    // N chords (sliding ladders rotated together by theta)
+    for(let k = 0; k < N; k++){
+      const phi = (k / N) * Math.PI / 2;     // first quadrant
+      const cosp = Math.cos(phi), sinp = Math.sin(phi);
+      // ladder ends at (cos*r, 0) and (0, sin*r) in local frame
+      for(let q = 0; q < 4; q++){      // 4 quadrant rotations
+        const qrot = q * Math.PI / 2;
+        const ax = Math.cos(theta + qrot) * cosp * r - Math.sin(theta + qrot) * 0;
+        const ay = Math.sin(theta + qrot) * cosp * r + Math.cos(theta + qrot) * 0;
+        const bx = Math.cos(theta + qrot) * 0 - Math.sin(theta + qrot) * sinp * r;
+        const by = Math.sin(theta + qrot) * 0 + Math.cos(theta + qrot) * sinp * r;
+        ctx.beginPath();
+        ctx.moveTo(cx + ax, cy + ay);
+        ctx.lineTo(cx + bx, cy + by);
+        ctx.stroke();
+      }
+    }
+  }
+  // 4 axis endpoints
+  ctx.fillStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+alpha.toFixed(3)+')';
+  for(let q = 0; q < 4; q++){
+    const a = q * Math.PI / 2 + theta;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a)*r, cy + Math.sin(a)*r, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* NESTED: 3 concentric rings, peg counts 3, 5, 8 (fibonacci) */
+function drawNested(cx, cy, theta, r, col, alpha){
+  const counts = [3, 5, 8];
+  const radii = [r * 0.40, r * 0.70, r * 1.0];
+  for(let i = 0; i < counts.length; i++){
+    const Ni = counts[i];
+    const ri = radii[i];
+    const ang_off = (i % 2 === 0 ? 1 : -1) * theta * (1 + 0.4 * i);
+    // ring outline
+    ctx.strokeStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+(alpha*0.4).toFixed(3)+')';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ri, 0, Math.PI * 2);
+    ctx.stroke();
+    // pegs
+    ctx.fillStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+alpha.toFixed(3)+')';
+    for(let k = 0; k < Ni; k++){
+      const p = pegXY(cx, cy, ang_off, ri, k, Ni);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+/* dispatcher: draw whichever family this ring belongs to */
+function drawSpini(ring, p, isLocked){
+  const col = FAM_COL[ring.family];
+  const alpha = isLocked ? 1.0 : 0.85;
+  const r = ring.ringR * p.scale;
+  // outer ring outline (dim) for context
+  ctx.strokeStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+(alpha*0.25).toFixed(3)+')';
+  ctx.lineWidth = isLocked ? 1.6 : 1.0;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // body draw by family
+  if(ring.family === 'CARD')        drawCardOrNeph(p.x, p.y, p.theta, r, ring.N, 2, col, alpha);
+  else if(ring.family === 'NEPH')   drawCardOrNeph(p.x, p.y, p.theta, r, ring.N, 3, col, alpha);
+  else if(ring.family === 'ASTRO')  drawAstro(p.x, p.y, p.theta, r, Math.min(ring.N, 8), col, alpha);
+  else                              drawNested(p.x, p.y, p.theta, r, col, alpha);
+
+  // center anchor + highlight halo when locked
+  if(isLocked){
+    ctx.fillStyle = 'rgba(0,255,213,0.18)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 1.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = isLocked ? 'rgba(0,255,213,1)' : 'rgba('+col[0]+','+col[1]+','+col[2]+',0.65)';
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, isLocked ? 4 : 2.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // label
+  ctx.fillStyle = isLocked ? 'rgba(0,255,213,1)' : 'rgba(200,200,220,0.78)';
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  const child = GRAPH[ring.id];
+  ctx.fillText((child ? child.label : ring.id) + ' · ' + ring.family + '/N=' + ring.N, p.x, p.y + r + 18);
+}
+
+/* ============================================================
+   LOCK-ON ENGINE -- unchanged from v0.3a
+   ============================================================ */
+const LOCK_FRAMES = 30;
+let lockCandidate = null;
+let lockedConf = 0;
+let lockedHash = null;
+let lockJustFired = false;
+
+function distanceToReticle(ring, t){
+  const p = ringPose(ring, t);
+  const dx = p.x - phone.x, dy = p.y - phone.y;
+  return { d: Math.sqrt(dx*dx + dy*dy), pose: p };
+}
+
+function tickLock(t){
+  if(ringField.length === 0){ lockCandidate = null; lockedConf = 0; lockedHash = null; return null; }
+  let best = null;
+  for(const ring of ringField){
+    const r = distanceToReticle(ring, t);
+    const ret = ring.ringR * r.pose.scale * 1.4;
+    if(r.d < ret){
+      if(!best || r.d < best.d) best = { ring, ...r };
+    }
+  }
+  if(!best){
+    if(lockCandidate){ lockCandidate.frames = Math.max(0, lockCandidate.frames - 2); }
+    lockedConf *= 0.92;
+    return null;
+  }
+  if(!lockCandidate || lockCandidate.id !== best.ring.id){
+    lockCandidate = {
+      id: best.ring.id, frames: 1,
+      theta: best.pose.theta, scale: best.pose.scale,
+      N: best.ring.N, family: best.ring.family
+    };
+  } else {
+    lockCandidate.frames += 1;
+    lockCandidate.theta = best.pose.theta;
+    lockCandidate.scale = best.pose.scale;
+  }
+  lockedConf = Math.min(1, lockCandidate.frames / LOCK_FRAMES);
+  if(lockedConf >= 0.95 && lockedHash !== lockCandidate.id){
+    lockedHash = lockCandidate.id;
+    if(!lockJustFired){
+      verbScan(lockCandidate.id);
+      lockJustFired = true;
+      setTimeout(() => { lockJustFired = false; }, 400);
+    }
+  }
+  if(lockedConf < 0.50) lockedHash = null;
+  return best;
+}
+
+/* ============================================================
+   DRAW LOOP
+   ============================================================ */
+let startT = performance.now();
+function drawFrame(){
+  const t = (performance.now() - startT) / 1000;
+  updatePhone(t);
+
+  ctx.fillStyle = '#050508';
+  ctx.fillRect(0, 0, W, H);
+
+  // subtle grid
+  ctx.strokeStyle = 'rgba(20,30,50,0.6)';
+  ctx.lineWidth = 1;
+  for(let gx = 0; gx < W; gx += 60){ ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for(let gy = 0; gy < H; gy += 60){ ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+  // center node
+  const e = eulerOfNode(curNode);
+  const n = GRAPH[curNode];
+  const cx = W * 0.5, cy = H * 0.5;
+  const centerN = Math.max(3, n.children.length);
+  const centerR = 44;
+  ctx.strokeStyle = 'rgba(255,215,0,0.85)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.arc(cx, cy, centerR, 0, Math.PI * 2);
+  ctx.stroke();
+  for(let k = 0; k < centerN; k++){
+    const ang = (k / centerN) * Math.PI * 2 - Math.PI / 2;
+    ctx.fillStyle = 'rgba(255,215,0,1)';
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(ang) * centerR, cy + Math.sin(ang) * centerR, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(255,215,0,1)';
+  ctx.font = 'bold 13px ui-monospace,monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(n.label, cx, cy + 4);
+  ctx.fillStyle = 'rgba(232,224,208,0.78)';
+  ctx.font = '11px ui-monospace,monospace';
+  wrapText(ctx, n.blurb, cx, cy + centerR + 22, W * 0.5, 14);
+
+  // all spini rings
+  const best = tickLock(t);
+  for(const ring of ringField){
+    const p = ringPose(ring, t);
+    const isLocked = lockCandidate && lockCandidate.id === ring.id;
+    drawSpini(ring, p, isLocked);
+  }
+
+  // reticle
+  drawReticle(phone.x, phone.y);
+
+  // lock-on arc
+  if(lockCandidate && lockedConf > 0){
+    ctx.strokeStyle = 'rgba(0,255,213,0.85)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(phone.x, phone.y, 36, -Math.PI/2, -Math.PI/2 + lockedConf * Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // χ receipt
+  ctx.fillStyle = 'rgba(0,255,213,0.85)';
+  ctx.font = '11px ui-monospace,monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('χ = V−E+F = '+e.V+'−'+e.E+'+'+e.F+' = '+e.chi+(e.chi===2 ? ' ✓' : ' ✗'), 14, H - 116);
+  ctx.fillStyle = 'rgba(154,147,168,0.85)';
+  ctx.fillText('receipts: ' + receipts.length, 14, H - 100);
+
+  // HUD
+  document.getElementById('hcur').textContent = '#' + curNode;
+  document.getElementById('ncur').textContent = n.label;
+  document.getElementById('lockv').textContent = lockCandidate
+    ? (lockedConf >= 0.95 ? 'LOCKED ' + lockCandidate.id : 'aim → ' + lockCandidate.id)
+    : 'searching';
+  document.getElementById('ringv').textContent = lockCandidate ? 'N=' + lockCandidate.N : '0';
+  document.getElementById('cfv').textContent = lockedConf.toFixed(2);
+  document.getElementById('famv').textContent = lockCandidate ? lockCandidate.family : '—';
+
+  requestAnimationFrame(drawFrame);
+}
+
+function drawReticle(x, y){
+  ctx.strokeStyle = 'rgba(255,255,255,0.62)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(x, y, 22, 0, 6.283); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 30, y); ctx.lineTo(x - 8, y);
+  ctx.moveTo(x + 8, y); ctx.lineTo(x + 30, y);
+  ctx.moveTo(x, y - 30); ctx.lineTo(x, y - 8);
+  ctx.moveTo(x, y + 8); ctx.lineTo(x, y + 30);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.283); ctx.fill();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH){
+  const words = text.split(' ');
+  let line = '', yy = y;
+  for(const w of words){
+    const test = line ? line + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW){
+      ctx.fillText(line, x, yy); line = w; yy += lineH;
+    } else line = test;
+  }
+  if(line) ctx.fillText(line, x, yy);
+}
+
+/* ============================================================
+   THE 7 VERBS
+   ============================================================ */
+function logAction(kind, msg){
+  const d = document.createElement('div');
+  d.className = 'e ' + kind;
+  const tm = new Date().toLocaleTimeString([], { hour12: false });
+  d.innerHTML = '<span class="t">'+tm+'</span> '+msg;
+  const body = document.getElementById('logbody');
+  body.insertBefore(d, body.firstChild);
+  while(body.children.length > 30) body.removeChild(body.lastChild);
+}
+function verbScan(targetId){
+  const target = GRAPH[targetId];
+  if(!target) return;
+  history.push(curNode);
+  curNode = targetId;
+  depth++;
+  ringField = buildRingField();
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  const fam = familyFromId(targetId);
+  receipts.push({ verb:'SCAN', from: history[history.length-1], to: targetId, depth, family: fam, t: Date.now() });
+  logAction('lock', '<span class="v">LOCKED+SCAN</span> → '+target.label+' (d='+depth+' · '+fam+'/N='+ringNFromId(targetId)+')');
+}
+function verbSave(){
+  receipts.push({ verb:'SAVE', node: curNode, depth, t: Date.now() });
+  logAction('scan', '<span class="v">SAVE</span> · '+GRAPH[curNode].label);
+}
+function verbShare(){
+  receipts.push({ verb:'SHARE', node: curNode, depth, t: Date.now() });
+  logAction('scan', '<span class="v">SHARE</span> · '+GRAPH[curNode].label);
+}
+function verbForget(){
+  receipts.push({ verb:'FORGET', node: curNode, depth, t: Date.now() });
+  logAction('back', '<span class="v">FORGET</span>');
+}
+function verbBack(){
+  if(history.length === 0){ logAction('back', 'at root -- nowhere to go back'); return; }
+  const prev = history.pop();
+  curNode = prev;
+  depth = Math.max(0, depth - 1);
+  ringField = buildRingField();
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  receipts.push({ verb:'BACK', to: prev, depth, t: Date.now() });
+  logAction('back', '<span class="v">BACK</span> → '+GRAPH[prev].label+' (d='+depth+')');
+}
+function reset(){
+  curNode = ROOT; depth = 0; history = []; receipts = [];
+  ringField = buildRingField();
+  lockCandidate = null; lockedConf = 0; lockedHash = null;
+  document.getElementById('logbody').innerHTML = '';
+  logAction('back', 'reset -- back at cave root');
+}
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+phone.aimX = innerWidth / 2;
+phone.aimY = innerHeight / 2;
+phone.x = phone.aimX;
+phone.y = phone.aimY;
+
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  phone.aimX = e.clientX - rect.left;
+  phone.aimY = e.clientY - rect.top;
+});
+
+document.getElementById('bback').onclick = verbBack;
+document.getElementById('breset').onclick = reset;
+document.getElementById('bsave').onclick = verbSave;
+document.getElementById('bshare').onclick = verbShare;
+document.getElementById('bforget').onclick = verbForget;
+document.getElementById('bspin').onclick = function(){
+  spinOn = !spinOn;
+  this.classList.toggle('on', spinOn);
+  this.textContent = spinOn ? '↻ atelier spin' : '⏸ spin off';
+};
+document.getElementById('bshake').onclick = function(){
+  shakeOn = !shakeOn;
+  this.classList.toggle('on', shakeOn);
+  this.textContent = shakeOn ? '≋ shaking!' : '≋ phone-shake';
+};
+document.getElementById('benv').onclick = function(){
+  envelopesOn = !envelopesOn;
+  this.classList.toggle('on', envelopesOn);
+};
+document.getElementById('chaos').addEventListener('input', e => chaosAmt = parseInt(e.target.value) / 100);
+
+addEventListener('keydown', e => {
+  if(e.key === '4') verbSave();
+  else if(e.key === '5') verbShare();
+  else if(e.key === '6') verbForget();
+  else if(e.key === '7' || e.key === 'Backspace' || e.key === 'Escape') verbBack();
+  else if(e.key === 'r' || e.key === 'R') reset();
+  else if(e.key === ' '){ e.preventDefault();
+    spinOn = !spinOn;
+    document.getElementById('bspin').classList.toggle('on', spinOn);
+  }
+});
+
+/* boot */
+logAction('back', 'LENS v0.3b envelope boot · 4 spini families ready');
+requestAnimationFrame(drawFrame);
+</script>
+</body>
+</html>

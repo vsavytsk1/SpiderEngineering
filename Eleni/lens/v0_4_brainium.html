@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.4 BRAINIUM -- spini brain hierarchical-depth lens</title>
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --pink:#ff69b4; --green:#00ffd5;
+    --espresso:#c7894a; --purple:#cc44ff; --dim:#6a6a82; --txt:#e8e0d0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.78);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.06em}
+  #sub{color:var(--dim);font-size:10px;margin-top:1px;max-width:520px}
+  #note{color:var(--espresso);font-size:10px;margin-top:5px;max-width:520px;line-height:1.4}
+  #note b{color:var(--gold)}
+  #side{margin-left:auto;max-width:280px;color:var(--dim);font-size:10px;line-height:1.5}
+  #side b{color:var(--cyan)} #side .l{color:var(--gold)}
+  #side .row{display:flex;align-items:center;gap:6px;margin:1px 0}
+  #side .sw{width:14px;height:8px;border-radius:2px;display:inline-block}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:flex;flex-wrap:wrap;gap:10px;
+    align-items:center;background:rgba(8,8,16,0.88);border:1px solid #20202e;border-radius:10px;padding:8px 14px;z-index:10}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)}
+  button.cyan{color:var(--cyan)} button.cyan:hover{border-color:var(--cyan)}
+  button.espresso{color:var(--espresso)} button.espresso:hover{border-color:var(--espresso)}
+  button.pink{color:var(--pink)} button.pink:hover{border-color:var(--pink)}
+  .ctl{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:11px}
+  input[type=range]{appearance:none;width:90px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  .sep{width:1px;height:22px;background:#2a2a3a;margin:0 3px}
+  .klbl{color:var(--dim);font-size:10px;letter-spacing:0.06em}
+  .val{color:var(--gold);font-size:11px;min-width:18px;text-align:right}
+  .wip{position:fixed;left:14px;bottom:14px;background:rgba(8,8,16,0.85);border:1px solid #c7894a;
+    border-radius:8px;padding:6px 10px;font-size:10px;color:var(--espresso);z-index:10;max-width:360px;line-height:1.4}
+  .wip b{color:var(--gold)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div>
+    <div id="ttl">LENS v0.4 BRAINIUM -- hierarchical-depth lens</div>
+    <div id="sub">left: <b style="color:var(--cyan)">PORTIA</b> jumping spider · right: <b style="color:var(--gold)">HUMAN</b> · same motif, different number of tuned scales</div>
+    <div id="note">claim under test: <b>"the diff is minimal complex fractality for different functions"</b> -- per sempai-web Fractal Engineering keystone (tier a). NOT a neural sim. Qualitative hierarchy lens only.</div>
+  </div>
+  <div id="side">
+    each ring = one <span class="l">hierarchical level</span><br>
+    each dot = a <span class="l">circuit motif</span> (NOT a neuron)<br>
+    <div class="row"><span class="sw" style="background:#c7894a"></span>L0 sensory tile</div>
+    <div class="row"><span class="sw" style="background:#00d4ff"></span>L1 local integrator</div>
+    <div class="row"><span class="sw" style="background:#ffd700"></span>L2 column</div>
+    <div class="row"><span class="sw" style="background:#00ffd5"></span>L3 region planner</div>
+    <div class="row"><span class="sw" style="background:#ff69b4"></span>L4 cross-region</div>
+    <div class="row"><span class="sw" style="background:#cc44ff"></span>L5+ meta / global</div>
+    <br>
+    pulse ripple = signal traverses<br>
+    levels in order &mdash; <b>deeper = more steps</b>
+  </div>
+</div>
+
+<div id="bar">
+  <span class="klbl">PORTIA depth</span>
+  <input id="dP" type="range" min="3" max="6" step="1" value="4"/>
+  <span class="val" id="dPv">4</span>
+  <span class="sep"></span>
+  <span class="klbl">HUMAN depth</span>
+  <input id="dH" type="range" min="5" max="9" step="1" value="7"/>
+  <span class="val" id="dHv">7</span>
+  <span class="sep"></span>
+  <span class="klbl">branch</span>
+  <input id="b" type="range" min="2" max="5" step="1" value="3"/>
+  <span class="val" id="bv">3</span>
+  <span class="sep"></span>
+  <button id="play" class="cyan">pause</button>
+  <button id="step" class="espresso">step</button>
+  <button id="reset" class="pink">reset</button>
+</div>
+
+<div class="wip">
+  <b>WIP -- seed dossier:</b> _private/grimoires/2026-06-17_brainium_spini_brain_pop.md<br>
+  <b>K1</b> no real spikes &middot; <b>K2</b> no fractal-as-brand &middot; <b>K3</b> no supercomputer (single HTML, Genesis kernel)
+</div>
+
+<script>
+  // ====== GENESIS KERNEL (L127) -- no DPR, no setTransform, no getBoundingClientRect ======
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  let W=0, H=0;
+  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  resize();
+  addEventListener('resize', resize);
+
+  // ====== CAVE PALETTE per level ======
+  const LEVEL_COLORS = [
+    '#c7894a', // L0 espresso  -- sensory tile
+    '#00d4ff', // L1 cyan      -- local integrator
+    '#ffd700', // L2 gold      -- column
+    '#00ffd5', // L3 green     -- region planner
+    '#ff69b4', // L4 pink      -- cross-region
+    '#cc44ff', // L5 purple    -- meta
+    '#9966ff', // L6 lighter purple
+    '#aa77ff', // L7
+    '#bb88ff'  // L8
+  ];
+
+  // ====== STATE ======
+  let dP = 4;   // Portia depth (4 hierarchical levels)
+  let dH = 7;   // Human depth (7 hierarchical levels)
+  let b  = 3;   // branching factor
+
+  let playing = true;
+  let t = 0;
+
+  // ====== HIERARCHY BUILD (deterministic per side) ======
+  // For each side we precompute ring radii + dot positions per ring.
+  // count(level) = b^level, capped at MAX_DOTS_PER_RING for render only.
+  // True count shown in label.
+  const MAX_DOTS = 220;
+
+  function buildSide(depth, branch, cx, cy, maxR){
+    // depth = number of rings (level 0..depth-1)
+    // ring i radius = maxR * (i+1)/depth
+    const rings = [];
+    let totalTrue = 0;
+    for (let i=0; i<depth; i++){
+      const trueCount = Math.pow(branch, i);
+      const drawCount = Math.min(trueCount, MAX_DOTS);
+      const radius = maxR * (i+1) / depth;
+      const dots = [];
+      const phase = i * 0.61803; // golden-ratio offset per level (cave-flavor)
+      for (let j=0; j<drawCount; j++){
+        const a = (j/drawCount) * Math.PI*2 + phase;
+        dots.push({ a, x: cx + Math.cos(a)*radius, y: cy + Math.sin(a)*radius });
+      }
+      rings.push({ level:i, radius, dots, trueCount });
+      totalTrue += trueCount;
+    }
+    return { rings, depth, totalTrue, cx, cy, maxR };
+  }
+
+  let portia = null, human = null;
+  function rebuild(){
+    const cy = H * 0.52;
+    const margin = 24;
+    const cxL = W * 0.25;
+    const cxR = W * 0.75;
+    const maxR = Math.min(W*0.22, H*0.36) - margin;
+    portia = buildSide(dP, b, cxL, cy, maxR);
+    human  = buildSide(dH, b, cxR, cy, maxR);
+  }
+
+  // ====== DRAW ======
+  function drawSide(side, label, accent){
+    const { rings, cx, cy, maxR, totalTrue, depth } = side;
+
+    // soft envelope ring (outer halo)
+    ctx.strokeStyle = '#1a1a26';
+    ctx.lineWidth = 1;
+    for (let i=0; i<depth; i++){
+      ctx.beginPath();
+      ctx.arc(cx, cy, rings[i].radius, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // edges (level i dot -> level i+1 dot at nearest angle) -- sample some
+    for (let i=0; i<depth-1; i++){
+      const a = rings[i], b2 = rings[i+1];
+      ctx.strokeStyle = LEVEL_COLORS[i] + '18';
+      ctx.lineWidth = 0.6;
+      const N = Math.min(a.dots.length, 80);
+      for (let j=0; j<N; j++){
+        const da = a.dots[j];
+        // pick a few children at proportional angles
+        const childIdx = Math.floor(j * b2.dots.length / a.dots.length);
+        const db = b2.dots[childIdx];
+        ctx.beginPath();
+        ctx.moveTo(da.x, da.y);
+        ctx.lineTo(db.x, db.y);
+        ctx.stroke();
+      }
+    }
+
+    // dots per ring
+    for (let i=0; i<depth; i++){
+      const col = LEVEL_COLORS[i % LEVEL_COLORS.length];
+      ctx.fillStyle = col;
+      const r = i===0 ? 4 : Math.max(1.5, 3.5 - i*0.35);
+      for (const d of rings[i].dots){
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, r, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // pulse ripple expanding from center outward, repeating
+    // period: longer when depth larger -- the WHOLE point
+    const period = depth * 60; // frames per full ripple
+    const phase = (t % period) / period;     // 0..1
+    const rippleR = phase * maxR * 1.05;
+    const rippleLvl = phase * depth;          // which level the ripple is at
+    const rippleAlpha = 0.85 * (1 - phase*0.6);
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = rippleAlpha;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rippleR, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // ripple level read-out next to current ring
+    if (rippleLvl < depth){
+      const lvlIdx = Math.floor(rippleLvl);
+      const col = LEVEL_COLORS[lvlIdx];
+      ctx.fillStyle = col;
+      ctx.font = '11px ui-monospace,Consolas,monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`L${lvlIdx}`, cx, cy - rippleR - 6);
+    }
+
+    // labels
+    ctx.fillStyle = accent;
+    ctx.font = 'bold 13px ui-monospace,Consolas,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, cx, cy + maxR + 28);
+
+    ctx.fillStyle = '#9a93a8';
+    ctx.font = '10px ui-monospace,Consolas,monospace';
+    ctx.fillText(`depth = ${depth}   branch = ${b}`, cx, cy + maxR + 44);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText(`circuit motifs (b^L sum): ${totalTrue.toLocaleString()}`, cx, cy + maxR + 58);
+
+    // honest scale annotation
+    ctx.fillStyle = '#6a6a82';
+    ctx.font = '9px ui-monospace,Consolas,monospace';
+    const note = (label === 'PORTIA')
+      ? '~600,000 neurons real // ~few mg brain'
+      : '~86,000,000,000 neurons real // ~1.4 kg brain';
+    ctx.fillText(note, cx, cy + maxR + 72);
+  }
+
+  function drawCenterCompare(){
+    // ratio bar between the two
+    const cy = H * 0.52;
+    const y = cy + Math.min(W*0.22, H*0.36) + 96;
+    const ratio = human.totalTrue / portia.totalTrue;
+    ctx.fillStyle = '#e8e0d0';
+    ctx.font = 'bold 12px ui-monospace,Consolas,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`motif ratio (human / portia) = ${ratio.toLocaleString(undefined,{maximumFractionDigits:1})}x`, W/2, y);
+
+    ctx.fillStyle = '#6a6a82';
+    ctx.font = '10px ui-monospace,Consolas,monospace';
+    ctx.fillText('real neuron ratio = ~143,000x   --   the question: how much of that is just MORE LEVELS?', W/2, y + 16);
+
+    ctx.fillStyle = '#c7894a';
+    ctx.font = '10px ui-monospace,Consolas,monospace';
+    ctx.fillText('same motif. tier (a) hierarchy. principle = HIERARCHY not "fractal". P=12 chi=2.', W/2, y + 32);
+  }
+
+  function frame(){
+    if (!portia || !human) rebuild();
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(0, 0, W, H);
+
+    // faint center divider
+    ctx.strokeStyle = '#15151f';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W/2, 60);
+    ctx.lineTo(W/2, H-100);
+    ctx.stroke();
+
+    drawSide(portia, 'PORTIA', '#00d4ff');
+    drawSide(human,  'HUMAN',  '#ffd700');
+    drawCenterCompare();
+
+    if (playing) t++;
+    requestAnimationFrame(frame);
+  }
+
+  // ====== CONTROLS ======
+  const dPS = document.getElementById('dP');
+  const dHS = document.getElementById('dH');
+  const bS  = document.getElementById('b');
+  const dPv = document.getElementById('dPv');
+  const dHv = document.getElementById('dHv');
+  const bv  = document.getElementById('bv');
+  const playBtn = document.getElementById('play');
+  const stepBtn = document.getElementById('step');
+  const resetBtn = document.getElementById('reset');
+
+  function apply(){
+    dP = +dPS.value; dH = +dHS.value; b = +bS.value;
+    dPv.textContent = dP; dHv.textContent = dH; bv.textContent = b;
+    rebuild();
+  }
+  dPS.addEventListener('input', apply);
+  dHS.addEventListener('input', apply);
+  bS.addEventListener('input', apply);
+
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? 'pause' : 'play';
+  });
+  stepBtn.addEventListener('click', () => { t += 6; });
+  resetBtn.addEventListener('click', () => {
+    dPS.value = 4; dHS.value = 7; bS.value = 3;
+    t = 0; playing = true; playBtn.textContent = 'pause';
+    apply();
+  });
+
+  addEventListener('resize', () => { rebuild(); });
+  apply();
+  frame();
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v0.6 -- the circle first: ONE gate + a ring of 0/1 nodes (spini)</title>
+<!--
+  LENS v0.6  --  "the circle first, minimal"  --  Ancient Korinthos, 2026-07-07
+  ===========================================================================
+  Stripped to Vlad's exact ask:
+    - ONE central node = THE GATE. weight 0.700. that is the only center.
+    - THE CIRCLE = the bytecode. each glyph of the stone's words (1 Cor 13:1)
+      -> UTF-8 bytes -> bits; every bit is a ring node (cyan = 1, dim = 0).
+    - every circle node connects to the gate (a spoke). that is the whole graph.
+  NO genesis atoms. NO fractal shells. Just the gate and the ring. Spini.
+
+  AXIOM 08: the gate's meaning is never rendered -- only its marker (dot+ring).
+  HONEST: a picture, not a trained model. bits are seeded from text, not learned.
+  Pure Canvas 2D, no deps. chi=2. Built 2026-07-07.
+-->
+<style>
+  :root{
+    --bg:#050508; --gold:#ffd700; --cyan:#00d4ff; --dim:#6a6a82; --txt:#e8e0d0;
+    --one:#00d4ff; --zero:#26364a;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud > div{pointer-events:auto;background:rgba(8,8,16,0.80);border:1px solid #20202e;
+    border-radius:8px;padding:8px 11px;backdrop-filter:blur(3px)}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.05em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:520px;line-height:1.45}
+  #side{margin-left:auto;color:var(--dim);font-size:10px;line-height:1.7}
+  #side b{color:var(--cyan)} #side .l{color:var(--gold)}
+  #side .row{display:flex;align-items:center;gap:6px}
+  #side .sw{width:14px;height:9px;border-radius:2px;display:inline-block}
+  #metrics{position:fixed;top:96px;left:14px;display:flex;gap:6px;flex-wrap:wrap;z-index:10}
+  .mc{background:rgba(8,8,16,0.85);border:1px solid #20202e;border-radius:6px;padding:5px 10px;min-width:80px}
+  .mc .lab{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:0.07em}
+  .mc .val{font-size:15px;font-weight:bold;color:var(--gold)}
+  .mc .val.cyan{color:var(--cyan)} .mc .val.green{color:var(--green,#00ffd5)}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:8px 12px;
+    align-items:center;background:rgba(8,8,16,0.90);border:1px solid #20202e;border-radius:10px;padding:10px 16px;z-index:10}
+  .klbl{color:var(--dim);font-size:10px}
+  input[type=range]{appearance:none;-webkit-appearance:none;width:104px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:var(--gold);cursor:pointer}
+  .v2{color:var(--gold);font-size:11px;min-width:34px;text-align:right}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)} button.on{border-color:var(--cyan);color:var(--cyan)}
+  #stamp{position:fixed;bottom:12px;right:14px;color:var(--dim);font-size:9px;text-align:right;z-index:9;line-height:1.5}
+  #stamp b{color:var(--gold)}
+  /* Apollonium-style hide-UI: one button that hides everything but the spin */
+  #hideui{position:fixed;top:12px;right:14px;z-index:20;background:rgba(8,8,16,0.9);
+    border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);font:11px var(--mono);
+    padding:6px 11px;cursor:pointer}
+  #hideui:hover{border-color:var(--gold)}
+  body.zen #hud, body.zen #metrics, body.zen #bar, body.zen #stamp, body.zen #langpanel{
+    opacity:0;pointer-events:none;transition:opacity .4s}
+  #hud,#metrics,#bar,#stamp,#langpanel{transition:opacity .4s}
+  /* language multi-select panel */
+  #langpanel{position:fixed;top:52px;right:14px;z-index:15;width:250px;max-height:70vh;overflow-y:auto;
+    background:rgba(8,8,16,0.95);border:1px solid #20202e;border-radius:8px;padding:10px 12px;display:none}
+  #langpanel.open{display:block}
+  #langpanel .ph{color:var(--gold);font-size:11px;letter-spacing:0.06em;margin-bottom:8px;display:flex;
+    justify-content:space-between;align-items:center}
+  #langpanel .ph a{color:var(--cyan);font-size:9px;cursor:pointer;text-decoration:none}
+  #langgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+  .lchip{font-size:10px;color:var(--dim);border:1px solid #20202e;border-radius:4px;padding:3px 6px;
+    cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lchip.on{color:var(--cyan);border-color:var(--cyan);background:rgba(0,212,255,0.08)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<button id="hideui" onclick="toggleZen()">hide UI</button>
+
+<div id="langpanel">
+  <div class="ph"><span>tongues on the ring</span>
+    <span><a onclick="selAll(true)">all</a> &middot; <a onclick="selAll(false)">none</a></span></div>
+  <div id="langgrid"></div>
+</div>
+
+<div id="hud">
+  <div>
+    <div id="ttl">the circle first &middot; gate + ring</div>
+    <div id="sub">ONE center node = <b>the gate</b> (w=0.700). the ring = the bytecode of the stone's
+      words (1 Cor 13:1): cyan node = bit <b>1</b>, dim node = bit <b>0</b>. every ring node wires to the gate.
+      no genesis, no fractal -- just the circle. spini.</div>
+  </div>
+  <div id="side">
+    <div class="row"><span class="sw" style="background:#00d4ff"></span> bit = <b>1</b></div>
+    <div class="row"><span class="sw" style="background:#26364a"></span> bit = <b>0</b></div>
+    <div class="row"><span class="sw" style="background:#ffd700"></span> gate <span class="l">w=0.700</span></div>
+  </div>
+</div>
+
+<div id="metrics">
+  <div class="mc"><div class="lab">ring nodes</div><div class="val cyan" id="m-bits">0</div></div>
+  <div class="mc"><div class="lab">ones / zeros</div><div class="val" id="m-oz">0 / 0</div></div>
+  <div class="mc"><div class="lab">gate weight</div><div class="val green" id="m-gate">0.700</div></div>
+  <div class="mc"><div class="lab">tongues</div><div class="val" id="m-lang">0</div></div>
+  <div class="mc"><div class="lab">humanity reached</div><div class="val cyan" id="m-cov">0%</div></div>
+  <div class="mc"><div class="lab">words seen / total</div><div class="val" id="m-runes" style="color:#ffd700">0</div></div>
+  <div class="mc"><div class="lab">fps</div><div class="val" id="m-fps">0</div></div>
+</div>
+
+<div id="bar">
+  <span class="klbl">language</span>
+  <button id="b-lang" onclick="cycleLang()">EN</button>
+  <span class="klbl">spin</span>
+  <input id="s-spin" type="range" min="0" max="100" step="1" value="30"><span class="v2" id="v-spin">30</span>
+  <span class="klbl">ring size</span>
+  <input id="s-size" type="range" min="64" max="512" step="8" value="256"><span class="v2" id="v-size">256</span>
+  <button id="b-spokes" class="on" onclick="toggleSpokes()">spokes</button>
+  <button id="b-runes" class="on" onclick="toggleRunes()">words</button>
+  <button id="b-spin" class="on" onclick="toggleSpin()">spinning</button>
+  <button id="b-langs" onclick="toggleLangPanel()">tongues...</button>
+</div>
+
+<div id="stamp">
+  LENS v0.6 &middot; the circle first<br>
+  one gate <b>0.700</b> &middot; ring of 0/1 &middot; center unseen<br>
+  &chi;=2 &middot; always
+</div>
+
+<script>
+"use strict";
+// No Python builtins in this JS (Curse 23). Non-ASCII lives only in DATA strings.
+var cv = document.getElementById("cv");
+var ctx = cv.getContext("2d");
+var W = 0, H = 0;
+function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+window.addEventListener("resize", resize); resize();
+
+// THE STONE: 1 Cor 13:1, top world tongues by speakers, NATIVE scripts.
+// Format: [code, name, speakersL1_millions, text]. The speaker figures drive the
+// "% of humanity reached" meter (rough L1 native totals, world pop ~8000M).
+// K3 HONESTY: non-Latin renderings are best-effort public-domain Bible versions;
+// verify before any non-demo use. Greek is Koine (the original). Gate stays 0.700.
+var STONE = [
+  ["EN", "English",    380, "If I speak in the tongues of men and of angels, but have not love, I am a noisy gong or a clanging cymbal. And if I have prophetic powers, and understand all mysteries and all knowledge, and if I have all faith, so as to remove mountains, but have not love, I am nothing. If I give away all I have, and if I deliver my body to be burned, but have not love, I gain nothing. Love is patient and kind; love is not jealous or boastful; it is not arrogant or rude. Love does not insist on its own way; it is not irritable or resentful; it does not rejoice at wrongdoing, but rejoices with the truth. Love bears all things, believes all things, hopes all things, endures all things. Love never ends."],
+  ["ZH", "Mandarin",   940, "\u6211\u82e5\u80fd\u8aaa\u842c\u4eba\u7684\u65b9\u8a00\uff0c\u4e26\u5929\u4f7f\u7684\u8a71\u8a9e\uff0c\u537b\u6c92\u6709\u611b\uff0c\u6211\u5c31\u6210\u4e86\u9cf4\u7684\u947c\uff0c\u97ff\u7684\u9238\u4e00\u822c\u3002"],
+  ["HI", "Hindi",      345, "\u092f\u0926\u093f \u092e\u0948\u0902 \u092e\u0928\u0941\u0937\u094d\u092f\u094b\u0902, \u0914\u0930 \u0938\u094d\u0935\u0930\u094d\u0917\u0926\u0942\u0924\u094b\u0902 \u0915\u0940 \u092c\u094b\u0932\u093f\u092f\u093e\u0901 \u092c\u094b\u0932\u0942\u0902, \u0914\u0930 \u092a\u094d\u0930\u0947\u092e \u0928 \u0930\u0916\u0942\u0901, \u0924\u094b \u092e\u0948\u0902 \u0920\u0928\u0920\u0928\u093e\u0924\u093e \u0939\u0941\u0906 \u092a\u0940\u0924\u0932 \u0939\u0942\u0901\u0964"],
+  ["ES", "Espanol",    485, "Si yo hablase lenguas humanas y ang\u00e9licas, y no tengo amor, vengo a ser como metal que resuena, o c\u00edmbalo que reti\u00f1e."],
+  ["AR", "Arabic",     360, "\u0625\u0646 \u0643\u0646\u062a\u064f \u0623\u062a\u0643\u0644\u0651\u0645\u064f \u0628\u0623\u0644\u0633\u0646\u0629\u0650 \u0627\u0644\u0646\u0651\u0627\u0633\u0650 \u0648\u0627\u0644\u0645\u0644\u0627\u0626\u0643\u0629\u0650\u060c \u0648\u0644\u0643\u0646 \u0644\u064a\u0633 \u0644\u064a \u0645\u062d\u0628\u0629\u060c \u0641\u0642\u062f \u0635\u0631\u062a\u064f \u0646\u062d\u0627\u0633\u064b\u0627 \u064a\u0637\u0646\u0651."],
+  ["BN", "Bengali",    240, "\u09af\u09a6\u09bf \u0986\u09ae\u09bf \u09ae\u09be\u09a8\u09c1\u09b7\u09c7\u09b0 \u0993 \u09a6\u09c2\u09a4\u0997\u09a3\u09c7\u09b0 \u09ad\u09be\u09b7\u09be\u09df \u0995\u09a5\u09be \u09ac\u09b2\u09bf, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u0986\u09ae\u09be\u09b0 \u09aa\u09cd\u09b0\u09c7\u09ae \u09a8\u09be \u09a5\u09be\u0995\u09c7, \u09a4\u09ac\u09c7 \u0986\u09ae\u09bf \u09ac\u09be\u099c\u09be \u09aa\u09bf\u09a4\u09b2 \u09b9\u09df\u09c7\u099b\u09bf\u0964"],
+  ["PT", "Portugues",  235, "Ainda que eu falasse as l\u00ednguas dos homens e dos anjos, e n\u00e3o tivesse amor, seria como o metal que soa ou como o sino que tine."],
+  ["RU", "Russkij",    150, "\u0415\u0441\u043b\u0438 \u044f \u0433\u043e\u0432\u043e\u0440\u044e \u044f\u0437\u044b\u043a\u0430\u043c\u0438 \u0447\u0435\u043b\u043e\u0432\u0435\u0447\u0435\u0441\u043a\u0438\u043c\u0438 \u0438 \u0430\u043d\u0433\u0435\u043b\u044c\u0441\u043a\u0438\u043c\u0438, \u0430 \u043b\u044e\u0431\u0432\u0438 \u043d\u0435 \u0438\u043c\u0435\u044e, \u0442\u043e \u044f \u043c\u0435\u0434\u044c \u0437\u0432\u0435\u043d\u044f\u0449\u0430\u044f."],
+  ["JA", "Nihongo",    125, "\u305f\u3068\u3048\u3001\u4eba\u3005\u306e\u8a00\u8449\u3084\u5929\u4f7f\u305f\u3061\u306e\u8a00\u8449\u3092\u8a71\u3057\u3066\u3082\u3001\u611b\u304c\u306a\u3051\u308c\u3070\u3001\u9cf4\u308a\u97ff\u304f\u9285\u9459\u306e\u3088\u3046\u3060\u3002"],
+  ["PA", "Punjabi",    125, "Je main manukkha te farishtiam diam boliam bolan, par pyar na rakhan, tan main thanthanaunda pittal han."],
+  ["DE", "Deutsch",    75,  "Wenn ich mit Menschen- und mit Engelzungen redete und h\u00e4tte die Liebe nicht, so w\u00e4re ich ein t\u00f6nend Erz oder eine klingende Schelle."],
+  ["KO", "Hangugeo",   80,  "\u0b0c\uac00 \uc0ac\ub78c\uc758 \ubc29\uc5b8\uacfc \ucc9c\uc0ac\uc758 \ub9d0\uc744 \ud560\uc9c0\ub77c\ub3c4 \uc0ac\ub791\uc774 \uc5c6\uc73c\uba74 \uc18c\ub9ac \ub098\ub294 \uad6c\ub9ac\uc640 \uc6b8\ub9ac\ub294 \uaf49\uacfc\ub9ac\uac00 \ub418\uace0"],
+  ["FR", "Francais",   80,  "Quand je parlerais les langues des hommes et des anges, si je n'ai pas l'amour, je suis un airain qui r\u00e9sonne, ou une cymbale qui retentit."],
+  ["TR", "Turkce",     85,  "\u0130nsanlar\u0131n ve meleklerin diliyle konu\u015fsam, ama sevgim olmasa, \u00f6t\u00fcc\u00fc bir bak\u0131r ya da \u00e7\u0131nlayan bir zil olurum."],
+  ["VI", "Tieng Viet", 85,  "D\u1ea7u t\u00f4i n\u00f3i \u0111\u01b0\u1ee3c c\u00e1c th\u1ee9 ti\u1ebfng lo\u00e0i ng\u01b0\u1eddi v\u00e0 thi\u00ean s\u1ee9, n\u1ebfu kh\u00f4ng c\u00f3 t\u00ecnh y\u00eau th\u01b0\u01a1ng, th\u00ec t\u00f4i ch\u1ec9 nh\u01b0 \u0111\u1ed3ng k\u00eau l\u00ean."],
+  ["IT", "Italiano",   65,  "Quand'anche io parlassi le lingue degli uomini e degli angeli, se non ho amore, divento un rame risonante o uno squillante cembalo."],
+  ["PL", "Polski",     40,  "Gdybym m\u00f3wi\u0142 j\u0119zykami ludzi i anio\u0142\u00f3w, a mi\u0142o\u015bci bym nie mia\u0142, sta\u0142bym si\u0119 jak mied\u017a brz\u0119cz\u0105ca albo cymba\u0142 brzmi\u0105cy."],
+  ["UK", "Ukrainska",  35,  "\u041a\u043e\u043b\u0438 \u044f \u0433\u043e\u0432\u043e\u0440\u044e \u043c\u043e\u0432\u0430\u043c\u0438 \u043b\u044e\u0434\u0441\u044c\u043a\u0438\u043c\u0438 \u0439 \u0430\u043d\u0433\u043e\u043b\u044c\u0441\u044c\u043a\u0438\u043c\u0438, \u0442\u0430 \u043b\u044e\u0431\u043e\u0432\u0456 \u043d\u0435 \u043c\u0430\u044e, \u0442\u043e \u0441\u0442\u0430\u0432 \u044f \u044f\u043a \u043c\u0456\u0434\u044c \u0442\u0430 \u0434\u0437\u0432\u0456\u043d\u043a\u0430."],
+  ["NL", "Nederlands", 24,  "Al ware het dat ik de talen der mensen en der engelen sprak, en de liefde niet had, zo ware ik een klinkend metaal of een luidende schel."],
+  ["EL", "Hellenic",   13,  "\u1f18\u1f70\u03bd \u03c4\u03b1\u1fd6\u03c2 \u03b3\u03bb\u03ce\u03c3\u03c3\u03b1\u03b9\u03c2 \u03c4\u1ff6\u03bd \u1f00\u03bd\u03b8\u03c1\u03ce\u03c0\u03c9\u03bd \u03bb\u03b1\u03bb\u1ff6 \u03ba\u03b1\u1f76 \u03c4\u1ff6\u03bd \u1f00\u03b3\u03b3\u03ad\u03bb\u03c9\u03bd, \u1f00\u03b3\u03ac\u03c0\u03b7\u03bd \u03b4\u1f72 \u03bc\u1f74 \u1f14\u03c7\u03c9, \u03b3\u1f73\u03b3\u03bf\u03bd\u03b1 \u03c7\u03b1\u03bb\u03ba\u1f78\u03c2 \u1f20\u03c7\u1ff6\u03bd \u1f22 \u03ba\u03cd\u03bc\u03b2\u03b1\u03bb\u03bf\u03bd \u1f00\u03bb\u03b1\u03bb\u1f04\u03b6\u03bf\u03bd."],
+  ["HE", "Hebrew",     9,   "\u05d0\u05dd \u05d1\u05dc\u05e9\u05d5\u05e0\u05d5\u05ea \u05d0\u05d3\u05dd \u05d5\u05de\u05dc\u05d0\u05db\u05d9\u05dd \u05d0\u05d3\u05d1\u05e8 \u05d5\u05d0\u05d9\u05df \u05d1\u05d9 \u05d0\u05d4\u05d1\u05d4 \u05d4\u05d9\u05d9\u05ea\u05d9 \u05db\u05e0\u05d7\u05e9\u05ea \u05d4\u05d5\u05de\u05d4 \u05d0\u05d5 \u05db\u05e6\u05dc\u05e6\u05dc \u05ea\u05e8\u05d5\u05e2\u05d4."],
+  ["LA", "Latina",     0,   "Si linguis hominum loquar et angelorum, caritatem autem non habeam, factus sum velut aes sonans aut cymbalum tinniens."],
+  // ---- TIER 2 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["UR", "Urdu",       70,  "\u0627\u06af\u0631 \u0645\u06cc\u06ba \u0622\u062f\u0645\u06cc\u0648\u06ba \u0627\u0648\u0631 \u0641\u0631\u0634\u062a\u0648\u06ba \u06a9\u06cc \u0632\u0628\u0627\u0646\u06cc\u06ba \u0628\u0648\u0644\u0648\u06ba \u0644\u06cc\u06a9\u0646 \u0645\u062d\u0628\u062a \u0646\u06c1 \u0631\u06a9\u06be\u0648\u06ba \u062a\u0648 \u0645\u06cc\u06ba \u0679\u0646\u0679\u0646\u0627\u062a\u0627 \u067e\u06cc\u062a\u0644 \u06c1\u0648\u06ba\u06d4"],
+  ["ID", "Indonesia",  200, "Sekalipun aku dapat berkata-kata dengan semua bahasa manusia dan bahasa malaikat, tetapi jika aku tidak mempunyai kasih, aku sama dengan gong yang berkumandang."],
+  ["SW", "Kiswahili",  90,  "Nijaposema kwa lugha za wanadamu na za malaika, kama sina upendo, nimekuwa shaba iliayo au upatu uvumao."],
+  ["TA", "Tamil",      80,  "\u0bae\u0ba9\u0bc1\u0ba9\u0bcd\u0bb0\u0bcd \u0baa\u0bbe\u0bb7\u0bc8\u0b95\u0bb3\u0bbe\u0bb2\u0bc1\u0bae\u0bcd \u0ba4\u0bc7\u0bb5\u0ba4\u0bc2\u0ba4\u0bb0\u0bcd \u0baa\u0bbe\u0bb7\u0bc8\u0b95\u0bb3\u0bbe\u0bb2\u0bc1\u0bae\u0bcd \u0ba8\u0bbe\u0ba9\u0bcd \u0baa\u0bc7\u0b9a\u0bbf\u0ba9\u0bbe\u0bb2\u0bc1\u0bae\u0bcd, \u0b85\u0ba9\u0bcd\u0baa\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bbe\u0bb5\u0bbf\u0b9f\u0bbf\u0ba9\u0bcd \u0ba8\u0bbe\u0ba9\u0bcd \u0baa\u0bbf\u0ba9\u0bcd\u0ba9\u0bca\u0bb2\u0bbf\u0b95\u0bcd\u0b95\u0bbf\u0ba9\u0bcd\u0bb1 \u0bb5\u0bc6\u0ba3\u0bcd\u0b95\u0bb2\u0bae\u0bcd\u0baa\u0bcb\u0bb2\u0bbe\u0ba9\u0bc7\u0ba9\u0bcd."],
+  ["TE", "Telugu",     80,  "\u0c28\u0c47\u0c28\u0c41 \u0c2e\u0c28\u0c41\u0c37\u0c41\u0c32 \u0c2d\u0c3e\u0c37\u0c32\u0c24\u0c4b\u0c28\u0c41 \u0c26\u0c47\u0c35\u0c26\u0c42\u0c24\u0c32 \u0c2d\u0c3e\u0c37\u0c32\u0c24\u0c4b\u0c28\u0c41 \u0c2e\u0c3e\u0c1f\u0c4d\u0c32\u0c3e\u0c21\u0c3f\u0c28\u0c3e, \u0c28\u0c3e\u0c15\u0c41 \u0c2a\u0c4d\u0c30\u0c47\u0c2e \u0c32\u0c47\u0c15\u0c2a\u0c4b\u0c24\u0c47 \u0c28\u0c47\u0c28\u0c41 \u0c2e\u0c4b\u0c17\u0c41\u0c1a\u0c41\u0c28\u0c4d\u0c28 \u0c2f\u0c3f\u0c24\u0c4d\u0c24\u0c21\u0c3f."],
+  ["TH", "Thai",       60,  "\u0e41\u0e21\u0e49\u0e02\u0e49\u0e32\u0e1e\u0e40\u0e08\u0e49\u0e32\u0e08\u0e30\u0e1e\u0e39\u0e14\u0e20\u0e32\u0e29\u0e32\u0e02\u0e2d\u0e07\u0e21\u0e19\u0e38\u0e29\u0e22\u0e4c\u0e41\u0e25\u0e30\u0e02\u0e2d\u0e07\u0e17\u0e39\u0e15\u0e2a\u0e27\u0e23\u0e23\u0e04\u0e4c\u0e01\u0e47\u0e14\u0e35 \u0e41\u0e15\u0e48\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01 \u0e02\u0e49\u0e32\u0e1e\u0e40\u0e08\u0e49\u0e32\u0e01\u0e47\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19\u0e42\u0e25\u0e2b\u0e30\u0e17\u0e35\u0e48\u0e2a\u0e48\u0e07\u0e40\u0e2a\u0e35\u0e22\u0e07."],
+  // ---- TIER 3 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["FA", "Farsi",      80,  "\u0627\u06af\u0631 \u0628\u0647 \u0632\u0628\u0627\u0646\u200c\u0647\u0627\u06cc \u0645\u0631\u062f\u0645 \u0648 \u0641\u0631\u0634\u062a\u06af\u0627\u0646 \u0633\u062e\u0646 \u06af\u0648\u06cc\u0645 \u0648\u0644\u06cc \u0645\u062d\u0628\u062a \u0646\u062f\u0627\u0634\u062a\u0647 \u0628\u0627\u0634\u0645\u060c \u0645\u062b\u0644 \u0637\u0628\u0644 \u067e\u0631\u0635\u062f\u0627 \u06cc\u0627 \u0633\u0646\u062c \u063a\u0631\u0646\u062f\u0647 \u0634\u062f\u0647\u200c\u0627\u0645."],
+  ["MR", "Marathi",    83,  "\u091c\u0930\u0940 \u092e\u0940 \u092e\u093e\u0923\u0938\u093e\u0902\u091a\u094d\u092f\u093e \u0935 \u0926\u0947\u0935\u0926\u0942\u0924\u093e\u0902\u091a\u094d\u092f\u093e \u092d\u093e\u0937\u093e \u092c\u094b\u0932\u0932\u094b, \u092a\u0923 \u092e\u093e\u091d\u094d\u092f\u093e\u092e\u0927\u094d\u092f\u0947 \u092a\u094d\u0930\u0940\u0924\u0940 \u0928\u0938\u0947\u0932, \u0924\u0930 \u092e\u0940 \u0928\u0941\u0938\u0924\u093e \u0928\u093e\u0926\u0923\u093e\u0930\u093e \u092a\u093f\u0924\u094d\u0924\u0933\u0947\u091a\u093e \u0921\u0939\u093e\u0933 \u091d\u093e\u0932\u094b \u0906\u0939\u0947."],
+  ["JV", "Javanese",   68,  "Saupama aku bisa guneman nganggo basane manungsa lan malaekat, nanging ora duwe katresnan, aku mung dadi kaya gong kang muni."],
+  ["GU", "Gujarati",   57,  "\u0a9c\u0acb \u0ab9\u0ac1\u0a82 \u0aae\u0aa8\u0ac1\u0ab7\u0acd\u0aaf\u0acb \u0a85\u0aa8\u0ac7 \u0aa6\u0ac2\u0aa4\u0acb \u0aa8\u0ac0 \u0aad\u0abe\u0ab7\u0abe\u0a93 \u0aac\u0acb\u0ab2\u0ac1\u0a82, \u0aaa\u0aa3 \u0aaa\u0acd\u0ab0\u0ac7\u0aae \u0aa8 \u0ab0\u0abe\u0a96\u0ac1\u0a82, \u0aa4\u0acb \u0ab9\u0ac1\u0a82 \u0ab0\u0aa3\u0a95\u0aa4\u0ac1\u0a82 \u0aaa\u0abf\u0aa4\u0ab3 \u0a9b\u0ac1\u0a82."],
+  ["KN", "Kannada",    45,  "\u0ca8\u0cbe\u0ca8\u0cc1 \u0cae\u0cbe\u0ca8\u0cb5\u0cb0 \u0cad\u0cbe\u0cb7\u0cc6\u0c97\u0cb3\u0ca8\u0ccd\u0ca8\u0cc2 \u0ca6\u0cc7\u0cb5\u0ca6\u0cc2\u0ca4\u0cb0 \u0cad\u0cbe\u0cb7\u0cc6\u0c97\u0cb3\u0ca8\u0ccd\u0ca8\u0cc2 \u0cae\u0cbe\u0ca4\u0ca8\u0cbe\u0ca1\u0cbf\u0ca6\u0cb0\u0cc2 \u0caa\u0ccd\u0cb0\u0cc0\u0ca4\u0cbf \u0c87\u0cb2\u0ccd\u0cb2\u0ca6\u0cbf\u0ca6\u0ccd\u0ca6\u0cb0\u0cc6 \u0ca8\u0cbe\u0ca8\u0cc1 \u0cb6\u0cac\u0ccd\u0ca6 \u0cae\u0cbe\u0ca1\u0cc1\u0cb5 \u0c95\u0c82\u0cb8\u0cbe\u0cb3."],
+  ["ML", "Malayalam",  38,  "\u0d1e\u0d3e\u0d7b \u0d2e\u0d28\u0d41\u0d37\u0d4d\u0d2f\u0d30\u0d41\u0d1f\u0d46\u0d2f\u0d41\u0d02 \u0d26\u0d42\u0d24\u0d28\u0d4d\u0d2e\u0d3e\u0d30\u0d41\u0d1f\u0d46\u0d2f\u0d41\u0d02 \u0d2d\u0d3e\u0d37\u0d15\u0d33\u0d3f\u0d7d \u0d38\u0d02\u0d38\u0d3e\u0d30\u0d3f\u0d1a\u0d3e\u0d32\u0d41\u0d02 \u0d38\u0d4d\u0d28\u0d47\u0d39\u0d02 \u0d07\u0d32\u0d4d\u0d32\u0d46\u0d19\u0d4d\u0d15\u0d3f\u0d7d \u0d1e\u0d3e\u0d7b \u0d2e\u0d41\u0d34\u0d19\u0d4d\u0d19\u0d41\u0d28\u0d4d\u0d28 \u0d2a\u0d3f\u0d1a\u0d33 \u0d06\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d41."],
+  ["MY", "Burmese",    43,  "\u1004\u102b\u101e\u100a\u103a \u101c\u102c \u1014\u103e\u1004\u1037\u103a \u1000\u1031\u102c\u1004\u103a\u1038\u1000\u1004\u103a\u1038\u1019\u103e\u102f\u1015\u103c\u102f\u101e\u1031\u102c \u1005\u1000\u102c\u1038\u1000\u102d\u102f \u1015\u103c\u1031\u102c\u1006\u102d\u102f\u1014\u102d\u102f\u1004\u103a\u101e\u1031\u102c\u103a\u101c\u100a\u103a\u1038 \u1001\u103b\u1005\u103a\u1001\u103c\u1004\u103a\u1038\u1019\u101b\u103e\u102d\u101c\u103b\u103e\u1004\u103a \u1004\u102b\u101e\u100a\u103a \u1019\u103c\u100a\u103a\u101e\u1036\u1005\u1031\u101e\u1031\u102c \u1000\u103c\u1031\u1038\u101e\u1036\u1015\u102b\u104b"],
+  ["HA", "Hausa",      80,  "Ko da ina magana da harsunan mutane da na mala'iku, amma ba ni da kauna, na zama kamar ganga mai kara ko kuge mai amo."],
+  ["AM", "Amharic",    35,  "\u1260\u1230\u12ce\u127d\u1293 \u1260\u1218\u120b\u12d5\u12ad\u1275 \u120b\u1295\u1265\u12eb\u12ce\u127d \u1265\u1293\u1308\u122d \u1348\u1245\u122d \u130d\u1295 \u12a8\u12bd \u12a8\u120b\u1208\u129d \u12a5\u1295\u12f0 \u121a\u1332\u129d \u1265\u122d\u1295\u12eb\u12c8\u12ed\u121d \u12a5\u1295\u12f0 \u121a\u1230\u121b \u133b\u12ed\u120d \u1206\u1295\u12eb\u120d\u1362"],
+  ["TL", "Filipino",   30,  "Kung ako'y nagsasalita ng mga wika ng mga tao at ng mga anghel, datapuwat wala akong pag-ibig, ay ako'y naging tanso na tumutunog o batingaw na umaalingawngaw."],
+  // ---- TIER 4 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["YUE","Cantonese",  85,  "\u5047\u5982\u6211\u80fd\u8b1b\u4e16\u4eba\u548c\u5929\u4f7f\u7684\u65b9\u8a00\uff0c\u537b\u6c92\u6709\u611b\uff0c\u6211\u5c31\u6210\u4e86\u9cf4\u7684\u947c\uff0c\u97ff\u7684\u9238\u4e00\u6a23\u3002"],
+  ["NE", "Nepali",     32,  "\u092f\u0926\u093f \u092e \u092e\u093e\u0928\u093f\u0938 \u0930 \u0938\u094d\u0935\u0930\u094d\u0917\u0926\u0942\u0924\u0939\u0930\u0942\u0915\u093e \u092c\u094b\u0932\u0940\u0939\u0930\u0942\u092e\u093e \u092c\u094b\u0932\u0947\u0902 \u0924\u0930 \u092e\u0938\u0902\u0917 \u092a\u094d\u0930\u0947\u092e \u091b\u0948\u0928 \u092d\u0928\u0947, \u092e \u090d\u0920\u094d\u0928\u093f\u0915\u094d\u092f\u094c\u0902 \u0918\u0923\u094d\u091f\u0940\u092e\u093e\u0924\u094d\u0930 \u092d\u090f\u0915\u094b \u091b\u0941\u0964"],
+  ["SI", "Sinhala",    17,  "\u0db8\u0db8 \u0db8\u0dd2\u0db1\u0dd2\u0dc3\u0dd4\u0db1\u0dca\u0d9c\u0dda\u0dad \u0dc3\u0dd4\u0dbb\u0daf\u0dd6\u0dad\u0dba\u0db1\u0dca\u0d9c\u0dda\u0dad \u0db6\u0dc3 \u0d9a\u0dad\u0dcf \u0d9a\u0dc5\u0dad\u0dca \u0db8\u0da7 \u0db4\u0dca\u200d\u0dbb\u0dda\u0db8\u0dba \u0db1\u0dd0\u0dad\u0dca\u0db1\u0db1\u0dca, \u0db8\u0db8 \u0db1\u0dcf\u0daf \u0daf\u0dd3 \u0d87\u0dad\u0dd2 \u0dbb\u0dad\u0dca\u0dad\u0dbb\u0db1\u0dca \u0dc0\u0dd9\u0db8\u0dd2."],
+  ["KM", "Khmer",      17,  "\u1794\u17be\u1781\u17d2\u1789\u17bb\u17c6\u1793\u17b7\u1799\u17b6\u1799\u1797\u17b6\u179f\u17b6\u1798\u1793\u17bb\u179f\u17d2\u179f \u1793\u17b7\u1784\u1791\u17c1\u179c\u178f\u17b6 \u178f\u17c2\u1798\u17b7\u1793\u1798\u17b6\u1793\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u179f\u17d2\u179a\u17d2\u179b\u17b6\u1789\u17cb\u1791\u17c1 \u1781\u17d2\u1789\u17bb\u17c6\u1785\u17b6\u178f\u17cb\u1791\u17bb\u1780\u178a\u17bc\u1785\u179f\u17c6\u179b\u17c1\u1784\u179b\u17c1\u17c7\u17d4"],
+  ["YO", "Yoruba",     45,  "Bi mo ba n fi ede awon eniyan ati ti awon angeli soro, sugbon ti mi o ni ife, mo di ide ti n dun tabi ariwo aja ti n pariwo."],
+  ["IG", "Igbo",       30,  "Ọ bụrụ na m na-asụ asụsụ mmadụ na nke ndị mmụọ ozi, ma enweghị m ịhụnanya, adịla m ka ọla kọntа na-ada ụda."],
+  ["UZ", "Uzbek",      35,  "Agar men odamlar va farishtalar tillarida gapirsam-u, lekin muhabbatim bo'lmasa, men jaranglaydigan mis yoki shaqillaydigan zang bo'lib qolaman."],
+  ["SU", "Sundanese",  40,  "Sanajan kuring bisa nyarita ku basa manusa jeung basa malaikat, tapi teu boga kanyaah, kuring mah ngan jadi goong nu disada."],
+  ["PS", "Pashto",     40,  "\u06a9\u0647 \u0632\u0647 \u062f \u0627\u0646\u0633\u0627\u0646\u0627\u0646\u0648 \u0627\u0648 \u0645\u0644\u0627\u06a9\u0648\u0646\u0648 \u067e\u0647 \u0698\u0628\u0648 \u062e\u0628\u0631\u06d0 \u0648\u06a9\u0693\u0645 \u062e\u0648 \u0645\u06cc\u0646\u0647 \u0648\u0646\u0644\u0631\u0645\u060c \u0646\u0648 \u0632\u0647 \u062f \u063a\u0696\u0648\u0646\u06a9\u0648\u0646\u06d0 \u0679\u0627\u0644\u06cc \u067e\u0647 \u0634\u0627\u0646 \u06cc\u0645."],
+  ["SD", "Sindhi",     30,  "\u062c\u064a\u06aa\u068a\u06be\u0646\u0647 \u0622\u0621\u0648\u0646 \u0645\u0627\u06bb\u0647\u0646 \u0648 \u0641\u0631\u0634\u062a\u0646 \u062c\u064a \u0628\u0648\u0644\u064a\u0648\u06bb \u0698\u0644\u0647\u0627\u06a9 \u0647\u062c\u0648\u06bb\u060c \u067e\u0631 \u0645\u0648\u06a8 \u067e\u064a\u0627\u0631 \u06aa\u0648\u0646\u0647 \u0627\u0687\u064a\u060c \u062a \u0622\u0621\u0648\u0646 \u068c\u0646\u06aa\u0646\u062f\u0691 \u067f\u0631\u0648 \u0622\u0647\u064a\u0627\u0646."],
+  // ---- TIER 5 (added 2026-07-07, the long tail; gate stays 0.700) ----
+  ["OM", "Oromo",      37,  "Utuun afaan namootaatii fi ergamootaatiin dubbadhee, jaalala garuu qabaachuu baadhe, ani sibiila iyyu yookiin bilbila kakawwee ta'a."],
+  ["ZU", "Zulu",       28,  "Noma ngikhuluma ngezilimi zabantu nezezingelosi, kodwa ngingenalo uthando, sengiyithusi elikhencezayo noma insimbi encencethayo."],
+  ["KU", "Kurdish",    30,  " Eger ez bi zimane mirovan u firishteyan bipeyivim, le hezkirina min tunebe, ez bune ye ku dibe misinga deng dide an zengeke ku deng dike."],
+  ["MG", "Malagasy",   25,  "Na dia miteny amin'ny fitenin'ny olona sy ny anjely aza aho, nefa tsy manana fitiavana, dia tonga varahina maneno aho na kipantsona mikarantsana."],
+  ["SO", "Somali",     22,  "Haddaan ku hadlo afafka dadka iyo malaa'igaha, laakiin aanan jacayl lahayn, waxaan noqday naxaas dhawaaqaysa ama saxal sanqadhaya."],
+  ["CEB","Cebuano",    20,  "Kon ako magsulti sa mga pinulongan sa mga tawo ug sa mga anghel, apan wala akoy gugma, ako nahimong nagalanog nga bronse o nagatunog nga piyangpiyang."],
+  ["RO", "Romana",     24,  "De a\u015f gr\u0103i \u00een limbile oamenilor \u015fi ale \u00eengerilor, iar dragoste nu am, f\u0103cutu-m-am aram\u0103 sun\u0103toare \u015fi chimval záng\u0103nitor."],
+  ["HU", "Magyar",     13,  "Ha embereknek vagy angyaloknak nyelv\u00e9n sz\u00f3lok is, szeretet pedig nincsen \u00e9nbennem, olyann\u00e1 lettem, mint a zeng\u0151 \u00e9rc vagy peng\u0151 cimbalom."],
+  ["CS", "Cestina",    11,  "Kdybych mluvil jazyky lidskými i and\u011blskými, ale l\u00e1sku bych nem\u011bl, jsem jako z\u0159ejm\u00fd kov, kter\u00fd zvon\u00ed, nebo jako cimb\u00e1l, kter\u00fd zvu\u010d\u00ed."],
+  ["AZ", "Azerbaycan", 24,  "\u018fg\u0259r insan v\u0259 m\u0259l\u0259k dill\u0259rind\u0259 dan\u0131\u015fsam, lakin m\u0259nd\u0259 m\u0259h\u0259bb\u0259t olmasa, m\u0259n ancaq c\u0131ng\u0131ldayan mis v\u0259 ya \u015f\u0131q\u0131rdayan zil olaram."],
+  ["KK", "Kazakh",     13,  "\u0415\u0433\u0435\u0440 \u043c\u0435\u043d \u0430\u0434\u0430\u043c \u0436\u04d9\u043d\u0435 \u043f\u0435\u0440\u0456\u0448\u0442\u0435 \u0442\u0456\u043b\u0434\u0435\u0440\u0456\u043d\u0434\u0435 \u0441\u04e9\u0439\u043b\u0435\u0441\u0435\u043c \u0434\u0435, \u0441\u04af\u0439\u0456\u0441\u043f\u0435\u043d\u0448\u0456\u043b\u0456\u0433\u0456\u043c \u0431\u043e\u043b\u043c\u0430\u0441\u0430, \u043c\u0435\u043d \u0441\u044b\u04a3\u0493\u044b\u0440\u043b\u0430\u0493\u0430\u043d \u043c\u044b\u0441 \u0441\u0435\u043a\u0456\u043b\u0434\u0456\u043c\u0456\u043d."],
+  ["EL2","Ellinika",   13,  "\u0395\u03ac\u03bd \u03bc\u03b9\u03bb\u03ac\u03c9 \u03c4\u03b9\u03c2 \u03b3\u03bb\u03ce\u03c3\u03c3\u03b5\u03c2 \u03c4\u03c9\u03bd \u03b1\u03bd\u03b8\u03c1\u03ce\u03c0\u03c9\u03bd \u03ba\u03b1\u03b9 \u03c4\u03c9\u03bd \u03b1\u03b3\u03b3\u03ad\u03bb\u03c9\u03bd, \u03b1\u03bb\u03bb\u03ac \u03b4\u03b5\u03bd \u03ad\u03c7\u03c9 \u03b1\u03b3\u03ac\u03c0\u03b7, \u03ad\u03b3\u03b9\u03bd\u03b1 \u03c7\u03b1\u03bb\u03ba\u03cc\u03c2 \u03c0\u03bf\u03c5 \u03b7\u03c7\u03b5\u03af."],
+  // ---- TIER 6 (added 2026-07-07 19:41, deeper tail; gate stays 0.700) ----
+  ["SN", "Shona",      15,  "Kunyange ndikataura nendimi dzevanhu nedzevatumwa, asi ndisina rudo, ndava ndarira dare kana simbi inorira."],
+  ["NY", "Chichewa",   14,  "Ngakhale nditayankhula m'zinenero za anthu ndi za angelo, koma wopanda chikondi, ndakhala ngati mkuwa wolira kapena chitsulo cholira."],
+  ["RW", "Kinyarwanda",13,  "Naho navuga indimi z'abantu n'iz'abamarayika, ariko nkaba ndwanya urukundo, mba ndi umuringa uvuga cyangwa icyuma gisakuza."],
+  ["TI", "Tigrinya",   9,   "Enkuwa bezaban sebatn melaektin entekek zetekawelku, fikri gin entaydebeleyeni, keab zitsanqela birti weyi zeymeti tsinatsile koynye."],
+  ["MN", "Mongol",     6,   "\u0425\u044d\u0440\u044d\u0432 \u0431\u0438 \u0445\u04af\u043c\u04af\u04af\u0441, \u0442\u044d\u043d\u0433\u044d\u0440 \u044d\u043b\u0447 \u043d\u0430\u0440\u044b\u043d \u0445\u044d\u043b\u044d\u044d\u0440 \u044f\u0440\u0438\u0430\u0432\u0447 \u0445\u0430\u0439\u0440 \u0430\u043b\u0433\u0430 \u0431\u043e\u043b \u0431\u0438 \u0436\u0438\u0433\u043d\u044d\u0445 \u0437\u044d\u0441 \u044e\u043c."],
+  ["LO", "Lao",        30,  "Thakhoi phao phasa khong manut lae thepada, tae bo mi khwam hak, khoi kok pen khu thong leuang."],
+  ["OR", "Odia",       35,  "\u0b2f\u0b26\u0b3f \u0b2e\u0b41\u0b01 \u0b2e\u0b28\u0b41\u0b37\u0b4d\u0b2f \u0b13 \u0b26\u0b42\u0b24\u0b2e\u0b3e\u0b28\u0b19\u0b4d\u0b15\u0b30 \u0b2d\u0b3e\u0b37\u0b3e\u0b30\u0bc7 \u0b15\u0b25\u0b3e \u0b15\u0b39\u0b47, \u0b15\u0b3f\u0b28\u0b4d\u0b24\u0b41 \u0b2a\u0b4d\u0b30\u0b47\u0b2e \u0b28\u0b25\u0b3e\u0b0f, \u0b24\u0b47\u0b2c\u0b47 \u0b2e\u0b41\u0b01 \u0b1f\u0b23\u0b1f\u0b23\u0b3f\u0b25\u0b3f\u0b2c\u0b3e \u0b2a\u0b3f\u0b24\u0b33 \u0b2e\u0b3e\u0b24\u0b4d\u0b30\u0964"],
+  ["AS", "Assamese",   15,  "\u09af\u09a6\u09bf \u09ae\u0987 \u09ae\u09be\u09a8\u09c1\u09b9 \u0986\u09b0\u09c1 \u09b8\u09cd\u09ac\u09b0\u09cd\u0997\u09c0\u09af\u09bc \u09a6\u09c2\u09a4\u09f0 \u09ad\u09be\u09b7\u09be\u09f0\u09c7 \u0995\u09a5\u09be \u0995\u0993\u0981, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u09ae\u09cb\u09f0 \u09aa\u09cd\u09f0\u09c7\u09ae \u09a8\u09be\u0987, \u09a4\u09c7\u09a8\u09cd\u09a4\u09c7 \u09ae\u0987 \u09ac\u09be\u099c\u09bf \u09a5\u0995\u09be \u09aa\u09bf\u09a4\u09b2 \u09b9\u09cb\u0987\u09b2\u09cb\u0981\u0964"],
+  ["SA", "Sanskrit",   1,   "\u092f\u0926\u094d\u092f\u092f\u0939\u0902 \u092e\u0928\u0941\u0937\u094d\u092f\u093e\u0923\u093e\u0902 \u0926\u0942\u0924\u093e\u0928\u093e\u0902 \u091a \u092d\u093e\u0937\u093e\u092d\u093f\u0930\u094d\u092d\u093e\u0937\u0947, \u092a\u094d\u0930\u0947\u092e \u0924\u0941 \u0928 \u0935\u093f\u0926\u094d\u092f\u0924\u0947 \u091a\u0947\u0924\u094d, \u0924\u0930\u094d\u0939\u093f \u0905\u0939\u0902 \u0928\u093e\u0926\u092f\u0928\u094d \u0915\u093e\u0902\u0938\u094d\u092f\u092e\u094d \u0905\u0938\u094d\u092e\u093f\u0964"],
+  ["KA", "Kartuli",    4,   "Tu kaca da angelozta enebze vlaparakob, magram siqvaruli ar makvs, mashin me var okros mzhghari an tsintsili."],
+  ["KY", "Kyrgyz",     5,   "\u042d\u0433\u0435\u0440 \u043c\u0435\u043d \u0430\u0434\u0430\u043c\u0434\u0430\u0440\u0434\u044b\u043d \u0436\u0430\u043d\u0430 \u043f\u0435\u0440\u0438\u0448\u0442\u0435\u043b\u0435\u0440\u0434\u0438\u043d \u0442\u0438\u043b\u0434\u0435\u0440\u0438\u043d\u0434\u0435 \u0441\u04af\u0439\u043b\u04e9\u0441\u04e9\u043c, \u0431\u0438\u0440\u043e\u043a \u043c\u0435\u043d\u0434\u0435 \u0441\u04af\u0439\u04af\u04af \u0431\u043e\u043b\u0431\u043e\u0441\u043e, \u043c\u0435\u043d \u0448\u0430\u04a3\u0433\u044b\u0440\u0430\u0433\u0430\u043d \u0436\u0435\u0437\u043c\u0438\u043d."]
+];
+// tongues we KNOW are still missing accurate byte-forms (honest marker, K3):
+var MISSING = ["Fula", "Balochi", "Chittagonian", "Bhojpuri", "Sylheti", "Aramaic", "Coptic", "Church Slavonic"];
+var WORLD_POP = 8000; // millions, for the coverage meter
+var langIdx = 0, GATE_W = 0.7;
+var circle = [], ringCap = 256, spinRate = 30, spin = true, showSpokes = true, rot = 0;
+// COSMETIC outer rune-ring: now the actual WORDS of the stone, in reading order,
+// connected, counter-spinning -- so the monkey brain reads the verse word for word
+// as it turns. Pure decoration (K1); the byte ring stays the real substrate.
+var runes = [], runeRot = 0, showRunes = true, _wordFit = null;
+// which tongues are lit on the rune ring (multi-select). default: English only.
+var selected = { "EN": true };
+
+function textToBits(s){
+  var bytes = [];
+  for (var i = 0; i < s.length; i++){
+    var cp = s.charCodeAt(i);
+    if (cp < 0x80){ bytes.push(cp); }
+    else if (cp < 0x800){ bytes.push(0xC0 | (cp >> 6)); bytes.push(0x80 | (cp & 0x3F)); }
+    else { bytes.push(0xE0 | (cp >> 12)); bytes.push(0x80 | ((cp >> 6) & 0x3F)); bytes.push(0x80 | (cp & 0x3F)); }
+  }
+  var bits = [];
+  for (var b = 0; b < bytes.length; b++){
+    for (var k = 7; k >= 0; k--){ bits.push((bytes[b] >> k) & 1); }
+  }
+  return bits;
+}
+
+function coverageInfo(){
+  // sum speakers of all baked tongues, as % of world pop (rough L1, K3).
+  var sum = 0, seen = {};
+  for (var i = 0; i < STONE.length; i++){
+    var nm = STONE[i][1], sp = STONE[i][2];
+    if (!seen[nm]){ seen[nm] = 1; sum += sp; }   // avoid double-count of variants
+  }
+  var pct = (sum / WORLD_POP) * 100;
+  return { sum: sum, pct: pct };
+}
+
+function build(){
+  var bits = textToBits(STONE[langIdx][3]);   // [3] = text (native script)
+  if (bits.length > ringCap) bits = bits.slice(0, ringCap);
+  circle = [];
+  var ones = 0;
+  for (var i = 0; i < bits.length; i++){
+    circle.push({ ang: (i / bits.length) * Math.PI * 2, bit: bits[i] });
+    if (bits[i] === 1) ones++;
+  }
+  // COSMETIC: the WORDS of the stone, in reading order, for every SELECTED tongue.
+  // Read the verse word for word as the ring turns. Each word carries its lang code.
+  runes = [];
+  for (var si = 0; si < STONE.length; si++){
+    var code = STONE[si][0];
+    if (!selected[code]) continue;
+    var words = STONE[si][3].split(/\s+/);
+    for (var wi = 0; wi < words.length; wi++){
+      var w = words[wi];
+      if (w.length === 0) continue;
+      runes.push({ word: w, lang: code, first: (wi === 0) });
+    }
+  }
+
+  document.getElementById("m-bits").textContent = circle.length;
+  document.getElementById("m-oz").textContent = ones + " / " + (circle.length - ones);
+  document.getElementById("m-gate").textContent = GATE_W.toFixed(3);
+  document.getElementById("b-lang").textContent = STONE[langIdx][0];
+  var cov = coverageInfo();
+  document.getElementById("m-cov").textContent = cov.pct.toFixed(0) + "%";
+  document.getElementById("m-lang").textContent = STONE.length;
+  document.getElementById("m-runes").textContent = runes.length;
+}
+
+var last = performance.now(), fps = 0;
+function frame(now){
+  var dt = now - last; last = now;
+  fps = fps * 0.9 + (1000 / Math.max(1, dt)) * 0.1;
+  if (spin){ rot += (spinRate / 100) * 0.03; runeRot -= (spinRate / 100) * 0.021; } // counter-spin
+
+  ctx.clearRect(0, 0, W, H);
+  var cx = W / 2, cy = H / 2;
+  var R = Math.min(W, H) * 0.38;
+
+  // COSMETIC OUTER RUNE-RING (drawn first = behind). The WORDS of the stone,
+  // in reading order, laid tangentially around the ring, counter-spinning, so
+  // you read the verse word for word as it turns. Pure decoration (K1).
+  if (showRunes && runes.length > 0){
+    var RR = Math.min(W, H) * 0.455;   // outer radius, beyond the byte ring
+    var n = runes.length;
+    // connecting arc between adjacent words (the "verse circuit")
+    ctx.strokeStyle = "rgba(199,137,74,0.16)"; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(cx, cy, RR, 0, 7); ctx.stroke();
+
+    // --- WIDTH-PROPORTIONAL LAYOUT (level-10 care) -------------------------
+    // Words are laid back-to-back around the circumference, each occupying an
+    // arc proportional to its pixel width, with a guaranteed gap so NOTHING
+    // collapses. Any number of tongues read continuously, verse after verse.
+    var C = 2 * Math.PI * RR;          // ring circumference in px
+    var GAP = 10;                      // min px between words (>= 1 always)
+    var FS_FLOOR = 9;                  // readable floor -- never crush below this
+    // GENESIS MINIMAL-COMPUTE PARADIGM: the FULL word-set is always computed,
+    // but we only RENDER what stays legible. Pick the largest font >= FS_FLOOR
+    // that fits; if even the floor overflows, render only the first M words that
+    // fit (you pay ring-size compute to reveal more). Honest "seeing N of TOTAL".
+    var fs = 17, widths = null, totalPx = 0;
+    for (; fs >= FS_FLOOR; fs--){
+      ctx.font = fs + "px 'Segoe UI','Noto Sans','Noto Sans JK','system-ui',sans-serif";
+      widths = new Array(n); totalPx = 0;
+      for (var g = 0; g < n; g++){
+        var wpx = ctx.measureText(runes[g].word).width;
+        widths[g] = wpx; totalPx += wpx + GAP;
+      }
+      if (totalPx <= C) break;         // fits at this size -- keep it
+    }
+    if (fs < FS_FLOOR) fs = FS_FLOOR;  // never leak below the readable floor
+    // how many words actually fit at the floor font (the visible budget)
+    var shown = n, usedPx = 0;
+    if (totalPx > C){                  // overflow: cap to what fits at FS_FLOOR
+      shown = 0;
+      for (var g2 = 0; g2 < n; g2++){
+        if (usedPx + widths[g2] + GAP > C) break;
+        usedPx += widths[g2] + GAP; shown++;
+      }
+    } else { usedPx = totalPx; }
+    var span = (totalPx > C) ? C : totalPx;   // pack fitted words edge-to-edge
+    var pxToRad = (2 * Math.PI) / span;
+
+    ctx.font = fs + "px 'Segoe UI','Noto Sans','Noto Sans JK','system-ui',sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    var cursorPx = 0;                  // running position along circumference
+    for (var g3 = 0; g3 < shown; g3++){
+      var slot = widths[g3] + GAP;
+      var centerPx = cursorPx + slot / 2;
+      cursorPx += slot;
+      var ag = centerPx * pxToRad + runeRot;
+      var gx = cx + Math.cos(ag) * RR, gy = cy + Math.sin(ag) * RR;
+      var tw = 0.6 + 0.4 * Math.sin(now * 0.001 + g3 * 0.5);
+      var col = runes[g3].first ? "0,212,255" : "255,215,0";
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(ag + Math.PI / 2);   // tangent to the circle
+      ctx.fillStyle = "rgba(" + col + "," + (0.42 + tw * 0.48).toFixed(3) + ")";
+      ctx.fillText(runes[g3].word, 0, 0);
+      ctx.restore();
+    }
+    // stash layout facts for the HUD (Genesis honesty: seeing N of TOTAL)
+    _wordFit = { fs: fs, shown: shown, total: n, overflow: (totalPx > C) };
+    var mr = document.getElementById("m-runes");
+    if (mr) mr.textContent = (shown === n) ? String(n) : (shown + " / " + n);
+  }
+
+  // spokes: every ring node -> the gate
+  if (showSpokes){
+    ctx.lineWidth = 0.6;
+    for (var i = 0; i < circle.length; i++){
+      var a = circle[i].ang + rot;
+      var x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      ctx.strokeStyle = circle[i].bit === 1 ? "rgba(0,212,255,0.13)" : "rgba(120,140,170,0.04)";
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+    }
+  }
+
+  // ring guide
+  ctx.strokeStyle = "rgba(0,212,255,0.10)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+
+  // the ring nodes (the bytecode)
+  for (var b = 0; b < circle.length; b++){
+    var an = circle[b].ang + rot;
+    var px = cx + Math.cos(an) * R, py = cy + Math.sin(an) * R;
+    if (circle[b].bit === 1){
+      ctx.fillStyle = "#00d4ff"; ctx.beginPath(); ctx.arc(px, py, 3.0, 0, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = "#26364a"; ctx.beginPath(); ctx.arc(px, py, 1.6, 0, 7); ctx.fill();
+    }
+  }
+
+  // THE GATE -- the one center node. AXIOM 08: marker only, no meaning shown.
+  var pulse = 0.5 + 0.5 * Math.sin(now * 0.002);
+  ctx.strokeStyle = "rgba(0,212,255," + (0.30 + pulse * 0.28).toFixed(3) + ")"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 14 + pulse * 4, 0, 7); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,215,0,0.16)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, GATE_W * 34, 0, 7); ctx.stroke();  // aura sized to 0.7
+  ctx.fillStyle = "#ffd700";
+  ctx.beginPath(); ctx.arc(cx, cy, 6.5, 0, 7); ctx.fill();
+
+  document.getElementById("m-fps").textContent = Math.round(fps);
+  requestAnimationFrame(frame);
+}
+
+function cycleLang(){ langIdx = (langIdx + 1) % STONE.length; build(); }
+function toggleSpin(){ spin = !spin; document.getElementById("b-spin").className = spin ? "on" : ""; }
+function toggleSpokes(){ showSpokes = !showSpokes; document.getElementById("b-spokes").className = showSpokes ? "on" : ""; }
+function toggleRunes(){ showRunes = !showRunes; document.getElementById("b-runes").className = showRunes ? "on" : ""; }
+
+// Apollonium-style hide-UI: focus on the spinning only
+function toggleZen(){
+  var z = document.body.classList.toggle("zen");
+  document.getElementById("hideui").textContent = z ? "show UI" : "hide UI";
+}
+// language multi-select panel
+function toggleLangPanel(){
+  var p = document.getElementById("langpanel");
+  var open = p.classList.toggle("open");
+  document.getElementById("b-langs").className = open ? "on" : "";
+}
+function buildLangGrid(){
+  var grid = document.getElementById("langgrid"); grid.innerHTML = "";
+  for (var i = 0; i < STONE.length; i++){
+    var code = STONE[i][0], name = STONE[i][1];
+    var chip = document.createElement("div");
+    chip.className = "lchip" + (selected[code] ? " on" : "");
+    chip.textContent = code + " " + name;
+    chip.setAttribute("data-code", code);
+    chip.onclick = (function(c){ return function(){ toggleLang(c); }; })(code);
+    grid.appendChild(chip);
+  }
+}
+function toggleLang(code){
+  if (selected[code]) delete selected[code]; else selected[code] = true;
+  buildLangGrid(); build();
+}
+function selAll(on){
+  selected = {};
+  if (on){ for (var i = 0; i < STONE.length; i++) selected[STONE[i][0]] = true; }
+  else { selected["EN"] = true; }  // never fully empty -- keep English
+  buildLangGrid(); build();
+}
+document.getElementById("s-spin").addEventListener("input", function(e){
+  spinRate = +e.target.value; document.getElementById("v-spin").textContent = spinRate;
+});
+document.getElementById("s-size").addEventListener("input", function(e){
+  ringCap = +e.target.value; document.getElementById("v-size").textContent = ringCap; build();
+});
+
+buildLangGrid();
+build();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

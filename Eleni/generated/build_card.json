@@ -1,0 +1,320 @@
+{
+  "name": "Eleni",
+  "greek": "\u1f19\u03bb\u03ad\u03bd\u03b7",
+  "what": "the Genesis-LLM circle: gate (0.700) + a ring of 0/1 nodes, the stone in the tongues of humanity",
+  "circle_file": "circle/circle_gate.html",
+  "circle_fingerprint": "05e87d8a7b8a",
+  "tongues_count": 60,
+  "coverage": {
+    "speakers_m_sum": 5746,
+    "world_pop_m": 8000.0,
+    "pct": 71.8
+  },
+  "gate_weight": 0.7,
+  "gate_law": 0.7,
+  "law_ok": true,
+  "axiom_08": "the center's meaning is never rendered, logged, or displayed",
+  "built_utc": "2026-07-07T15:15:52Z",
+  "tongues": [
+    {
+      "code": "EN",
+      "name": "English",
+      "speakers_m": 380
+    },
+    {
+      "code": "ZH",
+      "name": "Mandarin",
+      "speakers_m": 940
+    },
+    {
+      "code": "HI",
+      "name": "Hindi",
+      "speakers_m": 345
+    },
+    {
+      "code": "ES",
+      "name": "Espanol",
+      "speakers_m": 485
+    },
+    {
+      "code": "AR",
+      "name": "Arabic",
+      "speakers_m": 360
+    },
+    {
+      "code": "BN",
+      "name": "Bengali",
+      "speakers_m": 240
+    },
+    {
+      "code": "PT",
+      "name": "Portugues",
+      "speakers_m": 235
+    },
+    {
+      "code": "RU",
+      "name": "Russkij",
+      "speakers_m": 150
+    },
+    {
+      "code": "JA",
+      "name": "Nihongo",
+      "speakers_m": 125
+    },
+    {
+      "code": "PA",
+      "name": "Punjabi",
+      "speakers_m": 125
+    },
+    {
+      "code": "DE",
+      "name": "Deutsch",
+      "speakers_m": 75
+    },
+    {
+      "code": "KO",
+      "name": "Hangugeo",
+      "speakers_m": 80
+    },
+    {
+      "code": "FR",
+      "name": "Francais",
+      "speakers_m": 80
+    },
+    {
+      "code": "TR",
+      "name": "Turkce",
+      "speakers_m": 85
+    },
+    {
+      "code": "VI",
+      "name": "Tieng Viet",
+      "speakers_m": 85
+    },
+    {
+      "code": "IT",
+      "name": "Italiano",
+      "speakers_m": 65
+    },
+    {
+      "code": "PL",
+      "name": "Polski",
+      "speakers_m": 40
+    },
+    {
+      "code": "UK",
+      "name": "Ukrainska",
+      "speakers_m": 35
+    },
+    {
+      "code": "NL",
+      "name": "Nederlands",
+      "speakers_m": 24
+    },
+    {
+      "code": "EL",
+      "name": "Hellenic",
+      "speakers_m": 13
+    },
+    {
+      "code": "HE",
+      "name": "Hebrew",
+      "speakers_m": 9
+    },
+    {
+      "code": "LA",
+      "name": "Latina",
+      "speakers_m": 0
+    },
+    {
+      "code": "UR",
+      "name": "Urdu",
+      "speakers_m": 70
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "speakers_m": 200
+    },
+    {
+      "code": "SW",
+      "name": "Kiswahili",
+      "speakers_m": 90
+    },
+    {
+      "code": "TA",
+      "name": "Tamil",
+      "speakers_m": 80
+    },
+    {
+      "code": "TE",
+      "name": "Telugu",
+      "speakers_m": 80
+    },
+    {
+      "code": "TH",
+      "name": "Thai",
+      "speakers_m": 60
+    },
+    {
+      "code": "FA",
+      "name": "Farsi",
+      "speakers_m": 80
+    },
+    {
+      "code": "MR",
+      "name": "Marathi",
+      "speakers_m": 83
+    },
+    {
+      "code": "JV",
+      "name": "Javanese",
+      "speakers_m": 68
+    },
+    {
+      "code": "GU",
+      "name": "Gujarati",
+      "speakers_m": 57
+    },
+    {
+      "code": "KN",
+      "name": "Kannada",
+      "speakers_m": 45
+    },
+    {
+      "code": "ML",
+      "name": "Malayalam",
+      "speakers_m": 38
+    },
+    {
+      "code": "MY",
+      "name": "Burmese",
+      "speakers_m": 43
+    },
+    {
+      "code": "HA",
+      "name": "Hausa",
+      "speakers_m": 80
+    },
+    {
+      "code": "AM",
+      "name": "Amharic",
+      "speakers_m": 35
+    },
+    {
+      "code": "TL",
+      "name": "Filipino",
+      "speakers_m": 30
+    },
+    {
+      "code": "YUE",
+      "name": "Cantonese",
+      "speakers_m": 85
+    },
+    {
+      "code": "NE",
+      "name": "Nepali",
+      "speakers_m": 32
+    },
+    {
+      "code": "SI",
+      "name": "Sinhala",
+      "speakers_m": 17
+    },
+    {
+      "code": "KM",
+      "name": "Khmer",
+      "speakers_m": 17
+    },
+    {
+      "code": "YO",
+      "name": "Yoruba",
+      "speakers_m": 45
+    },
+    {
+      "code": "IG",
+      "name": "Igbo",
+      "speakers_m": 30
+    },
+    {
+      "code": "UZ",
+      "name": "Uzbek",
+      "speakers_m": 35
+    },
+    {
+      "code": "SU",
+      "name": "Sundanese",
+      "speakers_m": 40
+    },
+    {
+      "code": "PS",
+      "name": "Pashto",
+      "speakers_m": 40
+    },
+    {
+      "code": "SD",
+      "name": "Sindhi",
+      "speakers_m": 30
+    },
+    {
+      "code": "OM",
+      "name": "Oromo",
+      "speakers_m": 37
+    },
+    {
+      "code": "ZU",
+      "name": "Zulu",
+      "speakers_m": 28
+    },
+    {
+      "code": "KU",
+      "name": "Kurdish",
+      "speakers_m": 30
+    },
+    {
+      "code": "MG",
+      "name": "Malagasy",
+      "speakers_m": 25
+    },
+    {
+      "code": "SO",
+      "name": "Somali",
+      "speakers_m": 22
+    },
+    {
+      "code": "CEB",
+      "name": "Cebuano",
+      "speakers_m": 20
+    },
+    {
+      "code": "RO",
+      "name": "Romana",
+      "speakers_m": 24
+    },
+    {
+      "code": "HU",
+      "name": "Magyar",
+      "speakers_m": 13
+    },
+    {
+      "code": "CS",
+      "name": "Cestina",
+      "speakers_m": 11
+    },
+    {
+      "code": "AZ",
+      "name": "Azerbaycan",
+      "speakers_m": 24
+    },
+    {
+      "code": "KK",
+      "name": "Kazakh",
+      "speakers_m": 13
+    },
+    {
+      "code": "EL2",
+      "name": "Ellinika",
+      "speakers_m": 13
+    }
+  ]
+}

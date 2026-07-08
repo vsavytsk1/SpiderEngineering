@@ -1,0 +1,27 @@
+{
+  "part": "gate",
+  "input_kind": "raw_bits",
+  "raw_bits": "10101",
+  "prompt": null,
+  "prompt_bits": 5,
+  "gate_weight": 0.7,
+  "gate_state": "ORACLE",
+  "genesis_level": 1,
+  "firewall_ok": true,
+  "heart_readout": {
+    "sum": 1.6004,
+    "mean": 1.5e-05,
+    "std": 0.002429,
+    "max": 0.4996,
+    "active": 5
+  },
+  "fractal_readout": {
+    "sum": 0.0,
+    "mean": 0.0,
+    "std": 0.0,
+    "max": 0.0,
+    "active": 0
+  },
+  "flow": "string -> gate -> heart (twisted) -> fractal space -> readout (one-way)",
+  "seconds": 0.024
+}

@@ -1,0 +1,64 @@
+{
+  "version": "v005",
+  "soul_id": "5704488bef0f6d074d1ea9438f314c50f8ce4a2a9640c8fcba19e488089eba08",
+  "build_id": "b1e4af74f30dc528df8e646b96276666cf0c0b2461af8dd9452ff936f652294c",
+  "unix_birth": 1783509379.3406317,
+  "birth_utc": "2026-07-08T11:16:19Z",
+  "center_vector": [
+    0.7,
+    1783509379.3406317
+  ],
+  "max_level": 1,
+  "k_nearest": 1,
+  "tongues": 71,
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "total_genesis_nodes": 54,
+  "heart_nodes": 105032,
+  "heart_chi": 0,
+  "heart_mean_weight": 0.543357,
+  "total_join_wires": 54,
+  "genesis_levels": [
+    {
+      "level": 0,
+      "nodes": 12,
+      "edges": 30,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 1,
+      "nodes": 42,
+      "edges": 120,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    }
+  ],
+  "gate": {
+    "input_kind": "raw_bits",
+    "raw_bits": "10101",
+    "prompt": null,
+    "prompt_bits": 5,
+    "gate_weight": 0.7,
+    "gate_state": "ORACLE",
+    "firewall_ok": true,
+    "heart_active": 5,
+    "fractal_active": 0
+  },
+  "all_genesis_certified": true,
+  "built_utc": "2026-07-08T11:16:20Z",
+  "note": "immutable snapshot. never overwrite. the whole journey is kept.",
+  "vaulted": true,
+  "timings_seconds": {
+    "center": 0.059,
+    "heart": 0.319,
+    "genesis_L0": 0.168,
+    "join_L0": 0.197,
+    "genesis_L1": 0.174,
+    "join_L1": 0.174,
+    "gate": 0.203,
+    "vault_save": 0.812,
+    "vault_verify": 0.431
+  }
+}

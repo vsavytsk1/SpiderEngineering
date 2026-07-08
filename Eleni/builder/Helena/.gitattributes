@@ -1,0 +1,12 @@
+# The vault is byte-exact by design: every copy (.bin/.csv/.zip) is SHA-256 verified.
+# Git MUST NOT touch line endings here, or the .csv hashes would mismatch on clone
+# and the redundancy verify would falsely report CORRUPT. Treat build artifacts as binary.
+builds/** -text
+builds/**/*.csv -text
+builds/**/*.json -text
+builds/**/*.bin -text
+builds/**/*.zip -text
+builds/**/*.f32 -text
+builds/**/*.f64 -text
+builds/**/*.i32 -text
+builds/**/*.png -text

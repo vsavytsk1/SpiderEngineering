@@ -1,0 +1,94 @@
+{
+  "version": "v006",
+  "soul_id": "fbd87d0ff1eef4a1f239191110608bd4154954eef1299794c3c82826181861f6",
+  "build_id": "b3f0032c12870f265be08165bd2c5910c63d9647c1bbf0fd3b020f99697ea7aa",
+  "unix_birth": 1783510179.873916,
+  "birth_utc": "2026-07-08T11:29:39Z",
+  "center_vector": [
+    0.7,
+    1783510179.873916
+  ],
+  "max_level": 4,
+  "k_nearest": 4,
+  "tongues": 71,
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "total_genesis_nodes": 3420,
+  "heart_nodes": 105032,
+  "heart_chi": 0,
+  "heart_mean_weight": 0.543357,
+  "total_join_wires": 13680,
+  "genesis_levels": [
+    {
+      "level": 0,
+      "nodes": 12,
+      "edges": 30,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 1,
+      "nodes": 42,
+      "edges": 120,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 2,
+      "nodes": 162,
+      "edges": 480,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 3,
+      "nodes": 642,
+      "edges": 1920,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 4,
+      "nodes": 2562,
+      "edges": 7680,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    }
+  ],
+  "gate": {
+    "input_kind": "raw_bits",
+    "raw_bits": "10101",
+    "prompt": null,
+    "prompt_bits": 5,
+    "gate_weight": 0.7,
+    "gate_state": "ORACLE",
+    "firewall_ok": true,
+    "heart_active": 5,
+    "fractal_active": 0
+  },
+  "all_genesis_certified": true,
+  "built_utc": "2026-07-08T11:29:44Z",
+  "note": "immutable snapshot. never overwrite. the whole journey is kept.",
+  "vaulted": true,
+  "timings_seconds": {
+    "center": 0.057,
+    "heart": 0.321,
+    "genesis_L0": 0.163,
+    "join_L0": 0.239,
+    "genesis_L1": 0.169,
+    "join_L1": 0.198,
+    "genesis_L2": 0.163,
+    "join_L2": 0.264,
+    "genesis_L3": 0.166,
+    "join_L3": 0.538,
+    "genesis_L4": 0.177,
+    "join_L4": 1.68,
+    "gate": 0.235,
+    "vault_save": 1.211,
+    "vault_verify": 0.452
+  }
+}

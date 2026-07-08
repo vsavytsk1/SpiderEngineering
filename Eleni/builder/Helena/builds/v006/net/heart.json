@@ -1,0 +1,599 @@
+{
+  "part": "heart",
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "tongues": 71,
+  "nodes": 105032,
+  "edges": 105032,
+  "faces": 0,
+  "chi": 0,
+  "orientation": "reversing",
+  "mobius": 1.0,
+  "scale": 1.6,
+  "ones": 48296,
+  "zeros": 56736,
+  "mean_weight": 0.543357,
+  "xyz_file": "heart_xyz.f32",
+  "xyz_dtype": "float32",
+  "xyz_stride": 3,
+  "attr_file": "heart_attr.f32",
+  "attr_dtype": "float32",
+  "attr_stride": 2,
+  "attr_fields": [
+    "bit",
+    "weight"
+  ],
+  "edges_file": "heart_edges.i32",
+  "edges_dtype": "int32",
+  "edges_stride": 2,
+  "tongue_index": [
+    {
+      "code": "EN",
+      "name": "English",
+      "start": 0,
+      "count": 5480,
+      "ones": 2467,
+      "closes": true
+    },
+    {
+      "code": "ZH",
+      "name": "Mandarin",
+      "start": 5480,
+      "count": 864,
+      "ones": 444,
+      "closes": false
+    },
+    {
+      "code": "HI",
+      "name": "Hindi",
+      "start": 6344,
+      "count": 1984,
+      "ones": 776,
+      "closes": false
+    },
+    {
+      "code": "ES",
+      "name": "Espanol",
+      "start": 8328,
+      "count": 960,
+      "ones": 448,
+      "closes": true
+    },
+    {
+      "code": "AR",
+      "name": "Arabic",
+      "start": 9288,
+      "count": 1216,
+      "ones": 574,
+      "closes": false
+    },
+    {
+      "code": "BN",
+      "name": "Bengali",
+      "start": 10504,
+      "count": 1904,
+      "ones": 876,
+      "closes": false
+    },
+    {
+      "code": "PT",
+      "name": "Portugues",
+      "start": 12408,
+      "count": 6352,
+      "ones": 2958,
+      "closes": true
+    },
+    {
+      "code": "RU",
+      "name": "Russkij",
+      "start": 18760,
+      "count": 1256,
+      "ones": 564,
+      "closes": false
+    },
+    {
+      "code": "JA",
+      "name": "Nihongo",
+      "start": 20016,
+      "count": 984,
+      "ones": 442,
+      "closes": false
+    },
+    {
+      "code": "PA",
+      "name": "Punjabi",
+      "start": 21000,
+      "count": 832,
+      "ones": 359,
+      "closes": true
+    },
+    {
+      "code": "DE",
+      "name": "Deutsch",
+      "start": 21832,
+      "count": 1080,
+      "ones": 491,
+      "closes": true
+    },
+    {
+      "code": "KO",
+      "name": "Hangugeo",
+      "start": 22912,
+      "count": 1040,
+      "ones": 505,
+      "closes": false
+    },
+    {
+      "code": "FR",
+      "name": "Francais",
+      "start": 23952,
+      "count": 1120,
+      "ones": 509,
+      "closes": true
+    },
+    {
+      "code": "TR",
+      "name": "Turkce",
+      "start": 25072,
+      "count": 936,
+      "ones": 438,
+      "closes": false
+    },
+    {
+      "code": "VI",
+      "name": "Tieng Viet",
+      "start": 26008,
+      "count": 1224,
+      "ones": 565,
+      "closes": true
+    },
+    {
+      "code": "IT",
+      "name": "Italiano",
+      "start": 27232,
+      "count": 1048,
+      "ones": 493,
+      "closes": true
+    },
+    {
+      "code": "PL",
+      "name": "Polski",
+      "start": 28280,
+      "count": 1048,
+      "ones": 473,
+      "closes": true
+    },
+    {
+      "code": "UK",
+      "name": "Ukrainska",
+      "start": 29328,
+      "count": 1344,
+      "ones": 586,
+      "closes": false
+    },
+    {
+      "code": "NL",
+      "name": "Nederlands",
+      "start": 30672,
+      "count": 1096,
+      "ones": 475,
+      "closes": true
+    },
+    {
+      "code": "EL",
+      "name": "Hellenic",
+      "start": 31768,
+      "count": 1752,
+      "ones": 969,
+      "closes": false
+    },
+    {
+      "code": "HE",
+      "name": "Hebrew",
+      "start": 33520,
+      "count": 1056,
+      "ones": 587,
+      "closes": false
+    },
+    {
+      "code": "LA",
+      "name": "Latina",
+      "start": 34576,
+      "count": 944,
+      "ones": 453,
+      "closes": true
+    },
+    {
+      "code": "UR",
+      "name": "Urdu",
+      "start": 35520,
+      "count": 1232,
+      "ones": 600,
+      "closes": false
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "start": 36752,
+      "count": 1280,
+      "ones": 574,
+      "closes": true
+    },
+    {
+      "code": "SW",
+      "name": "Kiswahili",
+      "start": 38032,
+      "count": 832,
+      "ones": 381,
+      "closes": true
+    },
+    {
+      "code": "TA",
+      "name": "Tamil",
+      "start": 38864,
+      "count": 2544,
+      "ones": 1298,
+      "closes": false
+    },
+    {
+      "code": "TE",
+      "name": "Telugu",
+      "start": 41408,
+      "count": 2000,
+      "ones": 831,
+      "closes": false
+    },
+    {
+      "code": "TH",
+      "name": "Thai",
+      "start": 43408,
+      "count": 2376,
+      "ones": 1050,
+      "closes": false
+    },
+    {
+      "code": "FA",
+      "name": "Farsi",
+      "start": 45784,
+      "count": 1400,
+      "ones": 674,
+      "closes": false
+    },
+    {
+      "code": "MR",
+      "name": "Marathi",
+      "start": 47184,
+      "count": 2472,
+      "ones": 1031,
+      "closes": false
+    },
+    {
+      "code": "JV",
+      "name": "Javanese",
+      "start": 49656,
+      "count": 1000,
+      "ones": 472,
+      "closes": true
+    },
+    {
+      "code": "GU",
+      "name": "Gujarati",
+      "start": 50656,
+      "count": 1640,
+      "ones": 705,
+      "closes": false
+    },
+    {
+      "code": "KN",
+      "name": "Kannada",
+      "start": 52296,
+      "count": 2040,
+      "ones": 927,
+      "closes": false
+    },
+    {
+      "code": "ML",
+      "name": "Malayalam",
+      "start": 54336,
+      "count": 2200,
+      "ones": 1017,
+      "closes": false
+    },
+    {
+      "code": "MY",
+      "name": "Burmese",
+      "start": 56536,
+      "count": 2496,
+      "ones": 932,
+      "closes": true
+    },
+    {
+      "code": "HA",
+      "name": "Hausa",
+      "start": 59032,
+      "count": 944,
+      "ones": 404,
+      "closes": true
+    },
+    {
+      "code": "AM",
+      "name": "Amharic",
+      "start": 59976,
+      "count": 1528,
+      "ones": 659,
+      "closes": false
+    },
+    {
+      "code": "TL",
+      "name": "Filipino",
+      "start": 61504,
+      "count": 1272,
+      "ones": 600,
+      "closes": true
+    },
+    {
+      "code": "YUE",
+      "name": "Cantonese",
+      "start": 62776,
+      "count": 792,
+      "ones": 406,
+      "closes": false
+    },
+    {
+      "code": "NE",
+      "name": "Nepali",
+      "start": 63568,
+      "count": 2128,
+      "ones": 870,
+      "closes": false
+    },
+    {
+      "code": "SI",
+      "name": "Sinhala",
+      "start": 65696,
+      "count": 1832,
+      "ones": 904,
+      "closes": false
+    },
+    {
+      "code": "KM",
+      "name": "Khmer",
+      "start": 67528,
+      "count": 1920,
+      "ones": 1043,
+      "closes": false
+    },
+    {
+      "code": "YO",
+      "name": "Yoruba",
+      "start": 69448,
+      "count": 992,
+      "ones": 432,
+      "closes": true
+    },
+    {
+      "code": "IG",
+      "name": "Igbo",
+      "start": 70440,
+      "count": 1136,
+      "ones": 537,
+      "closes": false
+    },
+    {
+      "code": "UZ",
+      "name": "Uzbek",
+      "start": 71576,
+      "count": 1152,
+      "ones": 530,
+      "closes": true
+    },
+    {
+      "code": "SU",
+      "name": "Sundanese",
+      "start": 72728,
+      "count": 992,
+      "ones": 446,
+      "closes": true
+    },
+    {
+      "code": "PS",
+      "name": "Pashto",
+      "start": 73720,
+      "count": 1304,
+      "ones": 613,
+      "closes": false
+    },
+    {
+      "code": "SD",
+      "name": "Sindhi",
+      "start": 75024,
+      "count": 1368,
+      "ones": 650,
+      "closes": false
+    },
+    {
+      "code": "OM",
+      "name": "Oromo",
+      "start": 76392,
+      "count": 1056,
+      "ones": 479,
+      "closes": true
+    },
+    {
+      "code": "ZU",
+      "name": "Zulu",
+      "start": 77448,
+      "count": 1024,
+      "ones": 519,
+      "closes": true
+    },
+    {
+      "code": "KU",
+      "name": "Kurdish",
+      "start": 78472,
+      "count": 1104,
+      "ones": 500,
+      "closes": true
+    },
+    {
+      "code": "MG",
+      "name": "Malagasy",
+      "start": 79576,
+      "count": 1160,
+      "ones": 535,
+      "closes": true
+    },
+    {
+      "code": "SO",
+      "name": "Somali",
+      "start": 80736,
+      "count": 1040,
+      "ones": 446,
+      "closes": true
+    },
+    {
+      "code": "CEB",
+      "name": "Cebuano",
+      "start": 81776,
+      "count": 1200,
+      "ones": 571,
+      "closes": true
+    },
+    {
+      "code": "RO",
+      "name": "Romana",
+      "start": 82976,
+      "count": 1064,
+      "ones": 493,
+      "closes": true
+    },
+    {
+      "code": "HU",
+      "name": "Magyar",
+      "start": 84040,
+      "count": 1144,
+      "ones": 549,
+      "closes": true
+    },
+    {
+      "code": "CS",
+      "name": "Cestina",
+      "start": 85184,
+      "count": 1192,
+      "ones": 572,
+      "closes": true
+    },
+    {
+      "code": "AZ",
+      "name": "Azerbaycan",
+      "start": 86376,
+      "count": 1160,
+      "ones": 537,
+      "closes": false
+    },
+    {
+      "code": "KK",
+      "name": "Kazakh",
+      "start": 87536,
+      "count": 1584,
+      "ones": 718,
+      "closes": false
+    },
+    {
+      "code": "EL2",
+      "name": "Ellinika",
+      "start": 89120,
+      "count": 1352,
+      "ones": 748,
+      "closes": false
+    },
+    {
+      "code": "SN",
+      "name": "Shona",
+      "start": 90472,
+      "count": 856,
+      "ones": 398,
+      "closes": true
+    },
+    {
+      "code": "NY",
+      "name": "Chichewa",
+      "start": 91328,
+      "count": 1064,
+      "ones": 500,
+      "closes": true
+    },
+    {
+      "code": "RW",
+      "name": "Kinyarwanda",
+      "start": 92392,
+      "count": 984,
+      "ones": 470,
+      "closes": true
+    },
+    {
+      "code": "TI",
+      "name": "Tigrinya",
+      "start": 93376,
+      "count": 1064,
+      "ones": 513,
+      "closes": true
+    },
+    {
+      "code": "MN",
+      "name": "Mongol",
+      "start": 94440,
+      "count": 1136,
+      "ones": 494,
+      "closes": false
+    },
+    {
+      "code": "LO",
+      "name": "Lao",
+      "start": 95576,
+      "count": 760,
+      "ones": 336,
+      "closes": true
+    },
+    {
+      "code": "OR",
+      "name": "Odia",
+      "start": 96336,
+      "count": 1960,
+      "ones": 896,
+      "closes": false
+    },
+    {
+      "code": "AS",
+      "name": "Assamese",
+      "start": 98296,
+      "count": 2104,
+      "ones": 946,
+      "closes": false
+    },
+    {
+      "code": "SA",
+      "name": "Sanskrit",
+      "start": 100400,
+      "count": 2144,
+      "ones": 908,
+      "closes": false
+    },
+    {
+      "code": "KA",
+      "name": "Kartuli",
+      "start": 102544,
+      "count": 872,
+      "ones": 402,
+      "closes": true
+    },
+    {
+      "code": "KY",
+      "name": "Kyrgyz",
+      "start": 103416,
+      "count": 1616,
+      "ones": 728,
+      "closes": false
+    }
+  ],
+  "seconds": 0.14
+}

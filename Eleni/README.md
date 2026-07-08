@@ -27,7 +27,23 @@ Eleni/
   circle/
     circle_gate.html     -- the circle: gate (0.700) + a ring of 0/1 nodes,
                             the stone's words in 60 tongues of humanity, spinning.
+  lens/                  -- the version journey v0.1 -> v1.9 (every step, right or wrong)
+  builder/
+    Helena/              -- HELENA, the NATIVE build (8 standalone Python scripts +
+                            the pipe, the COBOL vault, the neo console). See its README.
 ```
+
+## HELENA — the native build
+
+The circle is the *picture*. **HELENA** is the *engine*: eight standalone Python
+scripts that build the whole architecture on one laptop, off Chromium — center,
+genesis, heart, transformer, gate, window, signed console, and the never-stopping
+flow. She speaks **fractal**, not human: a question is a *break* in a symmetric
+carrier, scattered across the closed surface, and the closed topology resolves it.
+
+→ see [`builder/Helena/README.md`](builder/Helena/README.md) for the full story
+and how to run it. Every build is vaulted in three formats (cosmic-ray-proof) and
+kept forever (the genizah law, Axiom 10).
 
 ## The circle so far
 

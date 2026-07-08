@@ -1,0 +1,18 @@
+{
+  "part": "genesis",
+  "level": 1,
+  "radius": 1.6,
+  "nodes": 42,
+  "edges": 120,
+  "faces": 80,
+  "chi": 2,
+  "pentagons": 12,
+  "certified": true,
+  "xyz_file": "genesis_L1_xyz.f32",
+  "xyz_dtype": "float32",
+  "xyz_stride": 3,
+  "edges_file": "genesis_L1_edges.i32",
+  "edges_dtype": "int32",
+  "edges_stride": 2,
+  "seconds": 0.002
+}

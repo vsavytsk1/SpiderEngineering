@@ -1,0 +1,20 @@
+{
+  "part": "join",
+  "genesis_level": 4,
+  "genesis_nodes": 2562,
+  "heart_nodes": 105032,
+  "k_nearest": 4,
+  "wires": 10248,
+  "op": "dot product a.b = cos(theta) (nearest heart node per genesis node)",
+  "wire_file": "join_L4.i32",
+  "wire_dtype": "int32",
+  "wire_stride": 2,
+  "wire_fields": [
+    "genesis_idx",
+    "heart_idx"
+  ],
+  "dot_file": "join_L4_dot.f32",
+  "dot_dtype": "float32",
+  "dot_stride": 1,
+  "seconds": 1.602
+}

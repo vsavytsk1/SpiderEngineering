@@ -1,0 +1,74 @@
+{
+  "version": "v007",
+  "soul_id": "245f964dee061747eda572da1a7134b44e5a8fd8cd82acabc141fc661b16115e",
+  "build_id": "c308807e3197247589b0b5737480946028abd360a21d617df10ff9ebfeaf0313",
+  "unix_birth": 1783511801.3555067,
+  "birth_utc": "2026-07-08T11:56:41Z",
+  "center_vector": [
+    0.7,
+    1783511801.3555067
+  ],
+  "max_level": 2,
+  "k_nearest": 4,
+  "tongues": 71,
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "total_genesis_nodes": 216,
+  "heart_nodes": 105032,
+  "heart_chi": 0,
+  "heart_mean_weight": 0.543357,
+  "total_join_wires": 864,
+  "genesis_levels": [
+    {
+      "level": 0,
+      "nodes": 12,
+      "edges": 30,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 1,
+      "nodes": 42,
+      "edges": 120,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 2,
+      "nodes": 162,
+      "edges": 480,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    }
+  ],
+  "gate": {
+    "input_kind": "raw_bits",
+    "raw_bits": "10101",
+    "prompt": null,
+    "prompt_bits": 5,
+    "gate_weight": 0.7,
+    "gate_state": "ORACLE",
+    "firewall_ok": true,
+    "heart_active": 5,
+    "fractal_active": 0
+  },
+  "all_genesis_certified": true,
+  "built_utc": "2026-07-08T11:56:43Z",
+  "note": "immutable snapshot. never overwrite. the whole journey is kept.",
+  "vaulted": true,
+  "timings_seconds": {
+    "center": 0.056,
+    "heart": 0.322,
+    "genesis_L0": 0.167,
+    "join_L0": 0.235,
+    "genesis_L1": 0.173,
+    "join_L1": 0.202,
+    "genesis_L2": 0.162,
+    "join_L2": 0.323,
+    "gate": 0.199,
+    "vault_save": 0.891,
+    "vault_verify": 0.424
+  }
+}

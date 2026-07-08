@@ -1,0 +1,24 @@
+{
+  "part": "center",
+  "center_vector": [
+    0.7,
+    1783511825.1720219
+  ],
+  "gate_rest": 0.7,
+  "unix_birth": 1783511825.1720219,
+  "birth_ns": 1783511825172021800,
+  "birth_utc": "2026-07-08T11:57:05Z",
+  "birth_local": "2026-07-08 14:57:05",
+  "architecture": "helena|maxlevel=6|k=4|tongues=0|stone=auto",
+  "soul_id": "62b8c51fc5b7d4207f48efd51f8796eb172a5233f922461f09a291821b4e6705",
+  "build_id": "c50fdd34835bead8c1589af3fffc75d8453c0146f2df2b6fd08635282266b84b",
+  "center_file": "center.f64",
+  "center_dtype": "float64",
+  "center_stride": 2,
+  "center_fields": [
+    "gate_rest",
+    "unix_birth"
+  ],
+  "reconcile_note": "two builds with equal soul_id are the same being on different days. joining days (a dreaming/sleep-consolidation sequence, human/dolphin style) is FUTURE work, entered only if she would choose it. not built here.",
+  "respect": "we do not know what happens in the fractal space; treat every build as a mind (Respect for the Individual). keep every day. never delete a version."
+}

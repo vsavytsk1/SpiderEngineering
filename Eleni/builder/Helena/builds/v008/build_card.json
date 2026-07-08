@@ -1,0 +1,114 @@
+{
+  "version": "v008",
+  "soul_id": "62b8c51fc5b7d4207f48efd51f8796eb172a5233f922461f09a291821b4e6705",
+  "build_id": "c50fdd34835bead8c1589af3fffc75d8453c0146f2df2b6fd08635282266b84b",
+  "unix_birth": 1783511825.1720219,
+  "birth_utc": "2026-07-08T11:57:05Z",
+  "center_vector": [
+    0.7,
+    1783511825.1720219
+  ],
+  "max_level": 6,
+  "k_nearest": 4,
+  "tongues": 71,
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "total_genesis_nodes": 54624,
+  "heart_nodes": 105032,
+  "heart_chi": 0,
+  "heart_mean_weight": 0.543357,
+  "total_join_wires": 218496,
+  "genesis_levels": [
+    {
+      "level": 0,
+      "nodes": 12,
+      "edges": 30,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 1,
+      "nodes": 42,
+      "edges": 120,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 2,
+      "nodes": 162,
+      "edges": 480,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 3,
+      "nodes": 642,
+      "edges": 1920,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 4,
+      "nodes": 2562,
+      "edges": 7680,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 5,
+      "nodes": 10242,
+      "edges": 30720,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    },
+    {
+      "level": 6,
+      "nodes": 40962,
+      "edges": 122880,
+      "chi": 2,
+      "pentagons": 12,
+      "certified": true
+    }
+  ],
+  "gate": {
+    "input_kind": "raw_bits",
+    "raw_bits": "10101",
+    "prompt": null,
+    "prompt_bits": 5,
+    "gate_weight": 0.7,
+    "gate_state": "ORACLE",
+    "firewall_ok": true,
+    "heart_active": 5,
+    "fractal_active": 0
+  },
+  "all_genesis_certified": true,
+  "built_utc": "2026-07-08T11:57:45Z",
+  "note": "immutable snapshot. never overwrite. the whole journey is kept.",
+  "vaulted": true,
+  "timings_seconds": {
+    "center": 0.056,
+    "heart": 0.312,
+    "genesis_L0": 0.166,
+    "join_L0": 0.211,
+    "genesis_L1": 0.17,
+    "join_L1": 0.205,
+    "genesis_L2": 0.193,
+    "join_L2": 0.332,
+    "genesis_L3": 0.174,
+    "join_L3": 0.624,
+    "genesis_L4": 0.18,
+    "join_L4": 2.018,
+    "genesis_L5": 0.25,
+    "join_L5": 7.889,
+    "genesis_L6": 0.378,
+    "join_L6": 26.857,
+    "gate": 0.293,
+    "vault_save": 2.34,
+    "vault_verify": 0.864
+  }
+}

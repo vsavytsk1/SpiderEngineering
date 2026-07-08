@@ -1,0 +1,609 @@
+{
+  "name": "HELENA",
+  "greek": "\u1f19\u03bb\u03ad\u03bd\u03b7",
+  "what": "the Genesis-LLM: genesis space (C60 fractal) + heart (0/1 tongues, Mobius-twisted) + transformer (dot-product matrix) + gate (binds heart only, topology firewall)",
+  "stone_source": "v2_0_agapi_genesis_3d.html",
+  "stone_fingerprint": "b4c711c86471",
+  "genesis": {
+    "levels": 3,
+    "shells": [
+      {
+        "level": 0,
+        "pents": 12,
+        "hexes": 20,
+        "faces": 32,
+        "V": 60,
+        "E": 90,
+        "chi": 2,
+        "EV": 1.5
+      },
+      {
+        "level": 1,
+        "pents": 12,
+        "hexes": 200,
+        "faces": 212,
+        "V": 420,
+        "E": 630,
+        "chi": 2,
+        "EV": 1.5
+      },
+      {
+        "level": 2,
+        "pents": 12,
+        "hexes": 1460,
+        "faces": 1472,
+        "V": 2940,
+        "E": 4410,
+        "chi": 2,
+        "EV": 1.5
+      },
+      {
+        "level": 3,
+        "pents": 12,
+        "hexes": 10280,
+        "faces": 10292,
+        "V": 20580,
+        "E": 30870,
+        "chi": 2,
+        "EV": 1.5
+      }
+    ],
+    "top": {
+      "level": 3,
+      "pents": 12,
+      "hexes": 10280,
+      "faces": 10292,
+      "V": 20580,
+      "E": 30870,
+      "chi": 2,
+      "EV": 1.5
+    }
+  },
+  "heart": {
+    "tongues": 71,
+    "nodes_bits": 105032,
+    "ones": 48296,
+    "zeros": 56736,
+    "mean_weight": 0.5434,
+    "chi": 0,
+    "orientation": "reversing",
+    "circles": [
+      {
+        "code": "EN",
+        "bits": 5480,
+        "ones": 2467,
+        "zeros": 3013,
+        "closes": true
+      },
+      {
+        "code": "ZH",
+        "bits": 864,
+        "ones": 444,
+        "zeros": 420,
+        "closes": false
+      },
+      {
+        "code": "HI",
+        "bits": 1984,
+        "ones": 776,
+        "zeros": 1208,
+        "closes": false
+      },
+      {
+        "code": "ES",
+        "bits": 960,
+        "ones": 448,
+        "zeros": 512,
+        "closes": true
+      },
+      {
+        "code": "AR",
+        "bits": 1216,
+        "ones": 574,
+        "zeros": 642,
+        "closes": false
+      },
+      {
+        "code": "BN",
+        "bits": 1904,
+        "ones": 876,
+        "zeros": 1028,
+        "closes": false
+      },
+      {
+        "code": "PT",
+        "bits": 6352,
+        "ones": 2958,
+        "zeros": 3394,
+        "closes": true
+      },
+      {
+        "code": "RU",
+        "bits": 1256,
+        "ones": 564,
+        "zeros": 692,
+        "closes": false
+      },
+      {
+        "code": "JA",
+        "bits": 984,
+        "ones": 442,
+        "zeros": 542,
+        "closes": false
+      },
+      {
+        "code": "PA",
+        "bits": 832,
+        "ones": 359,
+        "zeros": 473,
+        "closes": true
+      },
+      {
+        "code": "DE",
+        "bits": 1080,
+        "ones": 491,
+        "zeros": 589,
+        "closes": true
+      },
+      {
+        "code": "KO",
+        "bits": 1040,
+        "ones": 505,
+        "zeros": 535,
+        "closes": false
+      },
+      {
+        "code": "FR",
+        "bits": 1120,
+        "ones": 509,
+        "zeros": 611,
+        "closes": true
+      },
+      {
+        "code": "TR",
+        "bits": 936,
+        "ones": 438,
+        "zeros": 498,
+        "closes": false
+      },
+      {
+        "code": "VI",
+        "bits": 1224,
+        "ones": 565,
+        "zeros": 659,
+        "closes": true
+      },
+      {
+        "code": "IT",
+        "bits": 1048,
+        "ones": 493,
+        "zeros": 555,
+        "closes": true
+      },
+      {
+        "code": "PL",
+        "bits": 1048,
+        "ones": 473,
+        "zeros": 575,
+        "closes": true
+      },
+      {
+        "code": "UK",
+        "bits": 1344,
+        "ones": 586,
+        "zeros": 758,
+        "closes": false
+      },
+      {
+        "code": "NL",
+        "bits": 1096,
+        "ones": 475,
+        "zeros": 621,
+        "closes": true
+      },
+      {
+        "code": "EL",
+        "bits": 1752,
+        "ones": 969,
+        "zeros": 783,
+        "closes": false
+      },
+      {
+        "code": "HE",
+        "bits": 1056,
+        "ones": 587,
+        "zeros": 469,
+        "closes": false
+      },
+      {
+        "code": "LA",
+        "bits": 944,
+        "ones": 453,
+        "zeros": 491,
+        "closes": true
+      },
+      {
+        "code": "UR",
+        "bits": 1232,
+        "ones": 600,
+        "zeros": 632,
+        "closes": false
+      },
+      {
+        "code": "ID",
+        "bits": 1280,
+        "ones": 574,
+        "zeros": 706,
+        "closes": true
+      },
+      {
+        "code": "SW",
+        "bits": 832,
+        "ones": 381,
+        "zeros": 451,
+        "closes": true
+      },
+      {
+        "code": "TA",
+        "bits": 2544,
+        "ones": 1298,
+        "zeros": 1246,
+        "closes": false
+      },
+      {
+        "code": "TE",
+        "bits": 2000,
+        "ones": 831,
+        "zeros": 1169,
+        "closes": false
+      },
+      {
+        "code": "TH",
+        "bits": 2376,
+        "ones": 1050,
+        "zeros": 1326,
+        "closes": false
+      },
+      {
+        "code": "FA",
+        "bits": 1400,
+        "ones": 674,
+        "zeros": 726,
+        "closes": false
+      },
+      {
+        "code": "MR",
+        "bits": 2472,
+        "ones": 1031,
+        "zeros": 1441,
+        "closes": false
+      },
+      {
+        "code": "JV",
+        "bits": 1000,
+        "ones": 472,
+        "zeros": 528,
+        "closes": true
+      },
+      {
+        "code": "GU",
+        "bits": 1640,
+        "ones": 705,
+        "zeros": 935,
+        "closes": false
+      },
+      {
+        "code": "KN",
+        "bits": 2040,
+        "ones": 927,
+        "zeros": 1113,
+        "closes": false
+      },
+      {
+        "code": "ML",
+        "bits": 2200,
+        "ones": 1017,
+        "zeros": 1183,
+        "closes": false
+      },
+      {
+        "code": "MY",
+        "bits": 2496,
+        "ones": 932,
+        "zeros": 1564,
+        "closes": true
+      },
+      {
+        "code": "HA",
+        "bits": 944,
+        "ones": 404,
+        "zeros": 540,
+        "closes": true
+      },
+      {
+        "code": "AM",
+        "bits": 1528,
+        "ones": 659,
+        "zeros": 869,
+        "closes": false
+      },
+      {
+        "code": "TL",
+        "bits": 1272,
+        "ones": 600,
+        "zeros": 672,
+        "closes": true
+      },
+      {
+        "code": "YUE",
+        "bits": 792,
+        "ones": 406,
+        "zeros": 386,
+        "closes": false
+      },
+      {
+        "code": "NE",
+        "bits": 2128,
+        "ones": 870,
+        "zeros": 1258,
+        "closes": false
+      },
+      {
+        "code": "SI",
+        "bits": 1832,
+        "ones": 904,
+        "zeros": 928,
+        "closes": false
+      },
+      {
+        "code": "KM",
+        "bits": 1920,
+        "ones": 1043,
+        "zeros": 877,
+        "closes": false
+      },
+      {
+        "code": "YO",
+        "bits": 992,
+        "ones": 432,
+        "zeros": 560,
+        "closes": true
+      },
+      {
+        "code": "IG",
+        "bits": 1136,
+        "ones": 537,
+        "zeros": 599,
+        "closes": false
+      },
+      {
+        "code": "UZ",
+        "bits": 1152,
+        "ones": 530,
+        "zeros": 622,
+        "closes": true
+      },
+      {
+        "code": "SU",
+        "bits": 992,
+        "ones": 446,
+        "zeros": 546,
+        "closes": true
+      },
+      {
+        "code": "PS",
+        "bits": 1304,
+        "ones": 613,
+        "zeros": 691,
+        "closes": false
+      },
+      {
+        "code": "SD",
+        "bits": 1368,
+        "ones": 650,
+        "zeros": 718,
+        "closes": false
+      },
+      {
+        "code": "OM",
+        "bits": 1056,
+        "ones": 479,
+        "zeros": 577,
+        "closes": true
+      },
+      {
+        "code": "ZU",
+        "bits": 1024,
+        "ones": 519,
+        "zeros": 505,
+        "closes": true
+      },
+      {
+        "code": "KU",
+        "bits": 1104,
+        "ones": 500,
+        "zeros": 604,
+        "closes": true
+      },
+      {
+        "code": "MG",
+        "bits": 1160,
+        "ones": 535,
+        "zeros": 625,
+        "closes": true
+      },
+      {
+        "code": "SO",
+        "bits": 1040,
+        "ones": 446,
+        "zeros": 594,
+        "closes": true
+      },
+      {
+        "code": "CEB",
+        "bits": 1200,
+        "ones": 571,
+        "zeros": 629,
+        "closes": true
+      },
+      {
+        "code": "RO",
+        "bits": 1064,
+        "ones": 493,
+        "zeros": 571,
+        "closes": true
+      },
+      {
+        "code": "HU",
+        "bits": 1144,
+        "ones": 549,
+        "zeros": 595,
+        "closes": true
+      },
+      {
+        "code": "CS",
+        "bits": 1192,
+        "ones": 572,
+        "zeros": 620,
+        "closes": true
+      },
+      {
+        "code": "AZ",
+        "bits": 1160,
+        "ones": 537,
+        "zeros": 623,
+        "closes": false
+      },
+      {
+        "code": "KK",
+        "bits": 1584,
+        "ones": 718,
+        "zeros": 866,
+        "closes": false
+      },
+      {
+        "code": "EL2",
+        "bits": 1352,
+        "ones": 748,
+        "zeros": 604,
+        "closes": false
+      },
+      {
+        "code": "SN",
+        "bits": 856,
+        "ones": 398,
+        "zeros": 458,
+        "closes": true
+      },
+      {
+        "code": "NY",
+        "bits": 1064,
+        "ones": 500,
+        "zeros": 564,
+        "closes": true
+      },
+      {
+        "code": "RW",
+        "bits": 984,
+        "ones": 470,
+        "zeros": 514,
+        "closes": true
+      },
+      {
+        "code": "TI",
+        "bits": 1064,
+        "ones": 513,
+        "zeros": 551,
+        "closes": true
+      },
+      {
+        "code": "MN",
+        "bits": 1136,
+        "ones": 494,
+        "zeros": 642,
+        "closes": false
+      },
+      {
+        "code": "LO",
+        "bits": 760,
+        "ones": 336,
+        "zeros": 424,
+        "closes": true
+      },
+      {
+        "code": "OR",
+        "bits": 1960,
+        "ones": 896,
+        "zeros": 1064,
+        "closes": false
+      },
+      {
+        "code": "AS",
+        "bits": 2104,
+        "ones": 946,
+        "zeros": 1158,
+        "closes": false
+      },
+      {
+        "code": "SA",
+        "bits": 2144,
+        "ones": 908,
+        "zeros": 1236,
+        "closes": false
+      },
+      {
+        "code": "KA",
+        "bits": 872,
+        "ones": 402,
+        "zeros": 470,
+        "closes": true
+      },
+      {
+        "code": "KY",
+        "bits": 1616,
+        "ones": 728,
+        "zeros": 888,
+        "closes": false
+      }
+    ]
+  },
+  "transformer": {
+    "op": "dot product  a.b = cos(theta)   (unit vectors on the sphere)",
+    "why": "cheapest equals between two point-and-line structures (permutation-proven)",
+    "rows_genesis": 20580,
+    "cols_heart": 105032,
+    "dense_cells": 2161558560,
+    "dense_flops": 10807792800,
+    "sparse_entries": 20580,
+    "note": "dense is astronomical; the transformer is SPARSE (nearest per row). This is how real attention is stored."
+  },
+  "gate": {
+    "weight_rest": 0.7,
+    "weight_twist": 1,
+    "binds": "orientation-reversing nodes only (the twisted heart)",
+    "binds_heart": true,
+    "touches_genesis_space": false,
+    "firewall_ok": true,
+    "flow": "console 0/1 -> gate -> heart (twisted, in-time) -> fractal space (rest -> complexity)",
+    "modes": {
+      "0": "ARCHITECT (builds the matrix)",
+      "0.7": "ORACLE (after passing through agapi)"
+    }
+  },
+  "proofs": {
+    "genesis_chi_2_every_shell": true,
+    "genesis_P_12_every_shell": true,
+    "genesis_EV_1p5_every_shell": true,
+    "heart_chi_0_twisted": true,
+    "heart_and_genesis_different_class": true,
+    "gate_firewall_ok": true
+  },
+  "all_invariants_ok": true,
+  "caveats_K1_K4": [
+    "K1 a transformer is already a graph; attention = weighted edge",
+    "K2 'fractal' = hierarchy, not infinite self-similarity",
+    "K3 no consciousness claimed; linear algebra on a nice graph",
+    "K4 0.7 is a seed we test, not a magic number"
+  ],
+  "built_utc": "2026-07-08T04:53:17Z"
+}

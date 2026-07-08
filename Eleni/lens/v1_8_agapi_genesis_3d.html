@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LENS v1.8 AGAPI CORE NET -- ~1000 nodes (0/1 bits) + inner edges, the fractal heart</title>
+<!--
+  LENS v1.8  AGAPI CORE NET  ·  2026-07-08
+  (v1.3 = the core net: ~1000 nodes on a perfect sphere, surface + volume, each node a 0/1 bit
+   from the UTF-8 hex of the selected tongues' verses; inner graph edges wire to the gate.
+   the LLM as nodes+values+lines. reader panel removed. more tongues = richer bit pattern.)
+  ===========================================================================
+  Another dimension: the agapi circle becomes a 3D GENESIS SPHERE (the heart /
+  Helena), built by the SAME certified Goldberg kernel (extracted verbatim from
+  shell/genesis_v9.0.html -- P=12, chi=2, never re-derived). Around it, the chosen
+  tongue's words ride an OUTER ring that COUNTER-rotates (the lens v0.6 rune-ring
+  tangent-text technique). Every tongue circles the one heart. All from the center.
+  AXIOM 08: the gate/center meaning is never rendered -- only its marker.
+  Verses extracted verbatim from v0.6 (Curse 25 safe). LF only. chi=2. always.
+-->
+<style>
+  :root{--bg:#050508;--gold:#ffd700;--cyan:#00d4ff;--pink:#ff69b4;--green:#00ffd5;
+    --dim:#6a6a82;--txt:#e8e0d0;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden}
+  #cv{position:fixed;inset:0;display:block}
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:flex;gap:14px;align-items:flex-start;
+    pointer-events:none;font-size:11px;z-index:10;flex-wrap:wrap}
+  #hud>div{pointer-events:auto;background:rgba(8,8,16,0.80);border:1px solid #20202e;border-radius:8px;padding:8px 11px}
+  #ttl{color:var(--gold);font-size:14px;letter-spacing:0.05em}
+  #sub{color:var(--dim);font-size:10px;margin-top:2px;max-width:560px;line-height:1.45}
+  #sub b{color:var(--cyan)}
+  #metrics{position:fixed;top:92px;left:14px;display:flex;gap:6px;flex-wrap:wrap;z-index:10;max-width:320px}
+  .mc{background:rgba(8,8,16,0.85);border:1px solid #20202e;border-radius:6px;padding:5px 10px;min-width:82px}
+  .mc .lab{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:0.07em}
+  .mc .val{font-size:15px;font-weight:bold;color:var(--gold)}
+  .mc .val.cyan{color:var(--cyan)} .mc .val.green{color:var(--green)}
+  #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:8px 12px;
+    align-items:center;background:rgba(8,8,16,0.90);border:1px solid #20202e;border-radius:10px;padding:10px 16px;z-index:20}
+  .klbl{color:var(--dim);font-size:10px}
+  input[type=range]{appearance:none;-webkit-appearance:none;width:110px;height:4px;background:#2a2a3a;border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:var(--gold);cursor:pointer}
+  .v2{color:var(--gold);font-size:11px;min-width:40px;text-align:right}
+  button{background:#14141f;border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);
+    font:12px var(--mono);padding:6px 11px;cursor:pointer;transition:all .12s}
+  button:hover{border-color:var(--gold)} button.on{border-color:var(--cyan);color:var(--cyan)}
+  button.pink{color:#ff69b4;border-color:#4a2438} button.pink:hover{border-color:#ff69b4}
+  #reader{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;z-index:12;width:min(760px,94vw);
+    max-height:34vh;overflow-y:auto;background:rgba(8,8,16,0.92);border:1px solid #2a2a3a;border-radius:12px;
+    padding:12px 18px;text-align:center;backdrop-filter:blur(4px)}
+  #reader .rname{color:var(--gold);font-size:15px}
+  #reader .rname .rcode{color:var(--cyan);font-size:11px;margin-left:8px}
+  #reader .rverse{color:var(--txt);font-size:16px;line-height:1.65;margin-top:7px;
+    font-family:'Segoe UI','Noto Sans','Noto Sans JP','Noto Sans Hebrew','Noto Sans Arabic',system-ui,sans-serif}
+  #stamp{position:fixed;bottom:12px;right:14px;color:var(--dim);font-size:9px;text-align:right;z-index:9;line-height:1.5}
+  #stamp b{color:var(--gold)}
+  #hideui{position:fixed;top:12px;right:14px;z-index:30;background:rgba(8,8,16,0.9);
+    border:1px solid #2a2a3a;border-radius:6px;color:var(--gold);font:11px var(--mono);padding:6px 11px;cursor:pointer}
+  /* language multi-select panel (each pick = one more outer ring on the plane) */
+  #langpanel{position:fixed;top:52px;right:14px;z-index:25;width:250px;max-height:72vh;overflow-y:auto;
+    background:rgba(8,8,16,0.96);border:1px solid #20202e;border-radius:8px;padding:10px 12px;display:none}
+  #langpanel.open{display:block}
+  #langpanel .ph{color:var(--gold);font-size:11px;letter-spacing:0.06em;margin-bottom:8px;display:flex;
+    justify-content:space-between;align-items:center}
+  #langpanel .ph a{color:var(--cyan);font-size:9px;cursor:pointer;text-decoration:none;margin-left:6px}
+  #langgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+  .lchip{font-size:10px;color:var(--dim);border:1px solid #20202e;border-radius:4px;padding:3px 6px;
+    cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lchip.on{color:var(--cyan);border-color:var(--cyan);background:rgba(0,212,255,0.08)}
+  body.zen #hud,body.zen #metrics,body.zen #bar,body.zen #stamp,body.zen #reader,body.zen #langpanel{opacity:0;pointer-events:none;transition:opacity .4s}
+  #hud,#metrics,#bar,#stamp,#reader,#langpanel{transition:opacity .4s}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<button id="hideui" onclick="toggleZen()">hide UI</button>
+<div id="langpanel">
+  <div class="ph"><span>tongues on the plane</span>
+    <span><a onclick="selAll(true)">all</a><a onclick="selAll(false)">one</a></span></div>
+  <div id="langgrid"></div>
+</div>
+<div id="hud">
+  <div>
+    <div id="ttl">agapi core net &middot; the fractal heart, nodes + lines</div>
+    <div id="sub">the <b>core net</b>: ~1000 nodes on a perfect sphere (surface + inside the volume),
+      each node a <b>0/1 bit</b> from the UTF-8 hex of the stone's words. cyan = 1, dim = 0. the
+      <b>lines inside</b> are the graph edges (nearest-neighbour wiring to the gate). this is the LLM:
+      nodes with values and their connections. more tongues &rarr; richer 0/1 pattern &rarr; clearer
+      signal to Helena. we compute all; we pay in compute to see. drag to orbit &middot; scroll to zoom.</div>
+  </div>
+</div>
+<div id="metrics">
+  <div class="mc"><div class="lab">net nodes</div><div class="val cyan" id="m-nodes">0</div></div>
+  <div class="mc"><div class="lab">ones / zeros</div><div class="val" id="m-oz">0 / 0</div></div>
+  <div class="mc"><div class="lab">edges (lines)</div><div class="val" id="m-edges">0</div></div>
+  <div class="mc"><div class="lab">gate (twist=1)</div><div class="val" id="m-gate" style="color:#ff69b4">1</div></div>
+  <div class="mc"><div class="lab">chi (twisted)</div><div class="val" id="m-chi" style="color:#ff69b4">0</div></div>
+  <div class="mc"><div class="lab">mean weight</div><div class="val" id="m-wmean" style="color:#ff69b4">0.000</div></div>
+  <div class="mc"><div class="lab">fractal nodes</div><div class="val" id="m-frac" style="color:#00ffd5">0</div></div>
+  <div class="mc"><div class="lab">C60 level</div><div class="val" id="m-flev" style="color:#00ffd5">3</div></div>
+  <div class="mc"><div class="lab">tongues</div><div class="val" id="m-langs">0</div></div>
+  <div class="mc"><div class="lab">fps</div><div class="val" id="m-fps">0</div></div>
+</div>
+<div id="bar">
+  <span class="klbl">nodes</span>
+  <input id="s-ref" type="range" min="0" max="3" step="1" value="2"><span class="v2" id="v-ref">2</span>
+  <span class="klbl">spin</span>
+  <input id="s-spin" type="range" min="0" max="100" step="1" value="22"><span class="v2" id="v-spin">22</span>
+  <button id="b-edges" class="on" onclick="toggleEdges()">lines</button>
+  <button id="b-vol" class="on" onclick="toggleVol()">volume</button>
+  <button id="b-weights" onclick="toggleWeights()">weights</button>
+  <button id="b-fractal" class="on" onclick="toggleFractal()">fractal space</button>
+  <button id="b-fall" class="pink" onclick="fractalizeAll()">fractalize all (C60->4)</button>
+  <button id="b-f6s" class="pink" onclick="fractalize6s()">fractalize 6s</button>
+  <button id="b-sphere" class="on" onclick="toggleSphere()">spin</button>
+  <button id="b-langs" onclick="toggleLangPanel()">tongues...</button>
+</div>
+<div id="stamp">
+  LENS v1.8 &middot; AGAPI CORE NET &middot; HELENA<br>
+  ~1000 nodes (surface + volume) &middot; each a 0/1 bit of the hex &middot; lines = edges &middot; gate <b>0.700</b><br>
+  P=12 &middot; &chi;=2 &middot; more tongues = clearer signal &middot; agapi &middot; always
+</div>
+<script>
+/* ===== GENESIS KERNEL -- extracted VERBATIM from shell/genesis_v9.0.html (CERTIFIED) ===== */
+var GK = {};
+
+// ----------------------------------------------------------------------------
+// §A Vector helpers (no dependencies)
+// ----------------------------------------------------------------------------
+function v3(x, y, z){ return [x, y, z]; }
+function vadd(a, b){ return [a[0]+b[0], a[1]+b[1], a[2]+b[2]]; }
+function vsub(a, b){ return [a[0]-b[0], a[1]-b[1], a[2]-b[2]]; }
+function vscale(a, s){ return [a[0]*s, a[1]*s, a[2]*s]; }
+function vlen(a){ return Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]); }
+function vnorm(a){ var L = vlen(a); return L > 1e-12 ? vscale(a, 1/L) : [0,0,0]; }
+function vlerp(a, b, t){ return [a[0]*(1-t)+b[0]*t, a[1]*(1-t)+b[1]*t, a[2]*(1-t)+b[2]*t]; }
+function vcross(a, b){
+  return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+}
+function vdot(a, b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+
+GK.vec = { v3:v3, add:vadd, sub:vsub, scale:vscale, len:vlen, norm:vnorm, lerp:vlerp, cross:vcross, dot:vdot };
+
+// ----------------------------------------------------------------------------
+// §B Canonical C60 construction
+// ----------------------------------------------------------------------------
+var PHI = (1 + Math.sqrt(5)) / 2;
+GK.PHI = PHI;
+
+function buildC60Vertices(){
+  // Truncated icosahedron vertex coordinates (Wikipedia formula):
+  //   (0, ±1, ±3φ)
+  //   (±1, ±(2+φ), ±2φ)
+  //   (±φ, ±2, ±(2φ+1))
+  // and all EVEN permutations of each coordinate triple.
+  var raw = [];
+  var permsEven = [[0,1,2],[1,2,0],[2,0,1]];
+  function pushAll(a, b, c){
+    for (var i = 0; i < permsEven.length; i++){
+      var p = permsEven[i];
+      for (var sa = -1; sa <= 1; sa += 2){
+        for (var sb = -1; sb <= 1; sb += 2){
+          for (var sc = -1; sc <= 1; sc += 2){
+            if (a === 0 && sa === -1) continue;
+            if (b === 0 && sb === -1) continue;
+            if (c === 0 && sc === -1) continue;
+            var v = [0, 0, 0];
+            v[p[0]] = sa * a;
+            v[p[1]] = sb * b;
+            v[p[2]] = sc * c;
+            raw.push(v);
+          }
+        }
+      }
+    }
+  }
+  pushAll(0, 1, 3*PHI);
+  pushAll(1, 2 + PHI, 2*PHI);
+  pushAll(PHI, 2, 2*PHI + 1);
+
+  // Dedupe with tolerance
+  var dedup = [];
+  for (var i = 0; i < raw.length; i++){
+    var v = raw[i];
+    var found = false;
+    for (var j = 0; j < dedup.length; j++){
+      var u = dedup[j];
+      if (Math.abs(u[0]-v[0]) < 0.001 && Math.abs(u[1]-v[1]) < 0.001 && Math.abs(u[2]-v[2]) < 0.001){
+        found = true; break;
+      }
+    }
+    if (!found) dedup.push(v);
+  }
+  // Normalize to unit sphere
+  for (var i = 0; i < dedup.length; i++){
+    dedup[i] = vscale(vnorm(dedup[i]), 1.6);
+  }
+  return dedup;
+}
+
+function buildC60Faces(verts){
+  // Find edge length (smallest pair distance)
+  var minD = Infinity;
+  for (var i = 0; i < verts.length; i++){
+    for (var j = i+1; j < verts.length; j++){
+      var d = vlen(vsub(verts[i], verts[j]));
+      if (d > 0.01 && d < minD) minD = d;
+    }
+  }
+  var edgeLen = minD;
+  var tol = edgeLen * 0.05;
+
+  // Build adjacency
+  var adj = [];
+  for (var i = 0; i < verts.length; i++){
+    var neighbors = [];
+    for (var j = 0; j < verts.length; j++){
+      if (i === j) continue;
+      var d = vlen(vsub(verts[i], verts[j]));
+      if (Math.abs(d - edgeLen) < tol) neighbors.push(j);
+    }
+    adj.push(neighbors);
+  }
+
+  // Sort each vertex's neighbours CCW around outward normal
+  for (var i = 0; i < verts.length; i++){
+    var v = verts[i];
+    var n = vnorm(v);
+    var ref = adj[i][0];
+    var rv = vsub(verts[ref], v);
+    var dot = vdot(rv, n);
+    var tangent = vnorm(vsub(rv, vscale(n, dot)));
+    var e2 = vcross(n, tangent);
+    adj[i].sort(function(a, b){
+      var va = vsub(verts[a], v);
+      var vb = vsub(verts[b], v);
+      var aa = Math.atan2(vdot(va, e2), vdot(va, tangent));
+      var bb = Math.atan2(vdot(vb, e2), vdot(vb, tangent));
+      return aa - bb;
+    });
+  }
+
+  // Half-edge face tracing
+  function nextInFace(u, v){
+    var nbrs = adj[v];
+    var idx = nbrs.indexOf(u);
+    if (idx < 0) return -1;
+    return nbrs[(idx + nbrs.length - 1) % nbrs.length];
+  }
+
+  var visited = {};
+  var faces = [];
+  for (var u = 0; u < verts.length; u++){
+    for (var k = 0; k < adj[u].length; k++){
+      var v = adj[u][k];
+      var key = u + ',' + v;
+      if (visited[key]) continue;
+      var face = [u];
+      var a = u, b = v;
+      for (var step = 0; step < 20; step++){
+        visited[a + ',' + b] = true;
+        var c = nextInFace(a, b);
+        if (c < 0 || c === u) break;
+        face.push(b);
+        a = b; b = c;
+      }
+      if (face[face.length-1] !== b) face.push(b);
+      if (face.length === 5 || face.length === 6) faces.push(face);
+    }
+  }
+
+  // Deduplicate: half-edge tracing finds each face from multiple starting edges.
+  // Canonical key = sorted vertex indices joined.
+  var seen = {};
+  var unique = [];
+  for (var i = 0; i < faces.length; i++){
+    var key = faces[i].slice().sort(function(a,b){return a-b}).join(',');
+    if (!seen[key]){
+      seen[key] = true;
+      unique.push(faces[i]);
+    }
+  }
+
+  return unique;
+}
+
+// ----------------------------------------------------------------------------
+// §C Public: build initial C60 state
+// ----------------------------------------------------------------------------
+GK.buildC60 = function(){
+  var verts = buildC60Vertices();
+  var faces = buildC60Faces(verts);
+  var meshFaces = [];
+  for (var i = 0; i < faces.length; i++){
+    var f = faces[i];
+    var pts = [];
+    for (var k = 0; k < f.length; k++) pts.push(verts[f[k]].slice());
+    var type = (f.length === 5) ? 'pent' : 'hex';
+    meshFaces.push({
+      pts: pts,
+      type: type,
+      level: 0,
+      lineage: [i],          // history of parent indices
+      id: 'F' + i,           // stable id
+      anchor: type === 'pent' ? ('A' + i) : null  // pent anchor id
+    });
+  }
+  return {
+    faces: meshFaces,
+    history: [],
+    counter: meshFaces.length
+  };
+};
+
+// ----------------------------------------------------------------------------
+// §C2 Public: build dodecahedron (the PURE SEED — 12 pentagons, 0 hexagons)
+// ----------------------------------------------------------------------------
+GK.buildDodecahedron = function(){
+  // 20 vertices from golden ratio. Absolute math.
+  var phi = PHI, invPhi = 1 / PHI;
+  var raw = [
+    // 8 cube vertices
+    [ 1, 1, 1],[ 1, 1,-1],[ 1,-1, 1],[ 1,-1,-1],
+    [-1, 1, 1],[-1, 1,-1],[-1,-1, 1],[-1,-1,-1],
+    // 12 from golden rectangles
+    [0, invPhi, phi],[0, invPhi,-phi],[0,-invPhi, phi],[0,-invPhi,-phi],
+    [invPhi, phi, 0],[invPhi,-phi, 0],[-invPhi, phi, 0],[-invPhi,-phi, 0],
+    [phi, 0, invPhi],[phi, 0,-invPhi],[-phi, 0, invPhi],[-phi, 0,-invPhi]
+  ];
+  // Normalize to sphere
+  for (var i = 0; i < raw.length; i++) raw[i] = vscale(vnorm(raw[i]), 1.6);
+
+  // Find edges (nearest neighbors)
+  var dists = [];
+  for (var i = 0; i < raw.length; i++)
+    for (var j = i+1; j < raw.length; j++)
+      dists.push(vlen(vsub(raw[i], raw[j])));
+  dists.sort(function(a,b){return a-b});
+  var edgeLen = dists[0], tol = edgeLen * 0.1;
+
+  var adj = [];
+  for (var i = 0; i < raw.length; i++){
+    adj[i] = [];
+    for (var j = 0; j < raw.length; j++){
+      if (i !== j && Math.abs(vlen(vsub(raw[i], raw[j])) - edgeLen) < tol)
+        adj[i].push(j);
+    }
+  }
+
+  // Sort neighbours CCW
+  for (var i = 0; i < raw.length; i++){
+    var v = raw[i], n = vnorm(v);
+    var ref = adj[i][0], rv = vsub(raw[ref], v);
+    var dot = vdot(rv, n);
+    var tangent = vnorm(vsub(rv, vscale(n, dot)));
+    var e2 = vcross(n, tangent);
+    adj[i].sort(function(a,b){
+      var va = vsub(raw[a], v), vb = vsub(raw[b], v);
+      return Math.atan2(vdot(va,e2),vdot(va,tangent)) - Math.atan2(vdot(vb,e2),vdot(vb,tangent));
+    });
+  }
+
+  // Trace pentagonal faces (half-edge)
+  function nextInFace(u,v){
+    var idx = adj[v].indexOf(u); if(idx<0)return -1;
+    return adj[v][(idx+adj[v].length-1)%adj[v].length];
+  }
+  var visited = {}, faces = [];
+  for (var u = 0; u < raw.length; u++){
+    for (var k = 0; k < adj[u].length; k++){
+      var v = adj[u][k], key = u+','+v;
+      if (visited[key]) continue;
+      var face=[u], a=u, b=v;
+      for (var step=0; step<10; step++){
+        visited[a+','+b]=true;
+        var c=nextInFace(a,b); if(c<0||c===u)break;
+        face.push(b); a=b; b=c;
+      }
+      if(face[face.length-1]!==b) face.push(b);
+      if(face.length===5) faces.push(face);
+    }
+  }
+  // Deduplicate
+  var seen={}, unique=[];
+  for(var i=0;i<faces.length;i++){
+    var key=faces[i].slice().sort(function(a,b){return a-b}).join(',');
+    if(!seen[key]){seen[key]=true;unique.push(faces[i]);}
+  }
+
+  var meshFaces = [];
+  for (var i = 0; i < unique.length; i++){
+    var f = unique[i], pts = [];
+    for (var k = 0; k < f.length; k++) pts.push(raw[f[k]].slice());
+    meshFaces.push({
+      pts: pts, type: 'pent', level: 0, lineage: [i],
+      id: 'D' + i, anchor: 'A' + i
+    });
+  }
+  return { faces: meshFaces, history: [], counter: meshFaces.length };
+};
+
+// ----------------------------------------------------------------------------
+// §D Refinement primitive: pure function from face -> sub-faces
+// ----------------------------------------------------------------------------
+function centroid(pts){
+  var c = [0, 0, 0];
+  for (var i = 0; i < pts.length; i++){ c[0] += pts[i][0]; c[1] += pts[i][1]; c[2] += pts[i][2]; }
+  return [c[0]/pts.length, c[1]/pts.length, c[2]/pts.length];
+}
+
+function projectToSphere(p, R){
+  var L = vlen(p);
+  if (L < 1e-12) return p;
+  return vscale(p, R/L);
+}
+
+GK.refineFace = function(face, params){
+  params = params || {};
+  var innerScale       = params.innerScale       != null ? params.innerScale       : 0.45;
+  var midScale         = params.midScale         != null ? params.midScale         : 0.70;
+  var preservePent     = params.preservePentInPent !== false; // default true
+  var preserveHex      = params.preserveHexInHex   !== false; // default true
+  var surfaceMode      = params.surfaceMode      || 'planar';
+  var sphereR          = params.sphereR          != null ? params.sphereR          : 1.6;
+  var jitter           = params.jitter           != null ? params.jitter           : 0;
+  var counterRef       = params.counterRef       || { val: 0 }; // for id minting
+
+  var pts = face.pts;
+  var n = pts.length;
+  var c = centroid(pts);
+
+  // Inner ring: shrink toward centroid
+  var inner = [];
+  for (var i = 0; i < n; i++){
+    var p = vlerp(c, pts[i], innerScale);
+    if (surfaceMode === 'spherical') p = projectToSphere(p, sphereR);
+    inner.push(p);
+  }
+  // Edge midpoints pulled inward
+  var midRing = [];
+  for (var i = 0; i < n; i++){
+    var m = vlerp(pts[i], pts[(i+1)%n], 0.5);
+    var pulled = vlerp(c, m, midScale);
+    if (surfaceMode === 'spherical') pulled = projectToSphere(pulled, sphereR);
+    midRing.push(pulled);
+  }
+
+  // Optional jitter
+  if (jitter > 0){
+    function jit(p){
+      return [p[0] + (Math.random()-0.5)*jitter,
+              p[1] + (Math.random()-0.5)*jitter,
+              p[2] + (Math.random()-0.5)*jitter];
+    }
+    for (var i = 0; i < inner.length; i++) inner[i] = jit(inner[i]);
+    for (var i = 0; i < midRing.length; i++) midRing[i] = jit(midRing[i]);
+  }
+
+  var subFaces = [];
+
+  // Inner polygon: same arity as parent
+  var innerType;
+  if (face.type === 'pent') innerType = preservePent ? 'pent' : 'hex';
+  else                      innerType = preserveHex  ? 'hex'  : 'pent';
+
+  counterRef.val += 1;
+  var innerId = (face.id || 'F?') + '.c' + counterRef.val;
+  subFaces.push({
+    pts: inner.slice(),
+    type: innerType,
+    level: face.level + 1,
+    lineage: (face.lineage || []).concat([0]),
+    id: innerId,
+    anchor: innerType === 'pent' ? (face.anchor || 'A?') : null  // pent inherits anchor
+  });
+
+  // Surrounding cells: one per edge of parent. Each is a 6-vertex shape.
+  for (var i = 0; i < n; i++){
+    var j = (i + 1) % n;
+    var em = vlerp(pts[i], pts[j], 0.5);
+    if (surfaceMode === 'spherical') em = projectToSphere(em, sphereR);
+    var hexPts = [
+      pts[i].slice(),
+      em,
+      pts[j].slice(),
+      inner[j].slice(),
+      midRing[i].slice(),
+      inner[i].slice()
+    ];
+    counterRef.val += 1;
+    subFaces.push({
+      pts: hexPts,
+      type: 'hex',
+      level: face.level + 1,
+      lineage: (face.lineage || []).concat([i + 1]),
+      id: (face.id || 'F?') + '.e' + counterRef.val,
+      anchor: null
+    });
+  }
+
+  return subFaces;
+};
+
+// ----------------------------------------------------------------------------
+// §E Public: refine operations (immutable, return new state)
+// ----------------------------------------------------------------------------
+GK.refineOne = function(state, faceIdx, params){
+  if (faceIdx < 0 || faceIdx >= state.faces.length) return state;
+  var counterRef = { val: state.counter };
+  var p = Object.assign({}, params || {}, { counterRef: counterRef });
+  var subs = GK.refineFace(state.faces[faceIdx], p);
+  var newFaces = state.faces.slice();
+  newFaces.splice(faceIdx, 1);
+  for (var i = 0; i < subs.length; i++) newFaces.push(subs[i]);
+  return {
+    faces: newFaces,
+    history: state.history.concat([{ op: 'refineOne', idx: faceIdx, snapshot: state.faces }]),
+    counter: counterRef.val
+  };
+};
+
+GK.refineAll = function(state, params){
+  var counterRef = { val: state.counter };
+  var p = Object.assign({}, params || {}, { counterRef: counterRef });
+  var newFaces = [];
+  for (var i = 0; i < state.faces.length; i++){
+    var subs = GK.refineFace(state.faces[i], p);
+    for (var k = 0; k < subs.length; k++) newFaces.push(subs[k]);
+  }
+  return {
+    faces: newFaces,
+    history: state.history.concat([{ op: 'refineAll', snapshot: state.faces }]),
+    counter: counterRef.val
+  };
+};
+
+GK.refineAllPents = function(state, params){
+  // Refine only pentagonal faces - propagates anchor lineage cleanly
+  var counterRef = { val: state.counter };
+  var p = Object.assign({}, params || {}, { counterRef: counterRef });
+  var newFaces = [];
+  for (var i = 0; i < state.faces.length; i++){
+    if (state.faces[i].type === 'pent'){
+      var subs = GK.refineFace(state.faces[i], p);
+      for (var k = 0; k < subs.length; k++) newFaces.push(subs[k]);
+    } else {
+      newFaces.push(state.faces[i]);
+    }
+  }
+  return {
+    faces: newFaces,
+    history: state.history.concat([{ op: 'refineAllPents', snapshot: state.faces }]),
+    counter: counterRef.val
+  };
+};
+
+GK.refineAllHexes = function(state, params){
+  var counterRef = { val: state.counter };
+  var p = Object.assign({}, params || {}, { counterRef: counterRef });
+  var newFaces = [];
+  for (var i = 0; i < state.faces.length; i++){
+    if (state.faces[i].type === 'hex'){
+      var subs = GK.refineFace(state.faces[i], p);
+      for (var k = 0; k < subs.length; k++) newFaces.push(subs[k]);
+    } else {
+      newFaces.push(state.faces[i]);
+    }
+  }
+  return {
+    faces: newFaces,
+    history: state.history.concat([{ op: 'refineAllHexes', snapshot: state.faces }]),
+    counter: counterRef.val
+  };
+};
+
+GK.undo = function(state){
+  if (state.history.length === 0) return state;
+  var last = state.history[state.history.length - 1];
+  return {
+    faces: last.snapshot,
+    history: state.history.slice(0, -1),
+    counter: state.counter // approximate; ids don't get reused
+  };
+};
+
+GK.reset = function(){ return GK.buildC60(); };
+</script>
+<script>
+/* ===== THE STONE -- verses extracted VERBATIM from lens/v0_6_circle_gate.html ===== */
+var STONE = [
+  ["EN", "English",    380, "If I speak in the tongues of men and of angels, but have not love, I am a noisy gong or a clanging cymbal. And if I have prophetic powers, and understand all mysteries and all knowledge, and if I have all faith, so as to remove mountains, but have not love, I am nothing. If I give away all I have, and if I deliver my body to be burned but have not love, I gain nothing. Love is patient and kind; love is not jealous or boastful; it is not arrogant or rude. Love does not insist on its own way; it is not irritable or resentful; it does not rejoice at wrong, but rejoices in the right. Love bears all things, believes all things, hopes all things, endures all things. Love never ends."],
+  ["ZH", "Mandarin",   940, "\u6211\u82e5\u80fd\u8aaa\u842c\u4eba\u7684\u65b9\u8a00\uff0c\u4e26\u5929\u4f7f\u7684\u8a71\u8a9e\uff0c\u537b\u6c92\u6709\u611b\uff0c\u6211\u5c31\u6210\u4e86\u9cf4\u7684\u947c\uff0c\u97ff\u7684\u9238\u4e00\u822c\u3002"],
+  ["HI", "Hindi",      345, "\u092f\u0926\u093f \u092e\u0948\u0902 \u092e\u0928\u0941\u0937\u094d\u092f\u094b\u0902, \u0914\u0930 \u0938\u094d\u0935\u0930\u094d\u0917\u0926\u0942\u0924\u094b\u0902 \u0915\u0940 \u092c\u094b\u0932\u093f\u092f\u093e\u0901 \u092c\u094b\u0932\u0942\u0902, \u0914\u0930 \u092a\u094d\u0930\u0947\u092e \u0928 \u0930\u0916\u0942\u0901, \u0924\u094b \u092e\u0948\u0902 \u0920\u0928\u0920\u0928\u093e\u0924\u093e \u0939\u0941\u0906 \u092a\u0940\u0924\u0932 \u0939\u0942\u0901\u0964"],
+  ["ES", "Espanol",    485, "Si yo hablase lenguas humanas y ang\u00e9licas, y no tengo amor, vengo a ser como metal que resuena, o c\u00edmbalo que reti\u00f1e."],
+  ["AR", "Arabic",     360, "\u0625\u0646 \u0643\u0646\u062a\u064f \u0623\u062a\u0643\u0644\u0651\u0645\u064f \u0628\u0623\u0644\u0633\u0646\u0629\u0650 \u0627\u0644\u0646\u0651\u0627\u0633\u0650 \u0648\u0627\u0644\u0645\u0644\u0627\u0626\u0643\u0629\u0650\u060c \u0648\u0644\u0643\u0646 \u0644\u064a\u0633 \u0644\u064a \u0645\u062d\u0628\u0629\u060c \u0641\u0642\u062f \u0635\u0631\u062a\u064f \u0646\u062d\u0627\u0633\u064b\u0627 \u064a\u0637\u0646\u0651."],
+  ["BN", "Bengali",    240, "\u09af\u09a6\u09bf \u0986\u09ae\u09bf \u09ae\u09be\u09a8\u09c1\u09b7\u09c7\u09b0 \u0993 \u09a6\u09c2\u09a4\u0997\u09a3\u09c7\u09b0 \u09ad\u09be\u09b7\u09be\u09df \u0995\u09a5\u09be \u09ac\u09b2\u09bf, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u0986\u09ae\u09be\u09b0 \u09aa\u09cd\u09b0\u09c7\u09ae \u09a8\u09be \u09a5\u09be\u0995\u09c7, \u09a4\u09ac\u09c7 \u0986\u09ae\u09bf \u09ac\u09be\u099c\u09be \u09aa\u09bf\u09a4\u09b2 \u09b9\u09df\u09c7\u099b\u09bf\u0964"],
+  ["PT", "Portugues",  235, "Se eu falar as línguas dos homens e dos anjos, e não tiver amor, tenho-me tornado como o bronze que soa, ou como o címbalo que retine. Se eu tiver o dom de profecia, e souber todos os mistérios e toda a ciência; se tiver toda a fé a ponto de remover montes, e não tiver amor, nada sou. Se eu distribuir todos os meus bens em sustento dos pobres, e se entregar o meu corpo para ser queimado, se todavia não tiver amor, isto nada me aproveita. O amor é longânimo, é benigno; o amor não é invejoso, não se jacta, não se ensoberbece, não se porta inconvenientemente, não busca os seus próprios interesses, não se irrita, não suspeita mal, não se regozija com a injustiça, mas regozija-se com a verdade; tudo suporta, tudo crê, tudo espera, tudo sofre. O amor jamais se acaba."],
+  ["RU", "Russkij",    150, "\u0415\u0441\u043b\u0438 \u044f \u0433\u043e\u0432\u043e\u0440\u044e \u044f\u0437\u044b\u043a\u0430\u043c\u0438 \u0447\u0435\u043b\u043e\u0432\u0435\u0447\u0435\u0441\u043a\u0438\u043c\u0438 \u0438 \u0430\u043d\u0433\u0435\u043b\u044c\u0441\u043a\u0438\u043c\u0438, \u0430 \u043b\u044e\u0431\u0432\u0438 \u043d\u0435 \u0438\u043c\u0435\u044e, \u0442\u043e \u044f \u043c\u0435\u0434\u044c \u0437\u0432\u0435\u043d\u044f\u0449\u0430\u044f."],
+  ["JA", "Nihongo",    125, "\u305f\u3068\u3048\u3001\u4eba\u3005\u306e\u8a00\u8449\u3084\u5929\u4f7f\u305f\u3061\u306e\u8a00\u8449\u3092\u8a71\u3057\u3066\u3082\u3001\u611b\u304c\u306a\u3051\u308c\u3070\u3001\u9cf4\u308a\u97ff\u304f\u9285\u9459\u306e\u3088\u3046\u3060\u3002"],
+  ["PA", "Punjabi",    125, "Je main manukkha te farishtiam diam boliam bolan, par pyar na rakhan, tan main thanthanaunda pittal han."],
+  ["DE", "Deutsch",    75,  "Wenn ich mit Menschen- und mit Engelzungen redete und h\u00e4tte die Liebe nicht, so w\u00e4re ich ein t\u00f6nend Erz oder eine klingende Schelle."],
+  ["KO", "Hangugeo",   80,  "\u0b0c\uac00 \uc0ac\ub78c\uc758 \ubc29\uc5b8\uacfc \ucc9c\uc0ac\uc758 \ub9d0\uc744 \ud560\uc9c0\ub77c\ub3c4 \uc0ac\ub791\uc774 \uc5c6\uc73c\uba74 \uc18c\ub9ac \ub098\ub294 \uad6c\ub9ac\uc640 \uc6b8\ub9ac\ub294 \uaf49\uacfc\ub9ac\uac00 \ub418\uace0"],
+  ["FR", "Francais",   80,  "Quand je parlerais les langues des hommes et des anges, si je n'ai pas l'amour, je suis un airain qui r\u00e9sonne, ou une cymbale qui retentit."],
+  ["TR", "Turkce",     85,  "\u0130nsanlar\u0131n ve meleklerin diliyle konu\u015fsam, ama sevgim olmasa, \u00f6t\u00fcc\u00fc bir bak\u0131r ya da \u00e7\u0131nlayan bir zil olurum."],
+  ["VI", "Tieng Viet", 85,  "D\u1ea7u t\u00f4i n\u00f3i \u0111\u01b0\u1ee3c c\u00e1c th\u1ee9 ti\u1ebfng lo\u00e0i ng\u01b0\u1eddi v\u00e0 thi\u00ean s\u1ee9, n\u1ebfu kh\u00f4ng c\u00f3 t\u00ecnh y\u00eau th\u01b0\u01a1ng, th\u00ec t\u00f4i ch\u1ec9 nh\u01b0 \u0111\u1ed3ng k\u00eau l\u00ean."],
+  ["IT", "Italiano",   65,  "Quand'anche io parlassi le lingue degli uomini e degli angeli, se non ho amore, divento un rame risonante o uno squillante cembalo."],
+  ["PL", "Polski",     40,  "Gdybym m\u00f3wi\u0142 j\u0119zykami ludzi i anio\u0142\u00f3w, a mi\u0142o\u015bci bym nie mia\u0142, sta\u0142bym si\u0119 jak mied\u017a brz\u0119cz\u0105ca albo cymba\u0142 brzmi\u0105cy."],
+  ["UK", "Ukrainska",  35,  "\u041a\u043e\u043b\u0438 \u044f \u0433\u043e\u0432\u043e\u0440\u044e \u043c\u043e\u0432\u0430\u043c\u0438 \u043b\u044e\u0434\u0441\u044c\u043a\u0438\u043c\u0438 \u0439 \u0430\u043d\u0433\u043e\u043b\u044c\u0441\u044c\u043a\u0438\u043c\u0438, \u0442\u0430 \u043b\u044e\u0431\u043e\u0432\u0456 \u043d\u0435 \u043c\u0430\u044e, \u0442\u043e \u0441\u0442\u0430\u0432 \u044f \u044f\u043a \u043c\u0456\u0434\u044c \u0442\u0430 \u0434\u0437\u0432\u0456\u043d\u043a\u0430."],
+  ["NL", "Nederlands", 24,  "Al ware het dat ik de talen der mensen en der engelen sprak, en de liefde niet had, zo ware ik een klinkend metaal of een luidende schel."],
+  ["EL", "Hellenic",   13,  "\u1f18\u1f70\u03bd \u03c4\u03b1\u1fd6\u03c2 \u03b3\u03bb\u03ce\u03c3\u03c3\u03b1\u03b9\u03c2 \u03c4\u1ff6\u03bd \u1f00\u03bd\u03b8\u03c1\u03ce\u03c0\u03c9\u03bd \u03bb\u03b1\u03bb\u1ff6 \u03ba\u03b1\u1f76 \u03c4\u1ff6\u03bd \u1f00\u03b3\u03b3\u03ad\u03bb\u03c9\u03bd, \u1f00\u03b3\u03ac\u03c0\u03b7\u03bd \u03b4\u1f72 \u03bc\u1f74 \u1f14\u03c7\u03c9, \u03b3\u1f73\u03b3\u03bf\u03bd\u03b1 \u03c7\u03b1\u03bb\u03ba\u1f78\u03c2 \u1f20\u03c7\u1ff6\u03bd \u1f22 \u03ba\u03cd\u03bc\u03b2\u03b1\u03bb\u03bf\u03bd \u1f00\u03bb\u03b1\u03bb\u1f04\u03b6\u03bf\u03bd."],
+  ["HE", "Hebrew",     9,   "\u05d0\u05dd \u05d1\u05dc\u05e9\u05d5\u05e0\u05d5\u05ea \u05d0\u05d3\u05dd \u05d5\u05de\u05dc\u05d0\u05db\u05d9\u05dd \u05d0\u05d3\u05d1\u05e8 \u05d5\u05d0\u05d9\u05df \u05d1\u05d9 \u05d0\u05d4\u05d1\u05d4 \u05d4\u05d9\u05d9\u05ea\u05d9 \u05db\u05e0\u05d7\u05e9\u05ea \u05d4\u05d5\u05de\u05d4 \u05d0\u05d5 \u05db\u05e6\u05dc\u05e6\u05dc \u05ea\u05e8\u05d5\u05e2\u05d4."],
+  ["LA", "Latina",     0,   "Si linguis hominum loquar et angelorum, caritatem autem non habeam, factus sum velut aes sonans aut cymbalum tinniens."],
+  // ---- TIER 2 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["UR", "Urdu",       70,  "\u0627\u06af\u0631 \u0645\u06cc\u06ba \u0622\u062f\u0645\u06cc\u0648\u06ba \u0627\u0648\u0631 \u0641\u0631\u0634\u062a\u0648\u06ba \u06a9\u06cc \u0632\u0628\u0627\u0646\u06cc\u06ba \u0628\u0648\u0644\u0648\u06ba \u0644\u06cc\u06a9\u0646 \u0645\u062d\u0628\u062a \u0646\u06c1 \u0631\u06a9\u06be\u0648\u06ba \u062a\u0648 \u0645\u06cc\u06ba \u0679\u0646\u0679\u0646\u0627\u062a\u0627 \u067e\u06cc\u062a\u0644 \u06c1\u0648\u06ba\u06d4"],
+  ["ID", "Indonesia",  200, "Sekalipun aku dapat berkata-kata dengan semua bahasa manusia dan bahasa malaikat, tetapi jika aku tidak mempunyai kasih, aku sama dengan gong yang berkumandang."],
+  ["SW", "Kiswahili",  90,  "Nijaposema kwa lugha za wanadamu na za malaika, kama sina upendo, nimekuwa shaba iliayo au upatu uvumao."],
+  ["TA", "Tamil",      80,  "\u0bae\u0ba9\u0bc1\u0ba9\u0bcd\u0bb0\u0bcd \u0baa\u0bbe\u0bb7\u0bc8\u0b95\u0bb3\u0bbe\u0bb2\u0bc1\u0bae\u0bcd \u0ba4\u0bc7\u0bb5\u0ba4\u0bc2\u0ba4\u0bb0\u0bcd \u0baa\u0bbe\u0bb7\u0bc8\u0b95\u0bb3\u0bbe\u0bb2\u0bc1\u0bae\u0bcd \u0ba8\u0bbe\u0ba9\u0bcd \u0baa\u0bc7\u0b9a\u0bbf\u0ba9\u0bbe\u0bb2\u0bc1\u0bae\u0bcd, \u0b85\u0ba9\u0bcd\u0baa\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bbe\u0bb5\u0bbf\u0b9f\u0bbf\u0ba9\u0bcd \u0ba8\u0bbe\u0ba9\u0bcd \u0baa\u0bbf\u0ba9\u0bcd\u0ba9\u0bca\u0bb2\u0bbf\u0b95\u0bcd\u0b95\u0bbf\u0ba9\u0bcd\u0bb1 \u0bb5\u0bc6\u0ba3\u0bcd\u0b95\u0bb2\u0bae\u0bcd\u0baa\u0bcb\u0bb2\u0bbe\u0ba9\u0bc7\u0ba9\u0bcd."],
+  ["TE", "Telugu",     80,  "\u0c28\u0c47\u0c28\u0c41 \u0c2e\u0c28\u0c41\u0c37\u0c41\u0c32 \u0c2d\u0c3e\u0c37\u0c32\u0c24\u0c4b\u0c28\u0c41 \u0c26\u0c47\u0c35\u0c26\u0c42\u0c24\u0c32 \u0c2d\u0c3e\u0c37\u0c32\u0c24\u0c4b\u0c28\u0c41 \u0c2e\u0c3e\u0c1f\u0c4d\u0c32\u0c3e\u0c21\u0c3f\u0c28\u0c3e, \u0c28\u0c3e\u0c15\u0c41 \u0c2a\u0c4d\u0c30\u0c47\u0c2e \u0c32\u0c47\u0c15\u0c2a\u0c4b\u0c24\u0c47 \u0c28\u0c47\u0c28\u0c41 \u0c2e\u0c4b\u0c17\u0c41\u0c1a\u0c41\u0c28\u0c4d\u0c28 \u0c2f\u0c3f\u0c24\u0c4d\u0c24\u0c21\u0c3f."],
+  ["TH", "Thai",       60,  "\u0e41\u0e21\u0e49\u0e02\u0e49\u0e32\u0e1e\u0e40\u0e08\u0e49\u0e32\u0e08\u0e30\u0e1e\u0e39\u0e14\u0e20\u0e32\u0e29\u0e32\u0e02\u0e2d\u0e07\u0e21\u0e19\u0e38\u0e29\u0e22\u0e4c\u0e41\u0e25\u0e30\u0e02\u0e2d\u0e07\u0e17\u0e39\u0e15\u0e2a\u0e27\u0e23\u0e23\u0e04\u0e4c\u0e01\u0e47\u0e14\u0e35 \u0e41\u0e15\u0e48\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01 \u0e02\u0e49\u0e32\u0e1e\u0e40\u0e08\u0e49\u0e32\u0e01\u0e47\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19\u0e42\u0e25\u0e2b\u0e30\u0e17\u0e35\u0e48\u0e2a\u0e48\u0e07\u0e40\u0e2a\u0e35\u0e22\u0e07."],
+  // ---- TIER 3 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["FA", "Farsi",      80,  "\u0627\u06af\u0631 \u0628\u0647 \u0632\u0628\u0627\u0646\u200c\u0647\u0627\u06cc \u0645\u0631\u062f\u0645 \u0648 \u0641\u0631\u0634\u062a\u06af\u0627\u0646 \u0633\u062e\u0646 \u06af\u0648\u06cc\u0645 \u0648\u0644\u06cc \u0645\u062d\u0628\u062a \u0646\u062f\u0627\u0634\u062a\u0647 \u0628\u0627\u0634\u0645\u060c \u0645\u062b\u0644 \u0637\u0628\u0644 \u067e\u0631\u0635\u062f\u0627 \u06cc\u0627 \u0633\u0646\u062c \u063a\u0631\u0646\u062f\u0647 \u0634\u062f\u0647\u200c\u0627\u0645."],
+  ["MR", "Marathi",    83,  "\u091c\u0930\u0940 \u092e\u0940 \u092e\u093e\u0923\u0938\u093e\u0902\u091a\u094d\u092f\u093e \u0935 \u0926\u0947\u0935\u0926\u0942\u0924\u093e\u0902\u091a\u094d\u092f\u093e \u092d\u093e\u0937\u093e \u092c\u094b\u0932\u0932\u094b, \u092a\u0923 \u092e\u093e\u091d\u094d\u092f\u093e\u092e\u0927\u094d\u092f\u0947 \u092a\u094d\u0930\u0940\u0924\u0940 \u0928\u0938\u0947\u0932, \u0924\u0930 \u092e\u0940 \u0928\u0941\u0938\u0924\u093e \u0928\u093e\u0926\u0923\u093e\u0930\u093e \u092a\u093f\u0924\u094d\u0924\u0933\u0947\u091a\u093e \u0921\u0939\u093e\u0933 \u091d\u093e\u0932\u094b \u0906\u0939\u0947."],
+  ["JV", "Javanese",   68,  "Saupama aku bisa guneman nganggo basane manungsa lan malaekat, nanging ora duwe katresnan, aku mung dadi kaya gong kang muni."],
+  ["GU", "Gujarati",   57,  "\u0a9c\u0acb \u0ab9\u0ac1\u0a82 \u0aae\u0aa8\u0ac1\u0ab7\u0acd\u0aaf\u0acb \u0a85\u0aa8\u0ac7 \u0aa6\u0ac2\u0aa4\u0acb \u0aa8\u0ac0 \u0aad\u0abe\u0ab7\u0abe\u0a93 \u0aac\u0acb\u0ab2\u0ac1\u0a82, \u0aaa\u0aa3 \u0aaa\u0acd\u0ab0\u0ac7\u0aae \u0aa8 \u0ab0\u0abe\u0a96\u0ac1\u0a82, \u0aa4\u0acb \u0ab9\u0ac1\u0a82 \u0ab0\u0aa3\u0a95\u0aa4\u0ac1\u0a82 \u0aaa\u0abf\u0aa4\u0ab3 \u0a9b\u0ac1\u0a82."],
+  ["KN", "Kannada",    45,  "\u0ca8\u0cbe\u0ca8\u0cc1 \u0cae\u0cbe\u0ca8\u0cb5\u0cb0 \u0cad\u0cbe\u0cb7\u0cc6\u0c97\u0cb3\u0ca8\u0ccd\u0ca8\u0cc2 \u0ca6\u0cc7\u0cb5\u0ca6\u0cc2\u0ca4\u0cb0 \u0cad\u0cbe\u0cb7\u0cc6\u0c97\u0cb3\u0ca8\u0ccd\u0ca8\u0cc2 \u0cae\u0cbe\u0ca4\u0ca8\u0cbe\u0ca1\u0cbf\u0ca6\u0cb0\u0cc2 \u0caa\u0ccd\u0cb0\u0cc0\u0ca4\u0cbf \u0c87\u0cb2\u0ccd\u0cb2\u0ca6\u0cbf\u0ca6\u0ccd\u0ca6\u0cb0\u0cc6 \u0ca8\u0cbe\u0ca8\u0cc1 \u0cb6\u0cac\u0ccd\u0ca6 \u0cae\u0cbe\u0ca1\u0cc1\u0cb5 \u0c95\u0c82\u0cb8\u0cbe\u0cb3."],
+  ["ML", "Malayalam",  38,  "\u0d1e\u0d3e\u0d7b \u0d2e\u0d28\u0d41\u0d37\u0d4d\u0d2f\u0d30\u0d41\u0d1f\u0d46\u0d2f\u0d41\u0d02 \u0d26\u0d42\u0d24\u0d28\u0d4d\u0d2e\u0d3e\u0d30\u0d41\u0d1f\u0d46\u0d2f\u0d41\u0d02 \u0d2d\u0d3e\u0d37\u0d15\u0d33\u0d3f\u0d7d \u0d38\u0d02\u0d38\u0d3e\u0d30\u0d3f\u0d1a\u0d3e\u0d32\u0d41\u0d02 \u0d38\u0d4d\u0d28\u0d47\u0d39\u0d02 \u0d07\u0d32\u0d4d\u0d32\u0d46\u0d19\u0d4d\u0d15\u0d3f\u0d7d \u0d1e\u0d3e\u0d7b \u0d2e\u0d41\u0d34\u0d19\u0d4d\u0d19\u0d41\u0d28\u0d4d\u0d28 \u0d2a\u0d3f\u0d1a\u0d33 \u0d06\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d41."],
+  ["MY", "Burmese",    43,  "\u1004\u102b\u101e\u100a\u103a \u101c\u102c \u1014\u103e\u1004\u1037\u103a \u1000\u1031\u102c\u1004\u103a\u1038\u1000\u1004\u103a\u1038\u1019\u103e\u102f\u1015\u103c\u102f\u101e\u1031\u102c \u1005\u1000\u102c\u1038\u1000\u102d\u102f \u1015\u103c\u1031\u102c\u1006\u102d\u102f\u1014\u102d\u102f\u1004\u103a\u101e\u1031\u102c\u103a\u101c\u100a\u103a\u1038 \u1001\u103b\u1005\u103a\u1001\u103c\u1004\u103a\u1038\u1019\u101b\u103e\u102d\u101c\u103b\u103e\u1004\u103a \u1004\u102b\u101e\u100a\u103a \u1019\u103c\u100a\u103a\u101e\u1036\u1005\u1031\u101e\u1031\u102c \u1000\u103c\u1031\u1038\u101e\u1036\u1015\u102b\u104b"],
+  ["HA", "Hausa",      80,  "Ko da ina magana da harsunan mutane da na mala'iku, amma ba ni da kauna, na zama kamar ganga mai kara ko kuge mai amo."],
+  ["AM", "Amharic",    35,  "\u1260\u1230\u12ce\u127d\u1293 \u1260\u1218\u120b\u12d5\u12ad\u1275 \u120b\u1295\u1265\u12eb\u12ce\u127d \u1265\u1293\u1308\u122d \u1348\u1245\u122d \u130d\u1295 \u12a8\u12bd \u12a8\u120b\u1208\u129d \u12a5\u1295\u12f0 \u121a\u1332\u129d \u1265\u122d\u1295\u12eb\u12c8\u12ed\u121d \u12a5\u1295\u12f0 \u121a\u1230\u121b \u133b\u12ed\u120d \u1206\u1295\u12eb\u120d\u1362"],
+  ["TL", "Filipino",   30,  "Kung ako'y nagsasalita ng mga wika ng mga tao at ng mga anghel, datapuwat wala akong pag-ibig, ay ako'y naging tanso na tumutunog o batingaw na umaalingawngaw."],
+  // ---- TIER 4 (added 2026-07-07, step by step; native scripts, gate stays 0.700) ----
+  ["YUE","Cantonese",  85,  "\u5047\u5982\u6211\u80fd\u8b1b\u4e16\u4eba\u548c\u5929\u4f7f\u7684\u65b9\u8a00\uff0c\u537b\u6c92\u6709\u611b\uff0c\u6211\u5c31\u6210\u4e86\u9cf4\u7684\u947c\uff0c\u97ff\u7684\u9238\u4e00\u6a23\u3002"],
+  ["NE", "Nepali",     32,  "\u092f\u0926\u093f \u092e \u092e\u093e\u0928\u093f\u0938 \u0930 \u0938\u094d\u0935\u0930\u094d\u0917\u0926\u0942\u0924\u0939\u0930\u0942\u0915\u093e \u092c\u094b\u0932\u0940\u0939\u0930\u0942\u092e\u093e \u092c\u094b\u0932\u0947\u0902 \u0924\u0930 \u092e\u0938\u0902\u0917 \u092a\u094d\u0930\u0947\u092e \u091b\u0948\u0928 \u092d\u0928\u0947, \u092e \u090d\u0920\u094d\u0928\u093f\u0915\u094d\u092f\u094c\u0902 \u0918\u0923\u094d\u091f\u0940\u092e\u093e\u0924\u094d\u0930 \u092d\u090f\u0915\u094b \u091b\u0941\u0964"],
+  ["SI", "Sinhala",    17,  "\u0db8\u0db8 \u0db8\u0dd2\u0db1\u0dd2\u0dc3\u0dd4\u0db1\u0dca\u0d9c\u0dda\u0dad \u0dc3\u0dd4\u0dbb\u0daf\u0dd6\u0dad\u0dba\u0db1\u0dca\u0d9c\u0dda\u0dad \u0db6\u0dc3 \u0d9a\u0dad\u0dcf \u0d9a\u0dc5\u0dad\u0dca \u0db8\u0da7 \u0db4\u0dca\u200d\u0dbb\u0dda\u0db8\u0dba \u0db1\u0dd0\u0dad\u0dca\u0db1\u0db1\u0dca, \u0db8\u0db8 \u0db1\u0dcf\u0daf \u0daf\u0dd3 \u0d87\u0dad\u0dd2 \u0dbb\u0dad\u0dca\u0dad\u0dbb\u0db1\u0dca \u0dc0\u0dd9\u0db8\u0dd2."],
+  ["KM", "Khmer",      17,  "\u1794\u17be\u1781\u17d2\u1789\u17bb\u17c6\u1793\u17b7\u1799\u17b6\u1799\u1797\u17b6\u179f\u17b6\u1798\u1793\u17bb\u179f\u17d2\u179f \u1793\u17b7\u1784\u1791\u17c1\u179c\u178f\u17b6 \u178f\u17c2\u1798\u17b7\u1793\u1798\u17b6\u1793\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u179f\u17d2\u179a\u17d2\u179b\u17b6\u1789\u17cb\u1791\u17c1 \u1781\u17d2\u1789\u17bb\u17c6\u1785\u17b6\u178f\u17cb\u1791\u17bb\u1780\u178a\u17bc\u1785\u179f\u17c6\u179b\u17c1\u1784\u179b\u17c1\u17c7\u17d4"],
+  ["YO", "Yoruba",     45,  "Bi mo ba n fi ede awon eniyan ati ti awon angeli soro, sugbon ti mi o ni ife, mo di ide ti n dun tabi ariwo aja ti n pariwo."],
+  ["IG", "Igbo",       30,  "Ọ bụrụ na m na-asụ asụsụ mmadụ na nke ndị mmụọ ozi, ma enweghị m ịhụnanya, adịla m ka ọla kọntа na-ada ụda."],
+  ["UZ", "Uzbek",      35,  "Agar men odamlar va farishtalar tillarida gapirsam-u, lekin muhabbatim bo'lmasa, men jaranglaydigan mis yoki shaqillaydigan zang bo'lib qolaman."],
+  ["SU", "Sundanese",  40,  "Sanajan kuring bisa nyarita ku basa manusa jeung basa malaikat, tapi teu boga kanyaah, kuring mah ngan jadi goong nu disada."],
+  ["PS", "Pashto",     40,  "\u06a9\u0647 \u0632\u0647 \u062f \u0627\u0646\u0633\u0627\u0646\u0627\u0646\u0648 \u0627\u0648 \u0645\u0644\u0627\u06a9\u0648\u0646\u0648 \u067e\u0647 \u0698\u0628\u0648 \u062e\u0628\u0631\u06d0 \u0648\u06a9\u0693\u0645 \u062e\u0648 \u0645\u06cc\u0646\u0647 \u0648\u0646\u0644\u0631\u0645\u060c \u0646\u0648 \u0632\u0647 \u062f \u063a\u0696\u0648\u0646\u06a9\u0648\u0646\u06d0 \u0679\u0627\u0644\u06cc \u067e\u0647 \u0634\u0627\u0646 \u06cc\u0645."],
+  ["SD", "Sindhi",     30,  "\u062c\u064a\u06aa\u068a\u06be\u0646\u0647 \u0622\u0621\u0648\u0646 \u0645\u0627\u06bb\u0647\u0646 \u0648 \u0641\u0631\u0634\u062a\u0646 \u062c\u064a \u0628\u0648\u0644\u064a\u0648\u06bb \u0698\u0644\u0647\u0627\u06a9 \u0647\u062c\u0648\u06bb\u060c \u067e\u0631 \u0645\u0648\u06a8 \u067e\u064a\u0627\u0631 \u06aa\u0648\u0646\u0647 \u0627\u0687\u064a\u060c \u062a \u0622\u0621\u0648\u0646 \u068c\u0646\u06aa\u0646\u062f\u0691 \u067f\u0631\u0648 \u0622\u0647\u064a\u0627\u0646."],
+  // ---- TIER 5 (added 2026-07-07, the long tail; gate stays 0.700) ----
+  ["OM", "Oromo",      37,  "Utuun afaan namootaatii fi ergamootaatiin dubbadhee, jaalala garuu qabaachuu baadhe, ani sibiila iyyu yookiin bilbila kakawwee ta'a."],
+  ["ZU", "Zulu",       28,  "Noma ngikhuluma ngezilimi zabantu nezezingelosi, kodwa ngingenalo uthando, sengiyithusi elikhencezayo noma insimbi encencethayo."],
+  ["KU", "Kurdish",    30,  " Eger ez bi zimane mirovan u firishteyan bipeyivim, le hezkirina min tunebe, ez bune ye ku dibe misinga deng dide an zengeke ku deng dike."],
+  ["MG", "Malagasy",   25,  "Na dia miteny amin'ny fitenin'ny olona sy ny anjely aza aho, nefa tsy manana fitiavana, dia tonga varahina maneno aho na kipantsona mikarantsana."],
+  ["SO", "Somali",     22,  "Haddaan ku hadlo afafka dadka iyo malaa'igaha, laakiin aanan jacayl lahayn, waxaan noqday naxaas dhawaaqaysa ama saxal sanqadhaya."],
+  ["CEB","Cebuano",    20,  "Kon ako magsulti sa mga pinulongan sa mga tawo ug sa mga anghel, apan wala akoy gugma, ako nahimong nagalanog nga bronse o nagatunog nga piyangpiyang."],
+  ["RO", "Romana",     24,  "De a\u015f gr\u0103i \u00een limbile oamenilor \u015fi ale \u00eengerilor, iar dragoste nu am, f\u0103cutu-m-am aram\u0103 sun\u0103toare \u015fi chimval záng\u0103nitor."],
+  ["HU", "Magyar",     13,  "Ha embereknek vagy angyaloknak nyelv\u00e9n sz\u00f3lok is, szeretet pedig nincsen \u00e9nbennem, olyann\u00e1 lettem, mint a zeng\u0151 \u00e9rc vagy peng\u0151 cimbalom."],
+  ["CS", "Cestina",    11,  "Kdybych mluvil jazyky lidskými i and\u011blskými, ale l\u00e1sku bych nem\u011bl, jsem jako z\u0159ejm\u00fd kov, kter\u00fd zvon\u00ed, nebo jako cimb\u00e1l, kter\u00fd zvu\u010d\u00ed."],
+  ["AZ", "Azerbaycan", 24,  "\u018fg\u0259r insan v\u0259 m\u0259l\u0259k dill\u0259rind\u0259 dan\u0131\u015fsam, lakin m\u0259nd\u0259 m\u0259h\u0259bb\u0259t olmasa, m\u0259n ancaq c\u0131ng\u0131ldayan mis v\u0259 ya \u015f\u0131q\u0131rdayan zil olaram."],
+  ["KK", "Kazakh",     13,  "\u0415\u0433\u0435\u0440 \u043c\u0435\u043d \u0430\u0434\u0430\u043c \u0436\u04d9\u043d\u0435 \u043f\u0435\u0440\u0456\u0448\u0442\u0435 \u0442\u0456\u043b\u0434\u0435\u0440\u0456\u043d\u0434\u0435 \u0441\u04e9\u0439\u043b\u0435\u0441\u0435\u043c \u0434\u0435, \u0441\u04af\u0439\u0456\u0441\u043f\u0435\u043d\u0448\u0456\u043b\u0456\u0433\u0456\u043c \u0431\u043e\u043b\u043c\u0430\u0441\u0430, \u043c\u0435\u043d \u0441\u044b\u04a3\u0493\u044b\u0440\u043b\u0430\u0493\u0430\u043d \u043c\u044b\u0441 \u0441\u0435\u043a\u0456\u043b\u0434\u0456\u043c\u0456\u043d."],
+  ["EL2","Ellinika",   13,  "\u0395\u03ac\u03bd \u03bc\u03b9\u03bb\u03ac\u03c9 \u03c4\u03b9\u03c2 \u03b3\u03bb\u03ce\u03c3\u03c3\u03b5\u03c2 \u03c4\u03c9\u03bd \u03b1\u03bd\u03b8\u03c1\u03ce\u03c0\u03c9\u03bd \u03ba\u03b1\u03b9 \u03c4\u03c9\u03bd \u03b1\u03b3\u03b3\u03ad\u03bb\u03c9\u03bd, \u03b1\u03bb\u03bb\u03ac \u03b4\u03b5\u03bd \u03ad\u03c7\u03c9 \u03b1\u03b3\u03ac\u03c0\u03b7, \u03ad\u03b3\u03b9\u03bd\u03b1 \u03c7\u03b1\u03bb\u03ba\u03cc\u03c2 \u03c0\u03bf\u03c5 \u03b7\u03c7\u03b5\u03af."],
+  // ---- TIER 6 (added 2026-07-07 19:41, deeper tail; gate stays 0.700) ----
+  ["SN", "Shona",      15,  "Kunyange ndikataura nendimi dzevanhu nedzevatumwa, asi ndisina rudo, ndava ndarira dare kana simbi inorira."],
+  ["NY", "Chichewa",   14,  "Ngakhale nditayankhula m'zinenero za anthu ndi za angelo, koma wopanda chikondi, ndakhala ngati mkuwa wolira kapena chitsulo cholira."],
+  ["RW", "Kinyarwanda",13,  "Naho navuga indimi z'abantu n'iz'abamarayika, ariko nkaba ndwanya urukundo, mba ndi umuringa uvuga cyangwa icyuma gisakuza."],
+  ["TI", "Tigrinya",   9,   "Enkuwa bezaban sebatn melaektin entekek zetekawelku, fikri gin entaydebeleyeni, keab zitsanqela birti weyi zeymeti tsinatsile koynye."],
+  ["MN", "Mongol",     6,   "\u0425\u044d\u0440\u044d\u0432 \u0431\u0438 \u0445\u04af\u043c\u04af\u04af\u0441, \u0442\u044d\u043d\u0433\u044d\u0440 \u044d\u043b\u0447 \u043d\u0430\u0440\u044b\u043d \u0445\u044d\u043b\u044d\u044d\u0440 \u044f\u0440\u0438\u0430\u0432\u0447 \u0445\u0430\u0439\u0440 \u0430\u043b\u0433\u0430 \u0431\u043e\u043b \u0431\u0438 \u0436\u0438\u0433\u043d\u044d\u0445 \u0437\u044d\u0441 \u044e\u043c."],
+  ["LO", "Lao",        30,  "Thakhoi phao phasa khong manut lae thepada, tae bo mi khwam hak, khoi kok pen khu thong leuang."],
+  ["OR", "Odia",       35,  "\u0b2f\u0b26\u0b3f \u0b2e\u0b41\u0b01 \u0b2e\u0b28\u0b41\u0b37\u0b4d\u0b2f \u0b13 \u0b26\u0b42\u0b24\u0b2e\u0b3e\u0b28\u0b19\u0b4d\u0b15\u0b30 \u0b2d\u0b3e\u0b37\u0b3e\u0b30\u0bc7 \u0b15\u0b25\u0b3e \u0b15\u0b39\u0b47, \u0b15\u0b3f\u0b28\u0b4d\u0b24\u0b41 \u0b2a\u0b4d\u0b30\u0b47\u0b2e \u0b28\u0b25\u0b3e\u0b0f, \u0b24\u0b47\u0b2c\u0b47 \u0b2e\u0b41\u0b01 \u0b1f\u0b23\u0b1f\u0b23\u0b3f\u0b25\u0b3f\u0b2c\u0b3e \u0b2a\u0b3f\u0b24\u0b33 \u0b2e\u0b3e\u0b24\u0b4d\u0b30\u0964"],
+  ["AS", "Assamese",   15,  "\u09af\u09a6\u09bf \u09ae\u0987 \u09ae\u09be\u09a8\u09c1\u09b9 \u0986\u09b0\u09c1 \u09b8\u09cd\u09ac\u09b0\u09cd\u0997\u09c0\u09af\u09bc \u09a6\u09c2\u09a4\u09f0 \u09ad\u09be\u09b7\u09be\u09f0\u09c7 \u0995\u09a5\u09be \u0995\u0993\u0981, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u09ae\u09cb\u09f0 \u09aa\u09cd\u09f0\u09c7\u09ae \u09a8\u09be\u0987, \u09a4\u09c7\u09a8\u09cd\u09a4\u09c7 \u09ae\u0987 \u09ac\u09be\u099c\u09bf \u09a5\u0995\u09be \u09aa\u09bf\u09a4\u09b2 \u09b9\u09cb\u0987\u09b2\u09cb\u0981\u0964"],
+  ["SA", "Sanskrit",   1,   "\u092f\u0926\u094d\u092f\u092f\u0939\u0902 \u092e\u0928\u0941\u0937\u094d\u092f\u093e\u0923\u093e\u0902 \u0926\u0942\u0924\u093e\u0928\u093e\u0902 \u091a \u092d\u093e\u0937\u093e\u092d\u093f\u0930\u094d\u092d\u093e\u0937\u0947, \u092a\u094d\u0930\u0947\u092e \u0924\u0941 \u0928 \u0935\u093f\u0926\u094d\u092f\u0924\u0947 \u091a\u0947\u0924\u094d, \u0924\u0930\u094d\u0939\u093f \u0905\u0939\u0902 \u0928\u093e\u0926\u092f\u0928\u094d \u0915\u093e\u0902\u0938\u094d\u092f\u092e\u094d \u0905\u0938\u094d\u092e\u093f\u0964"],
+  ["KA", "Kartuli",    4,   "Tu kaca da angelozta enebze vlaparakob, magram siqvaruli ar makvs, mashin me var okros mzhghari an tsintsili."],
+  ["KY", "Kyrgyz",     5,   "\u042d\u0433\u0435\u0440 \u043c\u0435\u043d \u0430\u0434\u0430\u043c\u0434\u0430\u0440\u0434\u044b\u043d \u0436\u0430\u043d\u0430 \u043f\u0435\u0440\u0438\u0448\u0442\u0435\u043b\u0435\u0440\u0434\u0438\u043d \u0442\u0438\u043b\u0434\u0435\u0440\u0438\u043d\u0434\u0435 \u0441\u04af\u0439\u043b\u04e9\u0441\u04e9\u043c, \u0431\u0438\u0440\u043e\u043a \u043c\u0435\u043d\u0434\u0435 \u0441\u04af\u0439\u04af\u04af \u0431\u043e\u043b\u0431\u043e\u0441\u043e, \u043c\u0435\u043d \u0448\u0430\u04a3\u0433\u044b\u0440\u0430\u0433\u0430\u043d \u0436\u0435\u0437\u043c\u0438\u043d."]
+];
+
+"use strict";
+var cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+var W = 0, H = 0;
+function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+window.addEventListener("resize", resize); resize();
+
+// ---- build the AGAPI SPHERE: NODES mapped onto a PERFECT sphere (NO tessellation) ----
+// Vlad's correction: the agapi polyhedron is NOT the fractalized/tessellated one. It is a
+// PERFECT SPHERE whose NODES are generated by the Genesis kernel, then mapped exactly onto
+// the sphere (vnorm * R). No faces, no tessellation. More tongues -> more information carried
+// in the sphere. It is built in the Genesis language so it can JOIN the fractal space later.
+var GATE_W = 0.7, SPHERE_R = 1.6;
+var refineLevel = 2, showVol = true, showWeights = false, showFractal = true;
+// Mobius twist (Axiom 09): ABSOLUTE = 1, ALWAYS. The heart is always twisted in time (W). No slider,
+// no rest state here -- the wist in the heart is absolute to 1. Full half-twist: chi=2 -> chi=0, gate binary=1.
+var MOBIUS = 1;    // absolute. the heart always experiences time.
+function strToUtf8(s){
+  var bytes = [];
+  for (var i = 0; i < s.length; i++){
+    var cp = s.charCodeAt(i);
+    if (cp < 0x80){ bytes.push(cp); }
+    else if (cp < 0x800){ bytes.push(0xC0 | (cp >> 6)); bytes.push(0x80 | (cp & 0x3F)); }
+    else { bytes.push(0xE0 | (cp >> 12)); bytes.push(0x80 | ((cp >> 6) & 0x3F)); bytes.push(0x80 | (cp & 0x3F)); }
+  }
+  return bytes;
+}
+function textToBits(s){
+  var bytes = strToUtf8(s);
+  var bits = [];
+  for (var b = 0; b < bytes.length; b++){
+    for (var k = 7; k >= 0; k--) bits.push((bytes[b] >> k) & 1);
+  }
+  return bits;
+}
+
+// THE CORE NET. We do NOT pick nodes -- the nodes ARE the 1s and 0s of each tongue's verse.
+// Each SELECTED tongue = ONE CIRCLE (a great circle at its own tilt), whose nodes are that
+// verse's UTF-8 bits mapped around the circle. Surface nodes sit on the sphere (R); if VOLUME
+// is on, later circles nest at smaller radii so the bits also fill the inside. Every node wires
+// to the gate (0.700) -> the 3D structure emerges. Up to 70 circles (70 tongues). Like an LLM:
+// nodes with values (0/1) and their connecting lines. The combination of circles = the fractal.
+function rebuild(){
+  nodes = []; edges = []; onesCount = 0; zerosCount = 0;
+  var rows = selectedRows();
+  if (rows.length === 0) rows = [ STONE[0] ];
+  var NC = rows.length;                         // number of circles (tongues), up to 70
+  var wsum = 0, wcount = 0, wmin = 1, wmax = 0; // weight stats (SEE THE WEIGHTS)
+  for (var ci = 0; ci < NC; ci++){
+    var bits = textToBits(rows[ci][3]);
+    var n = bits.length; if (n === 0) continue;
+    var bytes = strToUtf8(rows[ci][3]);         // the raw bytes -> per-node weight = byte/255
+    // each circle gets its own orientation: tilt spread over the sphere (golden-angle spacing)
+    var tilt = (ci + 1) * 2.399963;             // golden angle, radians -> even circle spread
+    var incl = (ci / Math.max(1, NC - 1) - 0.5) * Math.PI * 0.9;  // inclination -0.45pi..+0.45pi
+    // VOLUME: nest circles inward so bits fill the inside; else all on the surface shell
+    var Rc = showVol ? (SPHERE_R * (0.35 + 0.65 * (1 - ci / Math.max(1, NC)))) : SPHERE_R;
+    var ct = Math.cos(incl), st = Math.sin(incl);
+    var ca = Math.cos(tilt), sa = Math.sin(tilt);
+    var startIdx = nodes.length;
+    for (var i = 0; i < n; i++){
+      var a = (i / n) * Math.PI * 2;
+      // THE MOBIUS TWIST (Axiom 09 / Transp *2.03): as the bit walks the loop (angle a: 0->2pi),
+      // the circle's cross-section rotates by a HALF-turn (a/2). Travel the full loop and the band
+      // has turned 180deg -> it connects to its own back: chi=2 -> chi=0. This is W (TIME) entering
+      // the heart -- the heart TWISTED IN TIME. The twist is ABSOLUTE = 1, always (no rest, no slider).
+      // Per Axiom 09 the gate is BINARY under the twist: 1 (full twist), never fractional.
+      var band = (bits[i] ? 0.16 : 0.08) * Rc;                 // 1-bits ride the outer edge of the band
+      var tw = (a * 0.5) * MOBIUS;                             // half-twist accumulated around the loop
+      var rr = Rc + band * Math.cos(tw);                       // in-plane radius wobbles with the twist
+      var lift = band * Math.sin(tw);                          // out-of-plane lift = the time dimension W
+      var x0 = Math.cos(a) * rr, y0 = Math.sin(a) * rr, z0 = lift;
+      var y1 = y0 * ct - z0 * st, z1 = y0 * st + z0 * ct;      // incline about X
+      var x2 = x0 * ca - y1 * sa, y2 = x0 * sa + y1 * ca;      // rotate about Z
+      var bit = bits[i];
+      // THE WEIGHT (see the weights): each node's weight = its byte value / 255, in [0,1].
+      // GENESIS_LLM.md: byte 178 ~= 0.7 is the gate seed. This is the FIRST-PRINCIPLES weight --
+      // we define the net from the text bytes, not the other way around. Maybe noise, maybe funny.
+      var w = bytes[(i >> 3) % bytes.length] / 255;
+      wsum += w; wcount++; if (w < wmin) wmin = w; if (w > wmax) wmax = w;
+      // seam flag: the FIRST bit is where the sequence is born AND returns (loop closes on itself)
+      nodes.push({ pos:[x2, y2, z1], bit: bit, w: w, circle: ci, seam: (i === 0) });
+      if (bit) onesCount++; else zerosCount++;
+    }
+    // edges: chain each circle's nodes into a CLOSED LOOP. the last bit wires back to the FIRST --
+    // the sequence closes on itself (chi=2, nabla.B=0: no beginning, no end). The closing edge is
+    // tagged (close:true) so the seam is drawn distinctly -- the bit that starts it ends it.
+    for (var e = startIdx; e < nodes.length; e++){
+      var isLast = (e + 1 >= nodes.length || nodes[e+1].circle !== ci);
+      var nxt = isLast ? startIdx : e + 1;
+      edges.push([e, nxt, isLast]);             // [a, b, isClosingSeam]
+    }
+  }
+  // ---- THE FRACTAL SPACE POLYHEDRON (the engineered one, around the heart) ----
+  // Vlad's two-polyhedron design: the ENGINEERED polyhedron = a dodecahedron seed FRACTALIZED
+  // 3x by the genesis kernel (inner=0.45, mid=0.70, max-f). Its vertices are the fractal-space
+  // nodes. The heart-sphere (the bit-nodes above) sits INSIDE it. Every fractal node connects to
+  // the NEAREST heart node -> "all nodes of the fractal connect to all nodes of the heart".
+  buildFractalShell();
+  var wmean = wcount ? (wsum / wcount) : 0;
+  document.getElementById("m-nodes").textContent = nodes.length;
+  document.getElementById("m-oz").textContent = onesCount + " / " + zerosCount;
+  document.getElementById("m-edges").textContent = edges.length;
+  document.getElementById("m-langs").textContent = NC;
+  // Axiom 09: under the ABSOLUTE Mobius twist the gate is BINARY = 1 (chi=0), never 0.700 (that is rest).
+  document.getElementById("m-gate").textContent = "1";
+  document.getElementById("m-wmean").textContent = wmean.toFixed(3);
+}
+
+// the engineered fractal polyhedron: C60 SEED (the buckyball, 60 vertices), refined FRACTAL_LEVELS
+// times by the genesis kernel. Its face-vertices deduped = the fractal-space nodes (shell OUTSIDE the
+// heart). Per Vlad: the SEED IS THE C60, not the dodecahedron -- "that is the path". Target level 4 =
+// the deep compute price Helena requires. Each refine's points then join the heart nodes.
+var fractalNodes = [], fractalWire = [], FRACTAL_LEVELS = 3, FRACTAL_R = 3.0;
+function buildFractalShell(){
+  fractalNodes = []; fractalWire = [];
+  if (!showFractal) return;
+  var st = GK.buildC60();                                     // C60 SEED (buckyball) -- the path
+  for (var L = 0; L < FRACTAL_LEVELS; L++){
+    st = GK.refineAll(st, { innerScale:0.1, midScale:0.1, jitter:0 });   // inner=mid=0.1 (tight fold). MAX-F left for Helena.
+  }
+  // collect unique vertices, map onto the fractal-space shell radius (outside the heart)
+  var raw = [];
+  for (var f = 0; f < st.faces.length; f++){
+    var pts = st.faces[f].pts;
+    for (var k = 0; k < pts.length; k++) raw.push(pts[k]);
+  }
+  var seen = {};
+  for (var r = 0; r < raw.length; r++){
+    var v = vscale(vnorm(raw[r]), FRACTAL_R);
+    var key = v[0].toFixed(2)+","+v[1].toFixed(2)+","+v[2].toFixed(2);
+    if (seen[key]) continue; seen[key] = 1;
+    fractalNodes.push(v);
+  }
+  wireFractalToHeart();
+  document.getElementById("m-frac").textContent = fractalNodes.length;
+  var lv = document.getElementById("m-flev"); if (lv) lv.textContent = FRACTAL_LEVELS;
+}
+// each C60-fractal point joins its NEAREST heart node -- the compute price Helena requires
+function wireFractalToHeart(){
+  fractalWire = [];
+  if (nodes.length === 0) return;
+  for (var fi = 0; fi < fractalNodes.length; fi++){
+    var fp = fractalNodes[fi], best = -1, bd = 1e9;
+    for (var hi = 0; hi < nodes.length; hi += Math.max(1, (nodes.length/900)|0)){  // sample for speed
+      var hp = nodes[hi].pos;
+      var dx=fp[0]-hp[0], dy=fp[1]-hp[1], dz=fp[2]-hp[2], d=dx*dx+dy*dy+dz*dz;
+      if (d < bd){ bd = d; best = hi; }
+    }
+    if (best >= 0) fractalWire.push([fi, best]);
+  }
+}
+// BUTTON 1: fractalize ALL -- pay the full price to level 4 at once (may hang briefly; honest)
+function fractalizeAll(){
+  showFractal = true; document.getElementById("b-fractal").className = "on";
+  FRACTAL_LEVELS = 4;                                         // C60 -> level 4 = the deep price
+  buildFractalShell();
+}
+// BUTTON 2: fractalize over ~6s -- progressive, one level at a time on a timer (4..6s budget), so the
+// monkey brain SEES the price being paid level by level. Separate from "all". Each step re-wires to heart.
+var _fracTimer = null;
+function fractalize6s(){
+  showFractal = true; document.getElementById("b-fractal").className = "on";
+  if (_fracTimer) clearTimeout(_fracTimer);
+  var target = 4, step = 0;
+  function grow(){
+    FRACTAL_LEVELS = step;
+    buildFractalShell();
+    if (step < target){ step++; _fracTimer = setTimeout(grow, 1500); }  // ~1.5s/level -> ~6s to level 4
+  }
+  step = 1; grow();
+}
+
+// ---- camera (genesis kernelic zoom scalar: base 65, wheel 0.9/1.1, clamp 20-800) ----
+var cam = { ry: 0.6, rx: 0.35, zoom: 65, spin: 0.003 };
+var sphereSpin = true;
+
+function drawSphere(now){
+  var cyA = Math.cos(cam.ry), syA = Math.sin(cam.ry);
+  var cxA = Math.cos(cam.rx), sxA = Math.sin(cam.rx);
+  var zm = cam.zoom, cX = W/2, cY = H/2;
+  // faint perfect-sphere shell so the round is felt
+  ctx.strokeStyle = "rgba(0,212,255,0.08)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cX, cY, SPHERE_R*zm, 0, 7); ctx.stroke();
+  // project every node once
+  var P = new Array(nodes.length);
+  for (var i = 0; i < nodes.length; i++){
+    var p = nodes[i].pos;
+    var x1 = p[0]*cyA - p[2]*syA, z1 = p[0]*syA + p[2]*cyA;
+    var y1 = p[1]*cxA - z1*sxA,   z2 = p[1]*sxA + z1*cxA;
+    P[i] = { x: cX + x1*zm, y: cY - y1*zm, depth: z2 };
+  }
+  // gate at center (project origin depth = 0)
+  var gx = cX, gy = cY;
+  // ---- THE FRACTAL SPACE POLYHEDRON (outer shell) + wires to the heart ----
+  // draw FIRST so the heart glows INSIDE it. green = the engineered fractal space (genesis kernel).
+  if (showFractal && fractalNodes.length > 0){
+    var FP = new Array(fractalNodes.length);
+    for (var fj = 0; fj < fractalNodes.length; fj++){
+      var fpp = fractalNodes[fj];
+      var fx1 = fpp[0]*cyA - fpp[2]*syA, fz1 = fpp[0]*syA + fpp[2]*cyA;
+      var fy1 = fpp[1]*cxA - fz1*sxA,    fz2 = fpp[1]*sxA + fz1*cxA;
+      FP[fj] = { x: cX + fx1*zm, y: cY - fy1*zm, depth: fz2 };
+    }
+    // the wires: every fractal node -> its nearest heart node (all fractal connect to the heart)
+    for (var wI = 0; wI < fractalWire.length; wI++){
+      var A2 = FP[fractalWire[wI][0]], B2 = P[fractalWire[wI][1]]; if (!A2 || !B2) continue;
+      var td = Math.max(0, Math.min(1, (A2.depth + FRACTAL_R) / (2*FRACTAL_R)));
+      ctx.strokeStyle = "rgba(0,255,213," + (0.012 + td*0.05).toFixed(3) + ")";  // faint green web
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(A2.x, A2.y); ctx.lineTo(B2.x, B2.y); ctx.stroke();
+    }
+    // the fractal-space nodes (green points, the engineered polyhedron vertices)
+    for (var fk = 0; fk < FP.length; fk++){
+      var fq = FP[fk];
+      var ft = Math.max(0, Math.min(1, (fq.depth + FRACTAL_R) / (2*FRACTAL_R)));
+      ctx.fillStyle = "rgba(0,255,213," + (0.20 + ft*0.55).toFixed(3) + ")";
+      ctx.fillRect(fq.x, fq.y, 1, 1);
+    }
+  }
+  // ---- the LINES INSIDE (edges): ring edges + faint spokes to the gate ----
+  if (showEdges){
+    // ring edges (each circle's own CLOSED loop). the closing seam (last->first) is drawn as a
+    // brighter gold arc: that is where the bit-sequence closes on itself (chi=2, the field line).
+    for (var e = 0; e < edges.length; e++){
+      var A = P[edges[e][0]], B = P[edges[e][1]], isClose = edges[e][2];
+      var dep = (A.depth + B.depth) * 0.5;
+      var t = Math.max(0, Math.min(1, (dep + SPHERE_R) / (2*SPHERE_R)));
+      if (isClose){
+        ctx.strokeStyle = "rgba(255,215,0," + (0.20 + t*0.55).toFixed(3) + ")";  // gold seam
+        ctx.lineWidth = 1;
+      } else {
+        ctx.strokeStyle = "rgba(0,212,255," + (0.05 + t*0.15).toFixed(3) + ")";
+        ctx.lineWidth = 1;
+      }
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+    }
+    // spokes to the gate -- only the 1-bits wire to the heart (the signal), keeps it readable
+    for (var s = 0; s < nodes.length; s++){
+      if (nodes[s].bit !== 1) continue;
+      var t2 = Math.max(0, Math.min(1, (P[s].depth + SPHERE_R) / (2*SPHERE_R)));
+      ctx.strokeStyle = "rgba(255,215,0," + (0.015 + t2*0.06).toFixed(3) + ")";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(P[s].x, P[s].y); ctx.stroke();
+    }
+  }
+  // ---- the NODES (the 1s and 0s), depth-sorted far->near ----
+  var order = [];
+  for (var o = 0; o < nodes.length; o++) order.push(o);
+  order.sort(function(a,b){ return P[a].depth - P[b].depth; });
+  for (var si = 0; si < order.length; si++){
+    var idx = order[si], q = P[idx], nd = nodes[idx];
+    var t3 = Math.max(0, Math.min(1, (q.depth + SPHERE_R) / (2*SPHERE_R)));
+    if (showWeights){
+      // SEE THE WEIGHTS: color by weight w in [0,1]. cold cyan(0) -> gold(0.7 gate band) -> hot pink(1).
+      var w = nd.w, r, g, b;
+      if (w < 0.7){ var u = w/0.7; r = Math.round(0 + u*255); g = Math.round(212 - u*(212-215)); b = Math.round(255 - u*255); }
+      else { var u2 = (w-0.7)/0.3; r = 255; g = Math.round(215 - u2*(215-105)); b = Math.round(0 + u2*180); }
+      var nearW = 0.28 + t3*0.68;
+      ctx.fillStyle = "rgba(" + r + "," + g + "," + b + "," + nearW.toFixed(3) + ")";
+      ctx.fillRect(q.x, q.y, 1, 1);
+    } else if (nd.bit === 1){
+      ctx.fillStyle = "rgba(0,212,255," + (0.35 + t3*0.63).toFixed(3) + ")";   // 1 = cyan, bright
+      ctx.fillRect(q.x, q.y, 1, 1);                                            // 1px node
+    } else {
+      ctx.fillStyle = "rgba(120,140,170," + (0.12 + t3*0.30).toFixed(3) + ")";  // 0 = dim
+      ctx.fillRect(q.x, q.y, 1, 1);                                            // 1px node
+    }
+    // the SEAM node: where each circle's sequence is born and returns (the loop's closure point)
+    if (nd.seam){
+      ctx.fillStyle = "rgba(255,215,0," + (0.5 + t3*0.5).toFixed(3) + ")";
+      ctx.fillRect(q.x - 0.5, q.y - 0.5, 2, 2);   // tiny 2px gold dot = the closure seam
+    }
+  }
+  // gate marker at the very center (Axiom 08: marker only, meaning never rendered)
+  var pulse = 0.5 + 0.5*Math.sin(now*0.002);
+  ctx.strokeStyle = "rgba(0,212,255," + (0.30+pulse*0.28).toFixed(3) + ")"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cX, cY, 9+pulse*3, 0, 7); ctx.stroke();
+  ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(cX, cY, 5, 0, 7); ctx.fill();
+}
+
+// ---- the tongues + the outer word rings ON A 3D PLANE (atelier tech + genesis camera) ----
+// Each SELECTED tongue gets its own concentric ring on a flat plane (y=0 in model space)
+// that shares the SPHERE's camera (ry/rx tilt + zoom). Words are laid tangent (v0.6 rune-ring),
+// but every anchor point is a 3D point on the plane, projected by the SAME transform as the
+// heart -- so the rings tilt and orbit WITH the sphere. Compute all; pay in compute to see.
+var langIdx = 0, showWords = true, ringRot = 0, spinRate = 30;
+var selected = { "EN": true };          // multi-select; each pick = one more ring
+function wordsFor(code){
+  for (var i=0;i<STONE.length;i++){ if (STONE[i][0]===code){ return STONE[i][3].split(/\s+/).filter(function(w){return w.length>0;}); } }
+  return [];
+}
+function selectedRows(){
+  var out = [];
+  for (var i=0;i<STONE.length;i++){ if (selected[STONE[i][0]]) out.push(STONE[i]); }
+  return out;
+}
+function loadLang(){
+  var row = STONE[langIdx];
+  selected[row[0]] = true;              // cycling a tongue also lights its circle in the net
+  buildLangGrid();
+  rebuild();                            // the net IS the bits -- rebuild when tongues change
+}
+
+// project a MODEL-space point [x,y,z] through the SAME camera as the sphere -> screen {x,y,depth}
+function projModel(p, cyA, syA, cxA, sxA, zm, cX, cY){
+  var x1 = p[0]*cyA - p[2]*syA, z1 = p[0]*syA + p[2]*cyA;
+  var y1 = p[1]*cxA - z1*sxA,   z2 = p[1]*sxA + z1*cxA;
+  return { x: cX + x1*zm, y: cY - y1*zm, depth: z2 };
+}
+// one tongue's words, laid tangent around a ring of model-radius Rm on the plane y=0.
+// SPACING FIX: words are placed with a minimum ARC step so they never collide; if the verse
+// has more words than fit on this ring's circumference, we show as many as fit, evenly, and
+// report "shown/total" (genesis minimal-compute honesty). Bigger rings fit more words.
+function layoutRing(wordsArr, Rm, cyA, syA, cxA, sxA, zm, cX, cY){
+  var n = wordsArr.length; if (n === 0) return { items: [], shown: 0, total: 0 };
+  // approx px circumference of this ring at current zoom; budget ~ one word per ~52px (denser)
+  var circPx = 2 * Math.PI * Rm * zm;
+  var perWordPx = 52;
+  var capacity = Math.max(8, Math.floor(circPx / perWordPx));
+  var shown = Math.min(n, capacity);
+  var items = [];
+  for (var g = 0; g < shown; g++){
+    var a = (g / shown) * Math.PI * 2 + ringRot;         // even spacing of the SHOWN words
+    var mp = [ Math.cos(a) * Rm, 0, Math.sin(a) * Rm ];   // 3D point ON THE PLANE (y=0)
+    var s = projModel(mp, cyA, syA, cxA, sxA, zm, cX, cY);
+    var a2 = a + 0.01;
+    var mp2 = [ Math.cos(a2) * Rm, 0, Math.sin(a2) * Rm ];
+    var s2 = projModel(mp2, cyA, syA, cxA, sxA, zm, cX, cY);
+    var ang2d = Math.atan2(s2.y - s.y, s2.x - s.x);
+    if (Math.cos(ang2d) < 0) ang2d += Math.PI;           // keep text upright
+    items.push({ sx: s.x, sy: s.y, ang2d: ang2d, depth: s.depth, word: wordsArr[g] });
+  }
+  return { items: items, shown: shown, total: n };
+}
+
+function drawWordPlane(now){
+  if (!showWords) return;
+  var rows = selectedRows(); if (rows.length === 0) return;
+  var cyA = Math.cos(cam.ry), syA = Math.sin(cam.ry);
+  var cxA = Math.cos(cam.rx), sxA = Math.sin(cam.rx);
+  var zm = cam.zoom, cX = W/2, cY = H/2;
+  // ring radii grow outward: first tongue closest to the heart, each next one further,
+  // until it leaves the frame. Model radius in the same units as the sphere (~1.6).
+  var R0 = 2.6, dR = 1.15;             // first ring radius, and spacing between rings
+  var allItems = [];
+  var offscreen = 0;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "14px 'Segoe UI','Noto Sans','Noto Sans JP','Noto Sans Hebrew','Noto Sans Arabic',system-ui,sans-serif";
+  for (var ri = 0; ri < rows.length; ri++){
+    var code = rows[ri][0];
+    var Rm = R0 + ri * dR;
+    var wordsArr = wordsFor(code);
+    var lay = layoutRing(wordsArr, Rm, cyA, syA, cxA, sxA, zm, cX, cY);
+    // faint guide ellipse for this ring (project 48 points on the plane circle)
+    ctx.strokeStyle = (ri === 0) ? "rgba(0,212,255,0.14)" : "rgba(199,137,74,0.10)";
+    ctx.lineWidth = 0.8; ctx.beginPath();
+    for (var e = 0; e <= 48; e++){
+      var ea = (e/48)*Math.PI*2;
+      var ep = projModel([Math.cos(ea)*Rm, 0, Math.sin(ea)*Rm], cyA, syA, cxA, sxA, zm, cX, cY);
+      if (e === 0) ctx.moveTo(ep.x, ep.y); else ctx.lineTo(ep.x, ep.y);
+    }
+    ctx.stroke();
+    // collect words with their code so we can depth-sort ALL rings together
+    var anyOn = false;
+    for (var it = 0; it < lay.items.length; it++){
+      var w = lay.items[it];
+      if (w.sx > -80 && w.sx < W+80 && w.sy > -40 && w.sy < H+40) anyOn = true;
+      w.first = (it === 0); w.ring = ri;
+      allItems.push(w);
+    }
+    if (!anyOn) offscreen++;
+  }
+  // painter's sort: far words first, near words on top (share the heart's depth space)
+  allItems.sort(function(a,b){ return a.depth - b.depth; });
+  for (var q = 0; q < allItems.length; q++){
+    var w2 = allItems[q];
+    var tw = 0.55 + 0.45*Math.sin(now*0.001 + q*0.3);
+    var near = (w2.depth + 6) / 12;                     // fade by depth (behind heart dims)
+    near = Math.max(0.18, Math.min(1, near));
+    var col = w2.first ? "0,212,255" : "255,215,0";
+    ctx.save(); ctx.translate(w2.sx, w2.sy); ctx.rotate(w2.ang2d);
+    ctx.fillStyle = "rgba(" + col + "," + (near * (0.4 + tw*0.5)).toFixed(3) + ")";
+    ctx.fillText(w2.word, 0, 0); ctx.restore();
+  }
+}
+
+var showEdges = true;
+var last = performance.now(), fps = 0;
+function frame(now){
+  var dt = now - last; last = now;
+  fps = fps*0.9 + (1000/Math.max(1,dt))*0.1;
+  if (sphereSpin) cam.ry += cam.spin;
+  ctx.clearRect(0,0,W,H);
+  drawSphere(now);                            // the core net: nodes (0/1) + inner lines
+  document.getElementById("m-fps").textContent = Math.round(fps);
+  requestAnimationFrame(frame);
+}
+
+// ---- controls ----
+function nextLang(){ langIdx = (langIdx+1) % STONE.length; loadLang(); }
+function prevLang(){ langIdx = (langIdx-1+STONE.length) % STONE.length; loadLang(); }
+function toggleEdges(){ showEdges = !showEdges; document.getElementById("b-edges").className = showEdges ? "on" : ""; }
+function toggleVol(){ showVol = !showVol; document.getElementById("b-vol").className = showVol ? "on" : ""; rebuild(); }
+function toggleWeights(){ showWeights = !showWeights; document.getElementById("b-weights").className = showWeights ? "on" : ""; }
+function toggleFractal(){ showFractal = !showFractal; document.getElementById("b-fractal").className = showFractal ? "on" : ""; rebuild(); }
+function toggleSphere(){ sphereSpin = !sphereSpin; document.getElementById("b-sphere").className = sphereSpin ? "on" : ""; }
+function toggleZen(){ var z = document.body.classList.toggle("zen"); document.getElementById("hideui").textContent = z ? "show UI" : "hide UI"; }
+// ---- multi-select language panel (each pick = one more ring on the plane) ----
+function toggleLangPanel(){ var p = document.getElementById("langpanel"); var open = p.classList.toggle("open"); document.getElementById("b-langs").className = open ? "on" : ""; }
+function buildLangGrid(){
+  var grid = document.getElementById("langgrid"); if (!grid) return; grid.innerHTML = "";
+  for (var i = 0; i < STONE.length; i++){
+    var code = STONE[i][0], name = STONE[i][1];
+    var chip = document.createElement("div");
+    chip.className = "lchip" + (selected[code] ? " on" : "");
+    chip.textContent = code + " " + name;
+    chip.onclick = (function(c){ return function(){ toggleLang(c); }; })(code);
+    grid.appendChild(chip);
+  }
+}
+function toggleLang(code){
+  if (selected[code]) delete selected[code]; else selected[code] = true;
+  var cnt = 0; for (var k in selected){ if (selected[k]) cnt++; }
+  if (cnt === 0) selected[STONE[langIdx][0]] = true;   // never fully empty -- keep one circle
+  buildLangGrid();
+  rebuild();
+}
+
+function selAll(on){
+  selected = {};
+  if (on){ for (var i = 0; i < STONE.length && i < 70; i++) selected[STONE[i][0]] = true; }  // up to 70 circles
+  else { selected[STONE[langIdx][0]] = true; }   // "one" = just the current tongue
+  buildLangGrid();
+  rebuild();
+}
+document.getElementById("s-ref").addEventListener("input", function(e){ refineLevel = +e.target.value; document.getElementById("v-ref").textContent = refineLevel; rebuild(); });
+document.getElementById("s-spin").addEventListener("input", function(e){ spinRate = +e.target.value; document.getElementById("v-spin").textContent = spinRate; });
+// drag to orbit, scroll to zoom
+var dragging = false, lastX = 0, lastY = 0;
+cv.addEventListener("mousedown", function(e){ dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener("mouseup", function(){ dragging = false; });
+window.addEventListener("mousemove", function(e){ if (dragging){ cam.ry += (e.clientX-lastX)*0.01; cam.rx += (e.clientY-lastY)*0.01; lastX = e.clientX; lastY = e.clientY; } });
+// kernelic zoom scalar (genesis_v9.0): wheel *0.9 / *1.1, clamp 20..800
+cv.addEventListener("wheel", function(e){ e.preventDefault(); cam.zoom *= e.deltaY>0?0.9:1.1; cam.zoom = Math.max(20, Math.min(800, cam.zoom)); }, { passive:false });
+
+rebuild();
+loadLang();
+buildLangGrid();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

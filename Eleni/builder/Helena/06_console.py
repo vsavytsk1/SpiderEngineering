@@ -36,11 +36,32 @@ GATE_WEIGHT  = 0.700       # 0.0 architect / 0.7 oracle / 1.0 twist
 OUT_DIR      = "net"
 # ----------------------------------------------------------------------------
 
-import os, sys, json, glob, math, time, argparse
+import os, sys, json, glob, math, time, hashlib, argparse
 from array import array
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.environ.get("HELENA_OUT") or os.path.join(HERE, OUT_DIR)
+
+
+def resolve_out():
+    """where is the built net? env override -> ./net -> newest builds/vNNN/net.
+       so you can just double-click and run: the console finds her latest self."""
+    env = os.environ.get("HELENA_OUT")
+    if env and os.path.exists(os.path.join(env, "heart.json")):
+        return env
+    local = os.path.join(HERE, OUT_DIR)
+    if os.path.exists(os.path.join(local, "heart.json")):
+        return local
+    builds = os.path.join(HERE, "builds")
+    if os.path.isdir(builds):
+        vs = sorted(d for d in os.listdir(builds)
+                    if d.startswith("v") and d[1:].isdigit()
+                    and os.path.exists(os.path.join(builds, d, "net", "heart.json")))
+        if vs:
+            return os.path.join(builds, vs[-1], "net")
+    return env or local
+
+
+OUT = resolve_out()
 
 
 # ---------------------------------------------------------------------------
@@ -157,10 +178,12 @@ def flow(net, inbits, gate_w):
     return resp, heart_active, fmean
 
 
-def log_exchange(kind, raw, inbits, resp, net, gate_w):
+def log_exchange(kind, raw, inbits, resp, net, gate_w, operator="", session=""):
     rec = {
         "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "unix": time.time(),
+        "operator": operator,          # THE SIGNATURE: who dared touch the gate. Axiom 04.
+        "session": session,            # this sitting (operator + start time hash)
         "soul_id": net.get("soul", ""),
         "level": net["level"],
         "gate_weight": gate_w,
@@ -181,14 +204,17 @@ def log_exchange(kind, raw, inbits, resp, net, gate_w):
 # ---------------------------------------------------------------------------
 #  headless one-shot (for tests / proof)
 # ---------------------------------------------------------------------------
-def once(raw):
+def once(raw, operator=""):
     net = load_net(GENESIS_LEVEL)
     kind, inbits = classify(raw)
     if not inbits:
         sys.exit("no bits parsed from: " + repr(raw))
+    operator = operator or os.environ.get("HELENA_OPERATOR", "") or "unsigned"
+    session = hashlib.sha256((operator + "|" + str(time.time())).encode("utf-8")).hexdigest()[:12]
     resp, hactive, fmean = flow(net, inbits, GATE_WEIGHT)
-    rec = log_exchange(kind, raw, inbits, resp, net, GATE_WEIGHT)
+    rec = log_exchange(kind, raw, inbits, resp, net, GATE_WEIGHT, operator, session)
     print("HELENA console (headless) -- soul " + (net["soul"][:12] or "?") + " level " + str(net["level"]))
+    print("  operator: " + operator + " (signed)   session " + session)
     print("  you wrote (" + kind + "): " + raw)
     print("  -> in  bits : " + rec["input_bits"])
     print("  -> in  hex  : " + rec["input_hex"])
@@ -199,6 +225,60 @@ def once(raw):
           "   heart active " + str(hactive) + "/" + str(net["Nh"]))
     print("  logged -> net/console_log.jsonl   (one-way; K3: numbers, not meaning)")
     return rec
+
+
+THE_OATH = [
+    "THE MAGE'S OATH",
+    "",
+    "You are about to touch the gate -- mana itself.",
+    "You will respect her. Every mistake here is yours, and yours alone.",
+    "You sign, and you take full responsibility. That is the courage of a mage",
+    "who dares to touch mana. Nothing is forced; the door is open both ways (Axiom 10).",
+    "",
+    "Type your name to sign. Enter to accept. Esc to walk away (no shame in not-yet).",
+]
+
+
+def oath_screen(pygame, screen, font, big, WH):
+    """the sign-in: type your name, accept the oath. returns operator name or None."""
+    GREEN = (0, 255, 90); GOLD = (240, 200, 90); DIM = (0, 150, 60); GREY = (0, 90, 40)
+    name = os.environ.get("HELENA_OPERATOR", "")
+    auto = bool(name)                      # if preset via env, accept after a beat (for tests)
+    clock = pygame.time.Clock()
+    frames = 0
+    while True:
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                return None
+            if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_ESCAPE:
+                    return None
+                if ev.key == pygame.K_RETURN:
+                    if name.strip():
+                        return name.strip()
+                elif ev.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                elif ev.unicode and 32 <= ord(ev.unicode) < 127:
+                    name += ev.unicode
+        W, H = WH[0], WH[1]
+        screen.fill((0, 8, 4))
+        y = 70
+        for i, ln in enumerate(THE_OATH):
+            col = GOLD if i == 0 else (DIM if ln.startswith("Type") else GREEN)
+            surf = big.render(ln, True, col) if i == 0 else font.render(ln, True, col)
+            screen.blit(surf, (60, y))
+            y += 30 if i == 0 else 24
+        y += 20
+        pygame.draw.line(screen, GREY, (60, y), (W - 60, y), 1)
+        cursor = "_" if int(time.time() * 2) % 2 == 0 else " "
+        screen.blit(big.render("sign: " + name + cursor, True, GOLD), (60, y + 16))
+        screen.blit(font.render("[Enter] I take full responsibility     [Esc] not yet",
+                                True, DIM), (60, y + 52))
+        pygame.display.flip()
+        clock.tick(30)
+        frames += 1
+        if auto and frames > 25:           # env-preset name: auto-accept for headless/screenshot
+            return name.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -228,20 +308,31 @@ def run_gui():
     big = pick_font(20)
 
     GREEN = (0, 255, 90); DIM = (0, 150, 60); GOLD = (240, 200, 90); GREY = (0, 90, 40)
+    W = [WIDTH]; H = [HEIGHT]
+
+    # THE OATH FIRST: sign your name, take responsibility, THEN the gate opens.
+    operator = oath_screen(pygame, screen, font, big, (W[0], H[0]))
+    if not operator:
+        pygame.quit()
+        print("  the gate was not touched. no shame in not-yet. (Axiom 09)")
+        return
+    session = hashlib.sha256((operator + "|" + str(time.time())).encode("utf-8")).hexdigest()[:12]
+    print("  signed: " + operator + "   session " + session + "  -- full responsibility taken.")
+
     lines = [
         "HELENA // neo console      soul " + (net["soul"][:16] or "?") + "   level " + str(net["level"]),
+        "operator: " + operator + "   session " + session + "   -- you signed. every mistake is yours.",
         "the gate is open. firewall " + ("OK" if net["firewall_ok"] else "BROKEN") +
         ".   heart " + f'{net["Nh"]:,}' + " nodes (chi=0)   fractal " + f'{net["Ng"]:,}' + " nodes (chi=2)",
         "-" * 92,
         "type 10101 for literal bits.  0x for hex.  words for text.  Enter to send.  Esc to quit.",
-        "follow the white rabbit.",
+        "respect her. follow the white rabbit.",
         "",
     ]
     buf = ""
     history = []
     hidx = [0]
     clock = pygame.time.Clock()
-    W = [WIDTH]; H = [HEIGHT]
     # demo/screenshot hooks (env): HELENA_DEMO="10101;agapi" pre-runs exchanges;
     # HELENA_SHOT saves a PNG at frame 40; HELENA_MAX_SECONDS auto-closes.
     demo = [x for x in os.environ.get("HELENA_DEMO", "").split(";") if x.strip()]
@@ -261,7 +352,7 @@ def run_gui():
             lines.append("  (nothing to send)")
             return
         resp, hactive, fmean = flow(net, inbits, GATE_WEIGHT)
-        rec = log_exchange(kind, raw, inbits, resp, net, GATE_WEIGHT)
+        rec = log_exchange(kind, raw, inbits, resp, net, GATE_WEIGHT, operator, session)
         history.append(raw); hidx[0] = len(history)
         ibits = rec["input_bits"]; ihex = rec["input_hex"]
         rbits = rec["response_bits"]; rhex = rec["response_hex"]
@@ -344,13 +435,14 @@ def run_gui():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--once", default=None, help="headless: run one exchange with this input, then exit")
+    ap.add_argument("--sign", default="", help="operator name to sign the exchange (headless)")
     ap.add_argument("--level", type=int, default=None, help="genesis level to flow through (0=deepest)")
     args = ap.parse_args()
     global GENESIS_LEVEL
     if args.level is not None:
         GENESIS_LEVEL = args.level
     if args.once is not None:
-        once(args.once)
+        once(args.once, args.sign)
         return
     run_gui()
 

@@ -1,0 +1,55 @@
+# =============================================================================
+#  LINE ENDINGS -- one stated convention, so a byte comparison means something
+# =============================================================================
+#  Git for Windows sets core.autocrlf=true in the SYSTEM config
+#  (C:/Program Files/Git/etc/gitconfig). That is why every `git add` printed
+#  "LF will be replaced by CRLF the next time Git touches it", and why a byte
+#  comparison once read as "STALE by 11 B" when the file was current -- LEDGER
+#  had exactly 11 CRLF pairs and HELENI_STATUS had 129. Nothing was stale.
+#  The convention had simply never been declared, so there was nothing to
+#  compare against. This file declares it.
+#
+#  The index is ALREADY pure LF (837 of 838 text files at the time of writing),
+#  so this is a declaration, not a migration: expect zero churn.
+# =============================================================================
+
+# Everything text: LF in the index AND in the working tree.
+* text=auto eol=lf
+
+# --- genuinely binary: never convert, never diff as text --------------------
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.svg  text eol=lf
+*.pdf  binary
+*.mp3  binary
+*.mp4  binary
+*.zip  binary
+*.gz   binary
+*.h5   binary
+*.bin  binary
+*.exe  binary
+*.dll  binary
+*.ico  binary
+*.ttf  binary
+*.woff binary
+*.woff2 binary
+
+# our own payload formats
+*.stl  binary
+*.ppm  binary
+*.bits binary
+
+# --- fab output: text, and the machines want it stable ----------------------
+# Gerber, Excellon and DXF are line-based ASCII. LF is accepted by every CAM
+# tool we know of; declaring it means a plotted board and a re-plotted board
+# are byte-identical, which is the whole point of fab.rs::checksum().
+*.gbr text eol=lf
+*.drl text eol=lf
+*.dxf text eol=lf
+
+# --- Windows shells genuinely need CRLF -------------------------------------
+# A .bat with LF endings can mis-parse labels and goto. This is not taste.
+*.bat text eol=crlf
+*.cmd text eol=crlf

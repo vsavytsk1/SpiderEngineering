@@ -1,0 +1,14 @@
+# -- THE EXPORT LANE: payload is LOCAL, the mirror is TRACKED -------------
+# Eleni/tools/helena_to_attentium.py turns a build into a viewer JSON and
+# triplicates it (vault.py, mirroring Helena's own redundancy.py). The dump
+# and its three copies are REGENERABLE from builds/ in one command, so they
+# never enter git -- only the MANIFEST, which carries the sha256 of every
+# copy. "Pay thea Heleni in compute." (Curse 31 / R5)
+exports/**
+!exports/**/
+!exports/**/MANIFEST.json
+!exports/.gitattributes
+
+# python bytecode -- regenerated, never shipped
+__pycache__/
+*.pyc

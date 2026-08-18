@@ -1,0 +1,5 @@
+# The vault is byte-exact by design: every copy (.bin/.csv/.zip) is SHA-256
+# verified. Git MUST NOT touch line endings here, or the .csv hashes would
+# mismatch on clone and verify would falsely report CORRUPT. Same rule Helena
+# already set for builds/** -- honored, not reinvented.
+* -text

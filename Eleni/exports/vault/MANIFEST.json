@@ -1,0 +1,14 @@
+{
+ "helena_v008_L3.json": {
+  "atom": "byte (JSON has no element type -- declared, per vault.py)",
+  "bytes": 254450,
+  "copies": {
+   "bin": "6e473f90bf041263328ac46c85e6ae59aa599b305adb9b931da71763bc032fb6",
+   "csv": "6e473f90bf041263328ac46c85e6ae59aa599b305adb9b931da71763bc032fb6",
+   "zip": "6e473f90bf041263328ac46c85e6ae59aa599b305adb9b931da71763bc032fb6"
+  },
+  "sha256": "6e473f90bf041263328ac46c85e6ae59aa599b305adb9b931da71763bc032fb6",
+  "spec": "HELENA redundancy.py, mirrored -- 3 codecs, SHA-256, TMR",
+  "vaulted_utc": "2026-08-18T11:41:38Z"
+ }
+}

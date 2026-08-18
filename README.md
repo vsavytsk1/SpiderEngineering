@@ -41,8 +41,6 @@ SpiderEngineering/
         HELENA.bat                  double-click launcher
 
   index.html                GitHub Pages entry (spider sim)
-  aracnium.toml             the single source of truth for one spider
-  build_fleet.py            fleet generator (1 or N, same design)
   README.md                 you are here
 ```
 
@@ -68,7 +66,7 @@ in `aracnium/sim/` -- every version frozen, every wrong turn visible.
 > A fleet is that design built N times. Nothing redescribes the spider.**
 
 ```
-   aracnium.toml             <-- THE spider. one file. one truth.
+   aracnium/spec/aracnium.toml   <-- THE spider. one file. one truth.
           |
           |  read by everything below (they never re-define geometry)
           |---------------+----------------+--------------+
@@ -76,20 +74,20 @@ in `aracnium/sim/` -- every version frozen, every wrong turn visible.
      firmware/        hardware/          sim/          docs/
    (runs on MCU)    (PCB/CAD/BOM)    (digital twin)  (the why)
           |
-          |  x fleet/fleet.toml   (count = 1 ... or 10 ... same design)
+          |  x aracnium/fleet/fleet.toml  (count = 1 ... or 10 ... same design)
           v
-   tools/build_fleet.py  ->  fleet/generated/  (per-unit cards + scaled BOM)
+   aracnium/tools/build_fleet.py  ->  aracnium/fleet/generated/
 ```
 
 ### Build one spider (or ten)
 
 ```bash
 # 1 spider:
-py -3 tools/build_fleet.py
+py -3 aracnium/tools/build_fleet.py
 
-# 10 spiders -- change ONE number in fleet/fleet.toml:
+# 10 spiders -- change ONE number in aracnium/fleet/fleet.toml:
 #   count = 10
-py -3 tools/build_fleet.py
+py -3 aracnium/tools/build_fleet.py
 ```
 
 ### The Aracne Covenant (Galactic Law Axiom 07)
@@ -218,7 +216,7 @@ py -3 pipe.py --max 4
 
 # Build a fleet of spiders:
 cd ../../..
-py -3 tools/build_fleet.py
+py -3 aracnium/tools/build_fleet.py
 ```
 
 ### What the math actually is
@@ -253,7 +251,9 @@ Dot product transformer. 71 tongues. Gate 0.700.
 
 ## Rules of the repo
 
-1. **Geometry is defined once, in `spec/`.** Never re-type a leg length.
+1. **Geometry is defined once, in `aracnium/spec/aracnium.toml`.** Never
+   re-type a leg length, and never keep a second copy "for convenience" --
+   a byte-identical duplicate is invariant R1 waiting to break.
 2. **Quantity lives only in `fleet/fleet.toml`.** Code never hard-codes "10".
 3. **Invariants do not break silently.** See `INVARIANTS.md`.
 4. **One spider = ten spiders.** Divergence is a bug.
